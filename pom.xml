@@ -9,9 +9,58 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
+    <dependencies>
+
+        <!-- SQL Server (JDBC) -->
+        <dependency>
+            <groupId>com.microsoft.sqlserver</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+            <version>13.4.0.jre11</version>
+        </dependency>
+
+        <!-- Hash de contraseñas -->
+        <dependency>
+            <groupId>org.mindrot</groupId>
+            <artifactId>jbcrypt</artifactId>
+            <version>0.4</version>
+        </dependency>
+
+        <!-- Selector de fechas para Swing -->
+        <dependency>
+            <groupId>com.toedter</groupId>
+            <artifactId>jcalendar</artifactId>
+            <version>1.4</version>
+        </dependency>
+
+        <!-- QR: generar y leer -->
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>core</artifactId>
+            <version>3.5.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>javase</artifactId>
+            <version>3.5.3</version>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <release>21</release>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>
