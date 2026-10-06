@@ -1,7 +1,7 @@
-package com.sigelab.controller;
+package SIGELAB.controller;
 
-import com.sigelab.model.Usuario;
-import com.sigelab.service.UsuarioService;
+import SIGELAB.model.Usuario;
+import SIGELAB.service.UsuarioService;
 
 import java.util.List;
 import java.util.Optional;

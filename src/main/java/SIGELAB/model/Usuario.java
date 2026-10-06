@@ -1,4 +1,4 @@
-package com.sigelab.model;
+package SIGELAB.model;
 
 import java.time.LocalDateTime;
 

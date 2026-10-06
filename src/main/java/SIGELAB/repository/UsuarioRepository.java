@@ -1,9 +1,13 @@
-package com.sigelab.repository;
+package SIGELAB.repository;
 
-import com.sigelab.config.DatabaseConnection;
-import com.sigelab.model.Usuario;
+import SIGELAB.config.DatabaseConnection;
+import SIGELAB.model.Usuario;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -11,6 +15,7 @@ import java.util.Optional;
 public class UsuarioRepository {
 
     public boolean guardar(Usuario usuario) {
+
         String sql = """
                 INSERT INTO Usuario
                 (nombre, apellido, usuario, password_hash, rol, activo)
@@ -30,16 +35,26 @@ public class UsuarioRepository {
             return statement.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            throw new RuntimeException("Error al guardar el usuario.", e);
+            throw new RuntimeException(
+                    "Error al guardar el usuario.",
+                    e
+            );
         }
     }
 
     public List<Usuario> listar() {
+
         List<Usuario> usuarios = new ArrayList<>();
 
         String sql = """
-                SELECT id_usuario, nombre, apellido, usuario,
-                       password_hash, rol, activo, fecha_creacion
+                SELECT id_usuario,
+                       nombre,
+                       apellido,
+                       usuario,
+                       password_hash,
+                       rol,
+                       activo,
+                       fecha_creacion
                 FROM Usuario
                 ORDER BY id_usuario
                 """;
@@ -53,16 +68,26 @@ public class UsuarioRepository {
             }
 
         } catch (SQLException e) {
-            throw new RuntimeException("Error al listar los usuarios.", e);
+            throw new RuntimeException(
+                    "Error al listar los usuarios.",
+                    e
+            );
         }
 
         return usuarios;
     }
 
     public Optional<Usuario> buscarPorId(int idUsuario) {
+
         String sql = """
-                SELECT id_usuario, nombre, apellido, usuario,
-                       password_hash, rol, activo, fecha_creacion
+                SELECT id_usuario,
+                       nombre,
+                       apellido,
+                       usuario,
+                       password_hash,
+                       rol,
+                       activo,
+                       fecha_creacion
                 FROM Usuario
                 WHERE id_usuario = ?
                 """;
@@ -73,19 +98,26 @@ public class UsuarioRepository {
             statement.setInt(1, idUsuario);
 
             try (ResultSet resultSet = statement.executeQuery()) {
+
                 if (resultSet.next()) {
-                    return Optional.of(mapearUsuario(resultSet));
+                    return Optional.of(
+                            mapearUsuario(resultSet)
+                    );
                 }
             }
 
         } catch (SQLException e) {
-            throw new RuntimeException("Error al buscar el usuario.", e);
+            throw new RuntimeException(
+                    "Error al buscar el usuario.",
+                    e
+            );
         }
 
         return Optional.empty();
     }
 
     public boolean actualizar(Usuario usuario) {
+
         String sql = """
                 UPDATE Usuario
                 SET nombre = ?,
@@ -111,12 +143,19 @@ public class UsuarioRepository {
             return statement.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            throw new RuntimeException("Error al actualizar el usuario.", e);
+            throw new RuntimeException(
+                    "Error al actualizar el usuario.",
+                    e
+            );
         }
     }
 
     public boolean eliminar(int idUsuario) {
-        String sql = "DELETE FROM Usuario WHERE id_usuario = ?";
+
+        String sql = """
+                DELETE FROM Usuario
+                WHERE id_usuario = ?
+                """;
 
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -126,25 +165,53 @@ public class UsuarioRepository {
             return statement.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            throw new RuntimeException("Error al eliminar el usuario.", e);
+            throw new RuntimeException(
+                    "Error al eliminar el usuario.",
+                    e
+            );
         }
     }
 
-    private Usuario mapearUsuario(ResultSet resultSet) throws SQLException {
+    private Usuario mapearUsuario(ResultSet resultSet)
+            throws SQLException {
+
         Usuario usuario = new Usuario();
 
-        usuario.setIdUsuario(resultSet.getInt("id_usuario"));
-        usuario.setNombre(resultSet.getString("nombre"));
-        usuario.setApellido(resultSet.getString("apellido"));
-        usuario.setUsuario(resultSet.getString("usuario"));
-        usuario.setPasswordHash(resultSet.getString("password_hash"));
-        usuario.setRol(resultSet.getString("rol"));
-        usuario.setActivo(resultSet.getBoolean("activo"));
+        usuario.setIdUsuario(
+                resultSet.getInt("id_usuario")
+        );
 
-        Timestamp fecha = resultSet.getTimestamp("fecha_creacion");
+        usuario.setNombre(
+                resultSet.getString("nombre")
+        );
+
+        usuario.setApellido(
+                resultSet.getString("apellido")
+        );
+
+        usuario.setUsuario(
+                resultSet.getString("usuario")
+        );
+
+        usuario.setPasswordHash(
+                resultSet.getString("password_hash")
+        );
+
+        usuario.setRol(
+                resultSet.getString("rol")
+        );
+
+        usuario.setActivo(
+                resultSet.getBoolean("activo")
+        );
+
+        Timestamp fecha =
+                resultSet.getTimestamp("fecha_creacion");
 
         if (fecha != null) {
-            usuario.setFechaCreacion(fecha.toLocalDateTime());
+            usuario.setFechaCreacion(
+                    fecha.toLocalDateTime()
+            );
         }
 
         return usuario;
