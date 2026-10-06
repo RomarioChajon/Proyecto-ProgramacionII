@@ -1,7 +1,7 @@
-package com.sigelab.service;
+package SIGELAB.service;
 
-import com.sigelab.model.Usuario;
-import com.sigelab.repository.UsuarioRepository;
+import SIGELAB.model.Usuario;
+import SIGELAB.repository.UsuarioRepository;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.List;
@@ -31,7 +31,9 @@ public class UsuarioService {
 
     public Optional<Usuario> buscarPorId(int idUsuario) {
         if (idUsuario <= 0) {
-            throw new IllegalArgumentException("El ID del usuario no es válido.");
+            throw new IllegalArgumentException(
+                    "El ID del usuario no es válido."
+            );
         }
 
         return usuarioRepository.buscarPorId(idUsuario);
@@ -44,16 +46,22 @@ public class UsuarioService {
                 usuarioRepository.buscarPorId(usuario.getIdUsuario());
 
         if (usuarioActual.isEmpty()) {
-            throw new IllegalArgumentException("El usuario no existe.");
+            throw new IllegalArgumentException(
+                    "El usuario no existe."
+            );
         }
 
         if (nuevaPassword != null && !nuevaPassword.isBlank()) {
             validarPassword(nuevaPassword);
 
             String passwordHash =
-                    BCrypt.hashpw(nuevaPassword, BCrypt.gensalt());
+                    BCrypt.hashpw(
+                            nuevaPassword,
+                            BCrypt.gensalt()
+                    );
 
             usuario.setPasswordHash(passwordHash);
+
         } else {
             usuario.setPasswordHash(
                     usuarioActual.get().getPasswordHash()
@@ -65,13 +73,19 @@ public class UsuarioService {
 
     public boolean eliminar(int idUsuario) {
         if (idUsuario <= 0) {
-            throw new IllegalArgumentException("El ID del usuario no es válido.");
+            throw new IllegalArgumentException(
+                    "El ID del usuario no es válido."
+            );
         }
 
         return usuarioRepository.eliminar(idUsuario);
     }
 
-    public boolean verificarPassword(String password, String passwordHash) {
+    public boolean verificarPassword(
+            String password,
+            String passwordHash
+    ) {
+
         if (password == null || passwordHash == null) {
             return false;
         }
@@ -81,28 +95,50 @@ public class UsuarioService {
 
     private void validarUsuario(Usuario usuario) {
         if (usuario == null) {
-            throw new IllegalArgumentException("El usuario es obligatorio.");
+            throw new IllegalArgumentException(
+                    "El usuario es obligatorio."
+            );
         }
 
-        if (usuario.getNombre() == null || usuario.getNombre().isBlank()) {
-            throw new IllegalArgumentException("El nombre es obligatorio.");
+        if (usuario.getNombre() == null ||
+                usuario.getNombre().isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "El nombre es obligatorio."
+            );
         }
 
-        if (usuario.getApellido() == null || usuario.getApellido().isBlank()) {
-            throw new IllegalArgumentException("El apellido es obligatorio.");
+        if (usuario.getApellido() == null ||
+                usuario.getApellido().isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "El apellido es obligatorio."
+            );
         }
 
-        if (usuario.getUsuario() == null || usuario.getUsuario().isBlank()) {
-            throw new IllegalArgumentException("El nombre de usuario es obligatorio.");
+        if (usuario.getUsuario() == null ||
+                usuario.getUsuario().isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "El nombre de usuario es obligatorio."
+            );
         }
 
-        if (usuario.getRol() == null || usuario.getRol().isBlank()) {
-            throw new IllegalArgumentException("El rol es obligatorio.");
+        if (usuario.getRol() == null ||
+                usuario.getRol().isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "El rol es obligatorio."
+            );
         }
 
         switch (usuario.getRol()) {
-            case "ADMIN", "ENCARGADO", "DOCENTE", "ESTUDIANTE" -> {
+            case "ADMIN",
+                 "ENCARGADO",
+                 "DOCENTE",
+                 "ESTUDIANTE" -> {
             }
+
             default -> throw new IllegalArgumentException(
                     "El rol seleccionado no es válido."
             );
@@ -111,7 +147,9 @@ public class UsuarioService {
 
     private void validarPassword(String password) {
         if (password == null || password.isBlank()) {
-            throw new IllegalArgumentException("La contraseña es obligatoria.");
+            throw new IllegalArgumentException(
+                    "La contraseña es obligatoria."
+            );
         }
 
         if (password.length() < 8) {
