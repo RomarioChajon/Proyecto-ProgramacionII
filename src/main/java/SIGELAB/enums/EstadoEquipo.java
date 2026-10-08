@@ -1,4 +1,10 @@
+
 package SIGELAB.enums;
 
-public class EstadoEquipo {
+public enum EstadoEquipo {
+    DISPONIBLE,
+    PRESTADO,
+    DANADO,
+    MANTENIMIENTO,
+    BAJA
 }

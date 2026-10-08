@@ -37,10 +37,7 @@ USE master;
 GO
 
 IF DB_ID(N'SIGELAB_DB') IS NOT NULL
-BEGIN
-    ALTER DATABASE SIGELAB_DB SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-    DROP DATABASE SIGELAB_DB;
-END
+    THROW 51000, 'SIGELAB_DB ya existe. Use el script de migracion, NO el de instalacion nueva.', 1;
 GO
 
 CREATE DATABASE SIGELAB_DB;
@@ -95,13 +92,29 @@ GO
    ===================================================================== */
 CREATE TABLE dbo.TipoEquipo (
                                 id_tipo_equipo INT IDENTITY(1,1) NOT NULL,
+                                codigo         NVARCHAR(30)  NOT NULL,
                                 nombre         NVARCHAR(50)  NOT NULL,
                                 descripcion    NVARCHAR(200) NULL,
                                 estado         NVARCHAR(10)  NOT NULL CONSTRAINT DF_TipoEquipo_Estado DEFAULT 'ACTIVO',
                                 CONSTRAINT PK_TipoEquipo        PRIMARY KEY (id_tipo_equipo),
                                 CONSTRAINT UQ_TipoEquipo_Nombre UNIQUE (nombre),
-                                CONSTRAINT CK_TipoEquipo_Estado CHECK (estado IN ('ACTIVO','INACTIVO'))
+                                CONSTRAINT UQ_TipoEquipo_Codigo UNIQUE (codigo),
+                                CONSTRAINT CK_TipoEquipo_Estado CHECK (estado IN ('ACTIVO','INACTIVO')),
+                                CONSTRAINT CK_TipoEquipo_Codigo CHECK (codigo LIKE 'CAT-[A-Z][A-Z][A-Z][A-Z]-%' AND LEN(codigo) BETWEEN 12 AND 19)
 );
+GO
+
+/* =====================================================================
+   3A. SECUENCIA GENERAL DE TIPOS DE EQUIPO
+   El Repository reserva el siguiente numero dentro de una transaccion.
+   ===================================================================== */
+CREATE TABLE dbo.SecuenciaTipoEquipo (
+                                         id INT NOT NULL CONSTRAINT PK_SecuenciaTipoEquipo PRIMARY KEY,
+                                         ultimo_numero INT NOT NULL,
+                                         CONSTRAINT CK_SecuenciaTipoEquipo_Id CHECK (id = 1),
+                                         CONSTRAINT CK_SecuenciaTipoEquipo_Num CHECK (ultimo_numero >= 0)
+);
+INSERT INTO dbo.SecuenciaTipoEquipo (id, ultimo_numero) VALUES (1, 0);
 GO
 
 /* =====================================================================
@@ -193,6 +206,19 @@ CREATE TABLE dbo.Producto (
                               CONSTRAINT FK_Producto_Tipo   FOREIGN KEY (id_tipo_equipo) REFERENCES dbo.TipoEquipo(id_tipo_equipo),
                               CONSTRAINT CK_Producto_Estado CHECK (estado IN ('ACTIVO','INACTIVO')),
                               CONSTRAINT CK_Producto_Codigo CHECK (LEN(LTRIM(RTRIM(codigo_producto))) > 0)
+);
+GO
+
+/* =====================================================================
+   3C. SECUENCIA DE PRODUCTOS POR CATEGORIA
+   Cada id_tipo_equipo tiene su propio contador.
+   ===================================================================== */
+CREATE TABLE dbo.SecuenciaProducto (
+                                       id_tipo_equipo INT NOT NULL CONSTRAINT PK_SecuenciaProducto PRIMARY KEY,
+                                       ultimo_numero INT NOT NULL CONSTRAINT DF_SecuenciaProducto_Num DEFAULT 0,
+                                       CONSTRAINT FK_SecuenciaProducto_Tipo FOREIGN KEY (id_tipo_equipo)
+                                           REFERENCES dbo.TipoEquipo(id_tipo_equipo),
+                                       CONSTRAINT CK_SecuenciaProducto_Num CHECK (ultimo_numero >= 0)
 );
 GO
 
