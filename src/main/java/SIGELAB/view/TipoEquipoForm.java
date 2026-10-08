@@ -24,7 +24,7 @@ public class TipoEquipoForm {
 
     // Estos nombres vienen del Designer
     private JButton salirButton;
-    private JButton guardarButton;
+    private JButton btnBuscar;
     private JTextField textField1;
 
     private JTable tblTipoEquipo;
