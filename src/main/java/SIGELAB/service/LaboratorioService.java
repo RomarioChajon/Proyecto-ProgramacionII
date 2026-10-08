@@ -1,3 +1,4 @@
+
 package SIGELAB.service;
 
 import SIGELAB.enums.EstadoLaboratorio;
@@ -32,11 +33,7 @@ public class LaboratorioService {
     public Optional<Laboratorio> buscarPorId(int idLaboratorio)
             throws SQLException {
 
-        if (idLaboratorio <= 0) {
-            throw new IllegalArgumentException(
-                    "El ID del laboratorio no es válido."
-            );
-        }
+        validarId(idLaboratorio);
 
         return repository.buscarPorId(idLaboratorio);
     }
@@ -49,26 +46,13 @@ public class LaboratorioService {
             EstadoLaboratorio estado
     ) throws SQLException {
 
-        validarDatos(
-                codigo,
-                nombre,
-                ubicacion,
-                capacidad,
-                estado
-        );
-
-        String codigoLimpio =
-                codigo.trim().toUpperCase();
-
-        if (repository.buscarPorCodigo(codigoLimpio).isPresent()) {
-            throw new IllegalArgumentException(
-                    "Ya existe un laboratorio con ese código."
-            );
-        }
+        validarDatos(nombre, ubicacion, capacidad, estado);
 
         Laboratorio laboratorio = new Laboratorio();
 
-        laboratorio.setCodigo(codigoLimpio);
+        // El código se genera automáticamente en el repositorio.
+        // Se conserva el parámetro codigo para mantener
+        // compatibilidad con el controlador existente.
         laboratorio.setNombre(nombre.trim());
         laboratorio.setUbicacion(ubicacion.trim());
         laboratorio.setCapacidad(capacidad);
@@ -86,19 +70,8 @@ public class LaboratorioService {
             EstadoLaboratorio estado
     ) throws SQLException {
 
-        if (idLaboratorio <= 0) {
-            throw new IllegalArgumentException(
-                    "El ID del laboratorio no es válido."
-            );
-        }
-
-        validarDatos(
-                codigo,
-                nombre,
-                ubicacion,
-                capacidad,
-                estado
-        );
+        validarId(idLaboratorio);
+        validarDatos(nombre, ubicacion, capacidad, estado);
 
         Optional<Laboratorio> existente =
                 repository.buscarPorId(idLaboratorio);
@@ -109,24 +82,10 @@ public class LaboratorioService {
             );
         }
 
-        String codigoLimpio =
-                codigo.trim().toUpperCase();
-
-        Optional<Laboratorio> mismoCodigo =
-                repository.buscarPorCodigo(codigoLimpio);
-
-        if (mismoCodigo.isPresent()
-                && mismoCodigo.get().getIdLaboratorio()
-                != idLaboratorio) {
-
-            throw new IllegalArgumentException(
-                    "Ya existe otro laboratorio con ese código."
-            );
-        }
-
         Laboratorio laboratorio = existente.get();
 
-        laboratorio.setCodigo(codigoLimpio);
+        // Se conserva el código original del laboratorio.
+        // No se permite cambiarlo manualmente.
         laboratorio.setNombre(nombre.trim());
         laboratorio.setUbicacion(ubicacion.trim());
         laboratorio.setCapacidad(capacidad);
@@ -173,24 +132,11 @@ public class LaboratorioService {
     }
 
     private void validarDatos(
-            String codigo,
             String nombre,
             String ubicacion,
             int capacidad,
             EstadoLaboratorio estado
     ) {
-
-        if (codigo == null || codigo.trim().isEmpty()) {
-            throw new IllegalArgumentException(
-                    "El código es obligatorio."
-            );
-        }
-
-        if (codigo.trim().length() > 20) {
-            throw new IllegalArgumentException(
-                    "El código no puede superar los 20 caracteres."
-            );
-        }
 
         if (nombre == null || nombre.trim().isEmpty()) {
             throw new IllegalArgumentException(

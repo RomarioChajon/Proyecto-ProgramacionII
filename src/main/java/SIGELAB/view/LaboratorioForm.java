@@ -7,6 +7,8 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -35,6 +37,11 @@ public class LaboratorioForm {
     private final DateTimeFormatter formatoFecha =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 
+    private static final ZoneId ZONA_GUATEMALA =
+            ZoneId.of("America/Guatemala");
+
+    private boolean cargandoTabla = false;
+
     public LaboratorioForm() {
 
         controller = new LaboratorioController();
@@ -44,32 +51,30 @@ public class LaboratorioForm {
         configurarTabla();
         configurarEventos();
         cargarLaboratorios();
+
+        nuevo();
     }
 
-    /*
-     * Crea todos los componentes Swing.
-     * De esta manera no dependemos del archivo .form
-     * para inicializar los componentes.
-     */
+    // CREAR INTERFAZ
+
     private void crearInterfaz() {
 
         panelPrincipal = new JPanel(new BorderLayout(10, 10));
+
         panelPrincipal.setBorder(
                 BorderFactory.createEmptyBorder(15, 15, 15, 15)
         );
 
-        JLabel lblTitulo =
-                new JLabel("Gestión de Laboratorios", SwingConstants.CENTER);
+        JLabel lblTitulo = new JLabel(
+                "Gestión de Laboratorios",
+                SwingConstants.CENTER
+        );
 
         lblTitulo.setFont(
                 new Font("Arial", Font.BOLD, 20)
         );
 
         panelPrincipal.add(lblTitulo, BorderLayout.NORTH);
-
-        // -------------------------------------------------
-        // CAMPOS
-        // -------------------------------------------------
 
         JPanel panelCampos =
                 new JPanel(new GridLayout(7, 2, 10, 10));
@@ -105,10 +110,6 @@ public class LaboratorioForm {
         panelCampos.add(new JLabel("Fecha de creación:"));
         panelCampos.add(txtFechaCreacion);
 
-        // -------------------------------------------------
-        // BOTONES
-        // -------------------------------------------------
-
         btnNuevo = new JButton("Nuevo");
         btnGuardar = new JButton("Guardar");
         btnActualizar = new JButton("Actualizar");
@@ -132,10 +133,6 @@ public class LaboratorioForm {
         panelSuperior.add(panelCampos, BorderLayout.CENTER);
         panelSuperior.add(panelBotones, BorderLayout.SOUTH);
 
-        // -------------------------------------------------
-        // TABLA
-        // -------------------------------------------------
-
         tblLaborario = new JTable();
 
         JScrollPane scrollTabla =
@@ -154,9 +151,37 @@ public class LaboratorioForm {
         panelPrincipal.add(contenido, BorderLayout.CENTER);
     }
 
+    // FECHA ACTUAL DE GUATEMALA
+
+    private void mostrarFechaActual() {
+
+        LocalDateTime fechaActual =
+                LocalDateTime.now(ZONA_GUATEMALA);
+
+        txtFechaCreacion.setText(
+                fechaActual.format(formatoFecha)
+        );
+    }
+
+    // FORMATEAR FECHA
+
+    private String formatearFecha(LocalDateTime fecha) {
+
+        if (fecha == null) {
+            return "";
+        }
+
+        return fecha.format(formatoFecha);
+    }
+
+    // CONFIGURAR FORMULARIO
+
     private void configurarFormulario() {
 
         txtId.setEditable(false);
+        txtCodigo.setEditable(false);
+        txtCodigo.setFocusable(false);
+        txtCodigo.setToolTipText("Se genera automáticamente al guardar el laboratorio.");
         txtFechaCreacion.setEditable(false);
 
         cmbEstado.removeAllItems();
@@ -167,7 +192,11 @@ public class LaboratorioForm {
         btnGuardar.setEnabled(true);
         btnActualizar.setEnabled(false);
         btnDesactivar.setEnabled(false);
+
+        mostrarFechaActual();
     }
+
+    // CONFIGURAR TABLA
 
     private void configurarTabla() {
 
@@ -189,7 +218,6 @@ public class LaboratorioForm {
                     public boolean isCellEditable(
                             int row,
                             int column) {
-
                         return false;
                     }
                 };
@@ -199,43 +227,42 @@ public class LaboratorioForm {
         tblLaborario.setSelectionMode(
                 ListSelectionModel.SINGLE_SELECTION
         );
+
+        tblLaborario.setRowHeight(25);
+        tblLaborario.setAutoCreateRowSorter(true);
+
+        tblLaborario.getTableHeader()
+                .setReorderingAllowed(false);
     }
+
+    // CONFIGURAR EVENTOS
 
     private void configurarEventos() {
 
-        btnNuevo.addActionListener(
-                e -> nuevo()
-        );
+        btnNuevo.addActionListener(e -> nuevo());
 
-        btnGuardar.addActionListener(
-                e -> guardar()
-        );
+        btnGuardar.addActionListener(e -> guardar());
 
-        btnActualizar.addActionListener(
-                e -> actualizar()
-        );
+        btnActualizar.addActionListener(e -> actualizar());
 
-        btnDesactivar.addActionListener(
-                e -> desactivar()
-        );
+        btnDesactivar.addActionListener(e -> desactivar());
 
-        btnBuscar.addActionListener(
-                e -> buscar()
-        );
+        btnBuscar.addActionListener(e -> buscar());
 
-        salirButton.addActionListener(
-                e -> salir()
-        );
+        salirButton.addActionListener(e -> salir());
 
-        tblLaborario
-                .getSelectionModel()
+        tblLaborario.getSelectionModel()
                 .addListSelectionListener(e -> {
 
-                    if (!e.getValueIsAdjusting()) {
+                    if (!e.getValueIsAdjusting()
+                            && !cargandoTabla) {
+
                         cargarLaboratorioSeleccionado();
                     }
                 });
     }
+
+    // CARGAR LABORATORIOS
 
     private void cargarLaboratorios() {
 
@@ -255,50 +282,60 @@ public class LaboratorioForm {
         }
     }
 
-    private void cargarTabla(
-            List<Laboratorio> laboratorios) {
+    // LLENAR TABLA
+
+    private void cargarTabla(List<Laboratorio> laboratorios) {
 
         DefaultTableModel modelo =
-                (DefaultTableModel)
-                        tblLaborario.getModel();
+                (DefaultTableModel) tblLaborario.getModel();
 
-        modelo.setRowCount(0);
+        cargandoTabla = true;
 
-        for (Laboratorio laboratorio : laboratorios) {
+        try {
 
-            String fecha = "";
+            modelo.setRowCount(0);
 
-            if (laboratorio.getFechaCreacion() != null) {
+            for (Laboratorio laboratorio : laboratorios) {
 
-                fecha = laboratorio
-                        .getFechaCreacion()
-                        .format(formatoFecha);
+                modelo.addRow(
+                        new Object[]{
+                                laboratorio.getIdLaboratorio(),
+                                laboratorio.getCodigo(),
+                                laboratorio.getNombre(),
+                                laboratorio.getUbicacion(),
+                                laboratorio.getCapacidad(),
+                                laboratorio.getEstado(),
+                                formatearFecha(
+                                        laboratorio.getFechaCreacion()
+                                )
+                        }
+                );
             }
 
-            modelo.addRow(
-                    new Object[]{
-                            laboratorio.getIdLaboratorio(),
-                            laboratorio.getCodigo(),
-                            laboratorio.getNombre(),
-                            laboratorio.getUbicacion(),
-                            laboratorio.getCapacidad(),
-                            laboratorio.getEstado(),
-                            fecha
-                    }
-            );
+            tblLaborario.clearSelection();
+
+        } finally {
+
+            cargandoTabla = false;
         }
     }
+
+    // NUEVO LABORATORIO
 
     private void nuevo() {
 
         limpiarCampos();
 
-        txtCodigo.requestFocus();
+        mostrarFechaActual();
+
+        txtNombre.requestFocusInWindow();
 
         btnGuardar.setEnabled(true);
         btnActualizar.setEnabled(false);
         btnDesactivar.setEnabled(false);
     }
+
+    // GUARDAR LABORATORIO
 
     private void guardar() {
 
@@ -310,9 +347,7 @@ public class LaboratorioForm {
 
             int capacidad =
                     Integer.parseInt(
-                            txtCapacidad
-                                    .getText()
-                                    .trim()
+                            txtCapacidad.getText().trim()
                     );
 
             String estado =
@@ -322,30 +357,40 @@ public class LaboratorioForm {
 
             Laboratorio laboratorio =
                     controller.guardar(
-                            txtCodigo.getText().trim(),
+                            null,
                             txtNombre.getText().trim(),
                             txtUbicacion.getText().trim(),
                             capacidad,
                             estado
                     );
 
+            // La fecha definitiva proviene de SQL Server.
+            String fechaGuardada =
+                    formatearFecha(
+                            laboratorio.getFechaCreacion()
+                    );
+
             JOptionPane.showMessageDialog(
                     panelPrincipal,
                     "Laboratorio guardado correctamente.\n"
-                            + "ID generado: "
-                            + laboratorio.getIdLaboratorio(),
+                            + "Código generado: "
+                            + laboratorio.getCodigo()
+                            + "\nID generado: "
+                            + laboratorio.getIdLaboratorio()
+                            + "\nFecha de creación: "
+                            + (fechaGuardada.isEmpty()
+                            ? "No disponible"
+                            : fechaGuardada),
                     "SIGELAB",
                     JOptionPane.INFORMATION_MESSAGE
             );
 
-            limpiarCampos();
             cargarLaboratorios();
+            nuevo();
 
         } catch (IllegalArgumentException ex) {
 
-            mostrarAdvertenciaGeneral(
-                    ex.getMessage()
-            );
+            mostrarAdvertenciaGeneral(ex.getMessage());
 
         } catch (SQLException ex) {
 
@@ -356,6 +401,8 @@ public class LaboratorioForm {
         }
     }
 
+    // ACTUALIZAR LABORATORIO
+
     private void actualizar() {
 
         if (txtId.getText().trim().isEmpty()) {
@@ -363,7 +410,6 @@ public class LaboratorioForm {
             mostrarAdvertenciaGeneral(
                     "Seleccione un laboratorio de la tabla."
             );
-
             return;
         }
 
@@ -391,7 +437,7 @@ public class LaboratorioForm {
             boolean actualizado =
                     controller.actualizar(
                             id,
-                            txtCodigo.getText().trim(),
+                            null,
                             txtNombre.getText().trim(),
                             txtUbicacion.getText().trim(),
                             capacidad,
@@ -407,8 +453,9 @@ public class LaboratorioForm {
                         JOptionPane.INFORMATION_MESSAGE
                 );
 
-                limpiarCampos();
+                // La fecha original se conserva en SQL Server.
                 cargarLaboratorios();
+                nuevo();
 
             } else {
 
@@ -419,9 +466,7 @@ public class LaboratorioForm {
 
         } catch (IllegalArgumentException ex) {
 
-            mostrarAdvertenciaGeneral(
-                    ex.getMessage()
-            );
+            mostrarAdvertenciaGeneral(ex.getMessage());
 
         } catch (SQLException ex) {
 
@@ -432,6 +477,8 @@ public class LaboratorioForm {
         }
     }
 
+    // DESACTIVAR LABORATORIO
+
     private void desactivar() {
 
         if (txtId.getText().trim().isEmpty()) {
@@ -439,7 +486,6 @@ public class LaboratorioForm {
             mostrarAdvertenciaGeneral(
                     "Seleccione un laboratorio de la tabla."
             );
-
             return;
         }
 
@@ -453,7 +499,6 @@ public class LaboratorioForm {
             mostrarAdvertenciaGeneral(
                     "El laboratorio ya se encuentra inactivo."
             );
-
             return;
         }
 
@@ -488,8 +533,8 @@ public class LaboratorioForm {
                         JOptionPane.INFORMATION_MESSAGE
                 );
 
-                limpiarCampos();
                 cargarLaboratorios();
+                nuevo();
 
             } else {
 
@@ -500,9 +545,7 @@ public class LaboratorioForm {
 
         } catch (IllegalArgumentException ex) {
 
-            mostrarAdvertenciaGeneral(
-                    ex.getMessage()
-            );
+            mostrarAdvertenciaGeneral(ex.getMessage());
 
         } catch (SQLException ex) {
 
@@ -512,6 +555,8 @@ public class LaboratorioForm {
             );
         }
     }
+
+    // BUSCAR LABORATORIOS
 
     private void buscar() {
 
@@ -530,12 +575,15 @@ public class LaboratorioForm {
         try {
 
             List<Laboratorio> resultados =
-                    controller.buscar(
-                            busqueda.trim()
-                    );
+                    controller.buscar(busqueda.trim());
 
             cargarTabla(resultados);
+
             limpiarCamposSinTabla();
+
+            btnGuardar.setEnabled(true);
+            btnActualizar.setEnabled(false);
+            btnDesactivar.setEnabled(false);
 
             if (resultados.isEmpty()) {
 
@@ -556,81 +604,67 @@ public class LaboratorioForm {
         }
     }
 
+    // SELECCIONAR LABORATORIO
+
     private void cargarLaboratorioSeleccionado() {
 
-        int fila =
-                tblLaborario.getSelectedRow();
+        int fila = tblLaborario.getSelectedRow();
 
         if (fila == -1) {
             return;
         }
 
+        int filaModelo =
+                tblLaborario.convertRowIndexToModel(fila);
+
+        DefaultTableModel modelo =
+                (DefaultTableModel) tblLaborario.getModel();
+
         txtId.setText(
-                String.valueOf(
-                        tblLaborario.getValueAt(fila, 0)
-                )
+                String.valueOf(modelo.getValueAt(filaModelo, 0))
         );
 
         txtCodigo.setText(
-                String.valueOf(
-                        tblLaborario.getValueAt(fila, 1)
-                )
+                String.valueOf(modelo.getValueAt(filaModelo, 1))
         );
 
         txtNombre.setText(
-                String.valueOf(
-                        tblLaborario.getValueAt(fila, 2)
-                )
+                String.valueOf(modelo.getValueAt(filaModelo, 2))
         );
 
         txtUbicacion.setText(
-                String.valueOf(
-                        tblLaborario.getValueAt(fila, 3)
-                )
+                String.valueOf(modelo.getValueAt(filaModelo, 3))
         );
 
         txtCapacidad.setText(
-                String.valueOf(
-                        tblLaborario.getValueAt(fila, 4)
-                )
+                String.valueOf(modelo.getValueAt(filaModelo, 4))
         );
 
         cmbEstado.setSelectedItem(
-                String.valueOf(
-                        tblLaborario.getValueAt(fila, 5)
-                )
+                String.valueOf(modelo.getValueAt(filaModelo, 5))
         );
 
+        // Mostrar fecha original de creación.
+        Object fecha = modelo.getValueAt(filaModelo, 6);
+
         txtFechaCreacion.setText(
-                String.valueOf(
-                        tblLaborario.getValueAt(fila, 6)
-                )
+                fecha == null ? "" : fecha.toString()
         );
 
         btnGuardar.setEnabled(false);
         btnActualizar.setEnabled(true);
 
         String estado =
-                String.valueOf(
-                        tblLaborario.getValueAt(fila, 5)
-                );
+                String.valueOf(modelo.getValueAt(filaModelo, 5));
 
         btnDesactivar.setEnabled(
                 "ACTIVO".equals(estado)
         );
     }
 
+    // VALIDAR CAMPOS
+
     private boolean validarCampos() {
-
-        if (txtCodigo.getText().trim().isEmpty()) {
-
-            mostrarAdvertencia(
-                    "Ingrese el código del laboratorio.",
-                    txtCodigo
-            );
-
-            return false;
-        }
 
         if (txtNombre.getText().trim().isEmpty()) {
 
@@ -638,7 +672,6 @@ public class LaboratorioForm {
                     "Ingrese el nombre del laboratorio.",
                     txtNombre
             );
-
             return false;
         }
 
@@ -648,7 +681,6 @@ public class LaboratorioForm {
                     "Ingrese la ubicación del laboratorio.",
                     txtUbicacion
             );
-
             return false;
         }
 
@@ -658,7 +690,6 @@ public class LaboratorioForm {
                     "Ingrese la capacidad del laboratorio.",
                     txtCapacidad
             );
-
             return false;
         }
 
@@ -666,9 +697,7 @@ public class LaboratorioForm {
 
             int capacidad =
                     Integer.parseInt(
-                            txtCapacidad
-                                    .getText()
-                                    .trim()
+                            txtCapacidad.getText().trim()
                     );
 
             if (capacidad <= 0) {
@@ -677,7 +706,6 @@ public class LaboratorioForm {
                         "La capacidad debe ser mayor que cero.",
                         txtCapacidad
                 );
-
                 return false;
             }
 
@@ -687,12 +715,13 @@ public class LaboratorioForm {
                     "La capacidad debe ser un número entero.",
                     txtCapacidad
             );
-
             return false;
         }
 
         return true;
     }
+
+    // MOSTRAR ADVERTENCIA
 
     private void mostrarAdvertencia(
             String mensaje,
@@ -705,11 +734,12 @@ public class LaboratorioForm {
                 JOptionPane.WARNING_MESSAGE
         );
 
-        campo.requestFocus();
+        campo.requestFocusInWindow();
     }
 
-    private void mostrarAdvertenciaGeneral(
-            String mensaje) {
+    // MOSTRAR ADVERTENCIA GENERAL
+
+    private void mostrarAdvertenciaGeneral(String mensaje) {
 
         JOptionPane.showMessageDialog(
                 panelPrincipal,
@@ -719,8 +749,9 @@ public class LaboratorioForm {
         );
     }
 
-    private void mostrarError(
-            String mensaje) {
+    // MOSTRAR ERROR
+
+    private void mostrarError(String mensaje) {
 
         JOptionPane.showMessageDialog(
                 panelPrincipal,
@@ -730,39 +761,57 @@ public class LaboratorioForm {
         );
     }
 
+    // LIMPIAR CAMPOS
+
     private void limpiarCampos() {
 
         limpiarCamposSinTabla();
 
-        tblLaborario.clearSelection();
+        cargandoTabla = true;
+
+        try {
+
+            tblLaborario.clearSelection();
+
+        } finally {
+
+            cargandoTabla = false;
+        }
 
         btnGuardar.setEnabled(true);
         btnActualizar.setEnabled(false);
         btnDesactivar.setEnabled(false);
     }
 
+    // LIMPIAR CAMPOS SIN MODIFICAR TABLA
+
     private void limpiarCamposSinTabla() {
 
         txtId.setText("");
-        txtCodigo.setText("");
+        txtCodigo.setText("Automático al guardar");
         txtNombre.setText("");
         txtUbicacion.setText("");
         txtCapacidad.setText("");
+
         cmbEstado.setSelectedItem("ACTIVO");
-        txtFechaCreacion.setText("");
+
+        // Fecha y hora actuales de Guatemala.
+        mostrarFechaActual();
     }
+
+    // SALIR
 
     private void salir() {
 
         Window ventana =
-                SwingUtilities.getWindowAncestor(
-                        panelPrincipal
-                );
+                SwingUtilities.getWindowAncestor(panelPrincipal);
 
         if (ventana != null) {
             ventana.dispose();
         }
     }
+
+    // OBTENER PANEL PRINCIPAL
 
     public JPanel getPanelPrincipal() {
         return panelPrincipal;

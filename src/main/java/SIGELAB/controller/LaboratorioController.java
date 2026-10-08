@@ -1,3 +1,4 @@
+
 package SIGELAB.controller;
 
 import SIGELAB.enums.EstadoLaboratorio;
@@ -6,6 +7,7 @@ import SIGELAB.service.LaboratorioService;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 public class LaboratorioController {
@@ -43,6 +45,9 @@ public class LaboratorioController {
         EstadoLaboratorio estadoLaboratorio =
                 convertirEstado(estado);
 
+        // El código se genera en el repositorio.
+        // Conservamos este parámetro para que el
+        // formulario actual siga siendo compatible.
         return service.guardar(
                 codigo,
                 nombre,
@@ -64,6 +69,7 @@ public class LaboratorioController {
         EstadoLaboratorio estadoLaboratorio =
                 convertirEstado(estado);
 
+        // El servicio conserva el código original.
         return service.actualizar(
                 idLaboratorio,
                 codigo,
@@ -96,13 +102,14 @@ public class LaboratorioController {
 
         try {
             return EstadoLaboratorio.valueOf(
-                    estado.trim().toUpperCase()
+                    estado.trim().toUpperCase(Locale.ROOT)
             );
 
         } catch (IllegalArgumentException e) {
 
             throw new IllegalArgumentException(
-                    "El estado seleccionado no es válido."
+                    "El estado seleccionado no es válido.",
+                    e
             );
         }
     }

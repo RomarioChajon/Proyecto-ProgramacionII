@@ -1,8 +1,10 @@
+
 package SIGELAB;
 
 import SIGELAB.view.LaboratorioForm;
 import SIGELAB.view.TipoEquipoForm;
 import SIGELAB.view.ProductoForm;
+import SIGELAB.view.EquipoForm;
 
 import javax.swing.*;
 import java.awt.*;
@@ -15,8 +17,9 @@ public class Main {
 
             JFrame ventana = new JFrame("SIGELAB - Menú Principal");
 
+            // Ahora tenemos 4 módulos
             JPanel panel = new JPanel(
-                    new GridLayout(3, 1, 10, 10)
+                    new GridLayout(4, 1, 10, 10)
             );
 
             panel.setBorder(
@@ -25,6 +28,7 @@ public class Main {
                     )
             );
 
+            // BOTONES DEL MENÚ
             JButton btnLaboratorios =
                     new JButton("Laboratorios");
 
@@ -34,10 +38,16 @@ public class Main {
             JButton btnProductos =
                     new JButton("Productos");
 
+            JButton btnEquipos =
+                    new JButton("Equipos");
+
+            // AGREGAR BOTONES AL PANEL
             panel.add(btnLaboratorios);
             panel.add(btnTiposEquipo);
             panel.add(btnProductos);
+            panel.add(btnEquipos);
 
+            // ABRIR LABORATORIOS
             btnLaboratorios.addActionListener(e -> {
 
                 LaboratorioForm formulario =
@@ -49,6 +59,7 @@ public class Main {
                 );
             });
 
+            // ABRIR TIPOS DE EQUIPO
             btnTiposEquipo.addActionListener(e -> {
 
                 TipoEquipoForm formulario =
@@ -60,6 +71,7 @@ public class Main {
                 );
             });
 
+            // ABRIR PRODUCTOS
             btnProductos.addActionListener(e -> {
 
                 ProductoForm formulario =
@@ -71,6 +83,19 @@ public class Main {
                 );
             });
 
+            // ABRIR EQUIPOS
+            btnEquipos.addActionListener(e -> {
+
+                EquipoForm formulario =
+                        new EquipoForm();
+
+                abrirVentana(
+                        "SIGELAB - Equipos",
+                        formulario.getPanelPrincipal()
+                );
+            });
+
+            // CONFIGURAR VENTANA PRINCIPAL
             ventana.setContentPane(panel);
 
             ventana.setDefaultCloseOperation(
@@ -83,16 +108,14 @@ public class Main {
         });
     }
 
+    // MÉTODO PARA ABRIR FORMULARIOS
     private static void abrirVentana(
             String titulo,
             JPanel panelFormulario) {
 
-        JFrame ventana =
-                new JFrame(titulo);
+        JFrame ventana = new JFrame(titulo);
 
-        ventana.setContentPane(
-                panelFormulario
-        );
+        ventana.setContentPane(panelFormulario);
 
         ventana.setDefaultCloseOperation(
                 JFrame.DISPOSE_ON_CLOSE
