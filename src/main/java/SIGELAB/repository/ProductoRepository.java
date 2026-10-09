@@ -28,9 +28,8 @@ public class ProductoRepository {
 
     public List<Producto> listar() throws SQLException {
 
-        String sql =
-                "SELECT " + COLUMNAS +
-                        " FROM dbo.Producto ORDER BY id_producto";
+        String sql = "SELECT " + COLUMNAS +
+                " FROM dbo.Producto ORDER BY id_producto";
 
         List<Producto> productos = new ArrayList<>();
 
@@ -49,9 +48,8 @@ public class ProductoRepository {
     public Optional<Producto> buscarPorId(int idProducto)
             throws SQLException {
 
-        String sql =
-                "SELECT " + COLUMNAS +
-                        " FROM dbo.Producto WHERE id_producto = ?";
+        String sql = "SELECT " + COLUMNAS +
+                " FROM dbo.Producto WHERE id_producto = ?";
 
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -59,7 +57,6 @@ public class ProductoRepository {
             statement.setInt(1, idProducto);
 
             try (ResultSet rs = statement.executeQuery()) {
-
                 if (rs.next()) {
                     return Optional.of(mapear(rs));
                 }
@@ -72,9 +69,8 @@ public class ProductoRepository {
     public Optional<Producto> buscarPorCodigo(String codigoProducto)
             throws SQLException {
 
-        String sql =
-                "SELECT " + COLUMNAS +
-                        " FROM dbo.Producto WHERE codigo_producto = ?";
+        String sql = "SELECT " + COLUMNAS +
+                " FROM dbo.Producto WHERE codigo_producto = ?";
 
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -82,7 +78,6 @@ public class ProductoRepository {
             statement.setString(1, codigoProducto);
 
             try (ResultSet rs = statement.executeQuery()) {
-
                 if (rs.next()) {
                     return Optional.of(mapear(rs));
                 }
@@ -95,8 +90,7 @@ public class ProductoRepository {
     public List<Producto> buscar(String texto) throws SQLException {
 
         String sql =
-                "SELECT " + COLUMNAS +
-                        " FROM dbo.Producto " +
+                "SELECT " + COLUMNAS + " FROM dbo.Producto " +
                         "WHERE codigo_producto LIKE ? " +
                         "OR nombre LIKE ? " +
                         "OR marca LIKE ? " +
@@ -115,7 +109,6 @@ public class ProductoRepository {
             }
 
             try (ResultSet rs = statement.executeQuery()) {
-
                 while (rs.next()) {
                     productos.add(mapear(rs));
                 }
@@ -137,7 +130,6 @@ public class ProductoRepository {
 
             boolean bloqueoAdquirido = false;
             boolean transaccionIniciada = false;
-            SQLException errorLiberacion = null;
 
             try {
 
@@ -159,7 +151,7 @@ public class ProductoRepository {
 
                 String codigo = String.format(
                         Locale.ROOT,
-                        "%s-%03d",
+                        "%s-%04d",
                         prefijo,
                         siguiente
                 );
@@ -208,7 +200,6 @@ public class ProductoRepository {
             } catch (SQLException | RuntimeException ex) {
 
                 if (transaccionIniciada) {
-
                     try {
                         connection.rollback();
                     } catch (SQLException rollbackError) {
@@ -221,16 +212,11 @@ public class ProductoRepository {
             } finally {
 
                 if (bloqueoAdquirido) {
-
                     try {
                         liberarGeneracion(connection);
                     } catch (SQLException ex) {
-                        errorLiberacion = ex;
+                        throw ex;
                     }
-                }
-
-                if (errorLiberacion != null) {
-                    throw errorLiberacion;
                 }
             }
         }
@@ -333,19 +319,28 @@ public class ProductoRepository {
 
                 String codigoCategoria = rs.getString("codigo");
 
-                if (codigoCategoria == null ||
-                        !codigoCategoria.matches(
-                                "CAT-[A-Za-z]{4}-[0-9]{3}"
-                        )) {
-
+                if (codigoCategoria == null) {
                     throw new SQLException(
-                            "La categoría no tiene un código válido."
+                            "La categoría seleccionada no tiene código."
                     );
                 }
 
-                return codigoCategoria
-                        .substring(4, 8)
+                codigoCategoria = codigoCategoria
+                        .trim()
                         .toUpperCase(Locale.ROOT);
+
+                if (!codigoCategoria.matches(
+                        "CAT-[A-Z]{4}-[0-9]{3,4}"
+                )) {
+
+                    throw new SQLException(
+                            "La categoría tiene un código inválido: " +
+                                    codigoCategoria +
+                                    ". Debe tener el formato CAT-MONI-0001."
+                    );
+                }
+
+                return codigoCategoria.substring(4, 8);
             }
         }
     }
@@ -360,7 +355,7 @@ public class ProductoRepository {
                         "WHERE codigo_producto LIKE ?";
 
         Pattern patron = Pattern.compile(
-                "^" + Pattern.quote(prefijo) + "-([0-9]{3})$"
+                "^" + Pattern.quote(prefijo) + "-([0-9]{3,4})$"
         );
 
         int maximo = 0;
@@ -381,7 +376,7 @@ public class ProductoRepository {
                     }
 
                     Matcher matcher = patron.matcher(
-                            codigo.toUpperCase(Locale.ROOT)
+                            codigo.trim().toUpperCase(Locale.ROOT)
                     );
 
                     if (matcher.matches()) {
@@ -396,10 +391,10 @@ public class ProductoRepository {
             }
         }
 
-        if (maximo >= 999) {
+        if (maximo >= 9999) {
             throw new SQLException(
                     "La categoría " + prefijo +
-                            " alcanzó el límite de 999 productos."
+                            " alcanzó el límite de 9999 productos."
             );
         }
 
