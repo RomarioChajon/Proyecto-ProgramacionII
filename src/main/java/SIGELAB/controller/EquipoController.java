@@ -1,4 +1,3 @@
-
 package SIGELAB.controller;
 
 import SIGELAB.model.Equipo;

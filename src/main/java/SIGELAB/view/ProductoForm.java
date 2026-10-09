@@ -1,4 +1,3 @@
-
 package SIGELAB.view;
 
 import SIGELAB.controller.ProductoController;

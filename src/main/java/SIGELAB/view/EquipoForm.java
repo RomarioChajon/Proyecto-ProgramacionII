@@ -1,3 +1,4 @@
+
 package SIGELAB.view;
 
 import SIGELAB.controller.EquipoController;
@@ -17,12 +18,15 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
 
 public class EquipoForm {
 
-    // COMPONENTES DEL GUI DESIGNER
     private JPanel panelPrincipal;
     private JTextField txtId;
     private JTextField txtCodigoInventario;
@@ -39,23 +43,42 @@ public class EquipoForm {
     private JTextField txtFechadeRegistro;
     private JTextArea observacionesTextArea;
 
-    // CONTROLADORES
     private final EquipoController equipoController;
     private final ProductoController productoController;
     private final LaboratorioController laboratorioController;
 
+    private static final ZoneId ZONA_GUATEMALA =
+            ZoneId.of("America/Guatemala");
+
     private static final DateTimeFormatter FORMATO_FECHA =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+
+    private final Map<Integer, String> nombresProductos =
+            new HashMap<>();
+
+    private final Map<Integer, String> nombresLaboratorios =
+            new HashMap<>();
 
     private DefaultTableModel modeloTabla;
     private boolean cargandoSeleccion = false;
 
-    // CONSTRUCTOR
     public EquipoForm() {
 
         equipoController = new EquipoController();
         productoController = new ProductoController();
         laboratorioController = new LaboratorioController();
+
+        if (panelPrincipal == null || txtId == null ||
+                txtCodigoInventario == null || cmbProducto == null ||
+                txtNumeroSerie == null || cmbLaboratorio == null ||
+                txtEstado == null || txtFechadeRegistro == null ||
+                observacionesTextArea == null || tblEquipo == null ||
+                btnNuevo == null || btnGuardar == null ||
+                btnActualizar == null || btnBuscar == null ||
+                salirButton == null) {
+
+            crearInterfaz();
+        }
 
         configurarFormulario();
         configurarTabla();
@@ -68,15 +91,116 @@ public class EquipoForm {
         nuevo();
     }
 
-    // CONFIGURAR FORMULARIO
+    private void crearInterfaz() {
+
+        panelPrincipal = new JPanel(new BorderLayout(10, 10));
+
+        panelPrincipal.setBorder(
+                BorderFactory.createEmptyBorder(12, 12, 12, 12)
+        );
+
+        JPanel campos = new JPanel(
+                new GridLayout(0, 4, 8, 8)
+        );
+
+        txtId = new JTextField();
+        txtCodigoInventario = new JTextField();
+        cmbProducto = new JComboBox<>();
+        txtNumeroSerie = new JTextField();
+        cmbLaboratorio = new JComboBox<>();
+        txtEstado = new JTextField();
+        txtFechadeRegistro = new JTextField();
+        observacionesTextArea = new JTextArea(3, 20);
+
+        campos.add(new JLabel("ID:"));
+        campos.add(txtId);
+
+        campos.add(new JLabel("Código de inventario:"));
+        campos.add(txtCodigoInventario);
+
+        campos.add(new JLabel("Producto:"));
+        campos.add(cmbProducto);
+
+        campos.add(new JLabel("Número de serie:"));
+        campos.add(txtNumeroSerie);
+
+        campos.add(new JLabel("Laboratorio:"));
+        campos.add(cmbLaboratorio);
+
+        campos.add(new JLabel("Estado:"));
+        campos.add(txtEstado);
+
+        campos.add(new JLabel("Fecha de registro:"));
+        campos.add(txtFechadeRegistro);
+
+        campos.add(new JLabel("Observaciones:"));
+        campos.add(new JScrollPane(observacionesTextArea));
+
+        JPanel botones = new JPanel(
+                new FlowLayout(FlowLayout.CENTER, 8, 5)
+        );
+
+        btnNuevo = new JButton("Nuevo");
+        btnGuardar = new JButton("Guardar");
+        btnActualizar = new JButton("Actualizar");
+        btnBuscar = new JButton("Buscar");
+        salirButton = new JButton("Salir");
+
+        botones.add(btnNuevo);
+        botones.add(btnGuardar);
+        botones.add(btnActualizar);
+        botones.add(btnBuscar);
+        botones.add(salirButton);
+
+        JPanel superior = new JPanel(
+                new BorderLayout(5, 8)
+        );
+
+        superior.add(
+                new JLabel(
+                        "Gestión de Equipos",
+                        SwingConstants.CENTER
+                ),
+                BorderLayout.NORTH
+        );
+
+        superior.add(campos, BorderLayout.CENTER);
+        superior.add(botones, BorderLayout.SOUTH);
+
+        tblEquipo = new JTable();
+
+        panelPrincipal.add(superior, BorderLayout.NORTH);
+
+        panelPrincipal.add(
+                new JScrollPane(tblEquipo),
+                BorderLayout.CENTER
+        );
+
+        panelPrincipal.setPreferredSize(
+                new Dimension(1100, 620)
+        );
+    }
+
     private void configurarFormulario() {
 
         txtId.setEditable(false);
+        txtCodigoInventario.setEditable(false);
         txtEstado.setEditable(false);
         txtFechadeRegistro.setEditable(false);
 
-        txtEstado.setText(EstadoEquipo.DISPONIBLE.name());
-        txtFechadeRegistro.setText("");
+        txtCodigoInventario.setText(
+                "Automático al guardar"
+        );
+
+        txtEstado.setText(
+                EstadoEquipo.DISPONIBLE.name()
+        );
+
+        txtFechadeRegistro.setText(
+                formatearFecha(
+                        LocalDateTime.now(ZONA_GUATEMALA)
+                )
+        );
 
         observacionesTextArea.setLineWrap(true);
         observacionesTextArea.setWrapStyleWord(true);
@@ -86,7 +210,6 @@ public class EquipoForm {
         btnActualizar.setEnabled(false);
     }
 
-    // CONFIGURAR TABLA
     private void configurarTabla() {
 
         modeloTabla = new DefaultTableModel(
@@ -102,8 +225,12 @@ public class EquipoForm {
                 },
                 0
         ) {
+
             @Override
-            public boolean isCellEditable(int row, int column) {
+            public boolean isCellEditable(
+                    int row,
+                    int column
+            ) {
                 return false;
             }
         };
@@ -116,21 +243,32 @@ public class EquipoForm {
 
         tblEquipo.setRowHeight(25);
         tblEquipo.setAutoCreateRowSorter(true);
-        tblEquipo.getTableHeader().setReorderingAllowed(false);
+
+        tblEquipo.getTableHeader()
+                .setReorderingAllowed(false);
     }
 
-    // CONFIGURAR BOTONES
     private void configurarEventos() {
 
-        btnNuevo.addActionListener(e -> nuevo());
+        btnNuevo.addActionListener(
+                e -> nuevo()
+        );
 
-        btnGuardar.addActionListener(e -> guardar());
+        btnGuardar.addActionListener(
+                e -> guardar()
+        );
 
-        btnActualizar.addActionListener(e -> actualizar());
+        btnActualizar.addActionListener(
+                e -> actualizar()
+        );
 
-        btnBuscar.addActionListener(e -> buscar());
+        btnBuscar.addActionListener(
+                e -> buscar()
+        );
 
-        salirButton.addActionListener(e -> salir());
+        salirButton.addActionListener(
+                e -> salir()
+        );
 
         tblEquipo.getSelectionModel()
                 .addListSelectionListener(e -> {
@@ -143,17 +281,24 @@ public class EquipoForm {
                 });
     }
 
-    // CARGAR PRODUCTOS ACTIVOS
     private void cargarProductos() {
 
         try {
 
             cmbProducto.removeAllItems();
+            nombresProductos.clear();
 
             List<Producto> productos =
                     productoController.listar();
 
             for (Producto producto : productos) {
+
+                nombresProductos.put(
+                        producto.getIdProducto(),
+                        producto.getCodigoProducto()
+                                + " - "
+                                + producto.getNombre()
+                );
 
                 if (producto.getEstado()
                         == EstadoProducto.ACTIVO) {
@@ -173,17 +318,22 @@ public class EquipoForm {
         }
     }
 
-    // CARGAR LABORATORIOS ACTIVOS
     private void cargarLaboratorios() {
 
         try {
 
             cmbLaboratorio.removeAllItems();
+            nombresLaboratorios.clear();
 
             List<Laboratorio> laboratorios =
                     laboratorioController.listar();
 
             for (Laboratorio laboratorio : laboratorios) {
+
+                nombresLaboratorios.put(
+                        laboratorio.getIdLaboratorio(),
+                        laboratorio.toString()
+                );
 
                 if (laboratorio.getEstado()
                         == EstadoLaboratorio.ACTIVO) {
@@ -203,7 +353,6 @@ public class EquipoForm {
         }
     }
 
-    // CARGAR EQUIPOS
     private void cargarEquipos() {
 
         try {
@@ -222,7 +371,22 @@ public class EquipoForm {
         }
     }
 
-    // LLENAR TABLA
+    private String obtenerNombreProducto(int idProducto) {
+
+        return nombresProductos.getOrDefault(
+                idProducto,
+                String.valueOf(idProducto)
+        );
+    }
+
+    private String obtenerNombreLaboratorio(int idLaboratorio) {
+
+        return nombresLaboratorios.getOrDefault(
+                idLaboratorio,
+                String.valueOf(idLaboratorio)
+        );
+    }
+
     private void cargarTabla(List<Equipo> equipos) {
 
         cargandoSeleccion = true;
@@ -237,11 +401,20 @@ public class EquipoForm {
                         new Object[]{
                                 equipo.getIdEquipo(),
                                 equipo.getCodigoInventario(),
-                                equipo.getIdProducto(),
+
+                                obtenerNombreProducto(
+                                        equipo.getIdProducto()
+                                ),
+
                                 equipo.getNumeroSerie(),
-                                equipo.getIdLaboratorio(),
+
+                                obtenerNombreLaboratorio(
+                                        equipo.getIdLaboratorio()
+                                ),
+
                                 equipo.getEstado(),
                                 equipo.getObservaciones(),
+
                                 formatearFecha(
                                         equipo.getFechaRegistro()
                                 )
@@ -250,12 +423,14 @@ public class EquipoForm {
             }
 
         } finally {
+
             cargandoSeleccion = false;
         }
     }
 
-    // FORMATO DE FECHA
-    private String formatearFecha(LocalDateTime fecha) {
+    private String formatearFecha(
+            LocalDateTime fecha
+    ) {
 
         if (fecha == null) {
             return "";
@@ -264,14 +439,26 @@ public class EquipoForm {
         return fecha.format(FORMATO_FECHA);
     }
 
-    // LIMPIAR FORMULARIO
     private void limpiarCampos() {
 
         txtId.setText("");
-        txtCodigoInventario.setText("");
+
+        txtCodigoInventario.setText(
+                "Automático al guardar"
+        );
+
         txtNumeroSerie.setText("");
-        txtEstado.setText(EstadoEquipo.DISPONIBLE.name());
-        txtFechadeRegistro.setText("");
+
+        txtEstado.setText(
+                EstadoEquipo.DISPONIBLE.name()
+        );
+
+        txtFechadeRegistro.setText(
+                formatearFecha(
+                        LocalDateTime.now(ZONA_GUATEMALA)
+                )
+        );
+
         observacionesTextArea.setText("");
 
         cmbProducto.setEnabled(true);
@@ -293,22 +480,24 @@ public class EquipoForm {
         btnActualizar.setEnabled(false);
     }
 
-    // NUEVO EQUIPO
     private void nuevo() {
 
         cargandoSeleccion = true;
 
         try {
+
             tblEquipo.clearSelection();
+
         } finally {
+
             cargandoSeleccion = false;
         }
 
         limpiarCampos();
-        txtCodigoInventario.requestFocusInWindow();
+
+        txtNumeroSerie.requestFocusInWindow();
     }
 
-    // GUARDAR EQUIPO
     private void guardar() {
 
         if (!txtId.getText().trim().isEmpty()) {
@@ -316,6 +505,7 @@ public class EquipoForm {
             mostrarAdvertencia(
                     "Presione Nuevo antes de guardar otro equipo."
             );
+
             return;
         }
 
@@ -326,10 +516,35 @@ public class EquipoForm {
             Equipo guardado =
                     equipoController.guardar(equipo);
 
+            txtId.setText(
+                    String.valueOf(
+                            guardado.getIdEquipo()
+                    )
+            );
+
+            txtCodigoInventario.setText(
+                    guardado.getCodigoInventario()
+            );
+
+            txtEstado.setText(
+                    guardado.getEstado().name()
+            );
+
+            txtFechadeRegistro.setText(
+                    formatearFecha(
+                            guardado.getFechaRegistro()
+                    )
+            );
+
             JOptionPane.showMessageDialog(
                     panelPrincipal,
                     "Equipo guardado correctamente.\n"
-                            + "ID: " + guardado.getIdEquipo()
+                            + "ID: "
+                            + guardado.getIdEquipo()
+                            + "\nCódigo de inventario: "
+                            + guardado.getCodigoInventario()
+                            + "\nEstado: "
+                            + guardado.getEstado().name()
                             + "\nFecha de registro: "
                             + formatearFecha(
                             guardado.getFechaRegistro()
@@ -343,7 +558,9 @@ public class EquipoForm {
 
         } catch (IllegalArgumentException ex) {
 
-            mostrarAdvertencia(ex.getMessage());
+            mostrarAdvertencia(
+                    ex.getMessage()
+            );
 
         } catch (SQLException ex) {
 
@@ -354,7 +571,6 @@ public class EquipoForm {
         }
     }
 
-    // ACTUALIZAR EQUIPO
     private void actualizar() {
 
         if (txtId.getText().trim().isEmpty()) {
@@ -362,13 +578,15 @@ public class EquipoForm {
             mostrarAdvertencia(
                     "Seleccione un equipo de la tabla."
             );
+
             return;
         }
 
         try {
 
-            int idEquipo =
-                    Integer.parseInt(txtId.getText().trim());
+            int idEquipo = Integer.parseInt(
+                    txtId.getText().trim()
+            );
 
             Equipo existente =
                     equipoController.buscarPorId(idEquipo)
@@ -384,6 +602,7 @@ public class EquipoForm {
                 mostrarAdvertencia(
                         "Solo se pueden actualizar equipos DISPONIBLES."
                 );
+
                 return;
             }
 
@@ -391,12 +610,14 @@ public class EquipoForm {
 
             equipo.setIdEquipo(idEquipo);
 
-            // CONSERVAR EL LABORATORIO ORIGINAL
+            equipo.setCodigoInventario(
+                    existente.getCodigoInventario()
+            );
+
             equipo.setIdLaboratorio(
                     existente.getIdLaboratorio()
             );
 
-            // CONSERVAR EL ESTADO REAL
             equipo.setEstado(
                     existente.getEstado()
             );
@@ -425,7 +646,9 @@ public class EquipoForm {
 
         } catch (IllegalArgumentException ex) {
 
-            mostrarAdvertencia(ex.getMessage());
+            mostrarAdvertencia(
+                    ex.getMessage()
+            );
 
         } catch (SQLException ex) {
 
@@ -436,7 +659,6 @@ public class EquipoForm {
         }
     }
 
-    // OBTENER DATOS DEL FORMULARIO
     private Equipo obtenerDatosFormulario() {
 
         Producto producto =
@@ -446,27 +668,15 @@ public class EquipoForm {
                 (Laboratorio) cmbLaboratorio.getSelectedItem();
 
         String codigo =
-                txtCodigoInventario.getText().trim();
+                txtId.getText().trim().isEmpty()
+                        ? null
+                        : txtCodigoInventario.getText().trim();
 
         String serie =
                 txtNumeroSerie.getText().trim();
 
         String observaciones =
                 observacionesTextArea.getText().trim();
-
-        if (codigo.isEmpty()) {
-
-            throw new IllegalArgumentException(
-                    "Ingrese el código de inventario."
-            );
-        }
-
-        if (codigo.length() > 30) {
-
-            throw new IllegalArgumentException(
-                    "El código no puede superar 30 caracteres."
-            );
-        }
 
         if (producto == null) {
 
@@ -513,7 +723,6 @@ public class EquipoForm {
         );
     }
 
-    // BUSCAR EQUIPOS
     private void buscar() {
 
         String texto = JOptionPane.showInputDialog(
@@ -532,10 +741,7 @@ public class EquipoForm {
             List<Equipo> equipos =
                     equipoController.buscar(texto.trim());
 
-            // LIMPIAR LOS CAMPOS
             nuevo();
-
-            // MOSTRAR LOS RESULTADOS
             cargarTabla(equipos);
 
             if (equipos.isEmpty()) {
@@ -557,7 +763,6 @@ public class EquipoForm {
         }
     }
 
-    // SELECCIONAR EQUIPO
     private void seleccionarEquipo() {
 
         int fila = tblEquipo.getSelectedRow();
@@ -583,11 +788,14 @@ public class EquipoForm {
                 mostrarAdvertencia(
                         "El equipo seleccionado ya no existe."
                 );
+
                 return;
             }
 
             txtId.setText(
-                    String.valueOf(equipo.getIdEquipo())
+                    String.valueOf(
+                            equipo.getIdEquipo()
+                    )
             );
 
             txtCodigoInventario.setText(
@@ -622,7 +830,6 @@ public class EquipoForm {
                     equipo.getIdLaboratorio()
             );
 
-            // IMPEDIR CAMBIO DE LABORATORIO
             cmbLaboratorio.setEnabled(false);
 
             boolean disponible =
@@ -641,15 +848,17 @@ public class EquipoForm {
         }
     }
 
-    // SELECCIONAR PRODUCTO
     private void seleccionarProducto(int idProducto) {
 
-        for (int i = 0; i < cmbProducto.getItemCount(); i++) {
+        for (int i = 0;
+             i < cmbProducto.getItemCount();
+             i++) {
 
             Producto producto =
                     cmbProducto.getItemAt(i);
 
-            if (producto.getIdProducto() == idProducto) {
+            if (producto != null
+                    && producto.getIdProducto() == idProducto) {
 
                 cmbProducto.setSelectedIndex(i);
                 return;
@@ -659,7 +868,6 @@ public class EquipoForm {
         cmbProducto.setSelectedIndex(-1);
     }
 
-    // SELECCIONAR LABORATORIO
     private void seleccionarLaboratorio(int idLaboratorio) {
 
         for (int i = 0;
@@ -669,7 +877,8 @@ public class EquipoForm {
             Laboratorio laboratorio =
                     cmbLaboratorio.getItemAt(i);
 
-            if (laboratorio.getIdLaboratorio()
+            if (laboratorio != null
+                    && laboratorio.getIdLaboratorio()
                     == idLaboratorio) {
 
                 cmbLaboratorio.setSelectedIndex(i);
@@ -680,18 +889,18 @@ public class EquipoForm {
         cmbLaboratorio.setSelectedIndex(-1);
     }
 
-    // SALIR
     private void salir() {
 
         Window ventana =
-                SwingUtilities.getWindowAncestor(panelPrincipal);
+                SwingUtilities.getWindowAncestor(
+                        panelPrincipal
+                );
 
         if (ventana != null) {
             ventana.dispose();
         }
     }
 
-    // MOSTRAR ADVERTENCIA
     private void mostrarAdvertencia(String mensaje) {
 
         JOptionPane.showMessageDialog(
@@ -702,7 +911,6 @@ public class EquipoForm {
         );
     }
 
-    // MOSTRAR ERROR
     private void mostrarError(String mensaje) {
 
         JOptionPane.showMessageDialog(
@@ -713,10 +921,8 @@ public class EquipoForm {
         );
     }
 
-    // OBTENER PANEL PRINCIPAL
     public JPanel getPanelPrincipal() {
         return panelPrincipal;
     }
 }
-
 
