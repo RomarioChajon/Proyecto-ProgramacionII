@@ -1,5 +1,4 @@
 
-
 package SIGELAB.service;
 
 import SIGELAB.enums.EstadoEquipo;
@@ -60,10 +59,14 @@ public class EquipoService {
         return repository.buscar(texto.trim());
     }
 
-    // REGISTRAR EQUIPO
-    public Equipo guardar(Equipo equipo) throws SQLException {
+    // REGISTRAR NUEVO EQUIPO
+    public Equipo guardar(Equipo equipo)
+            throws SQLException {
 
         validarEquipo(equipo);
+
+        // El código de inventario lo genera el repositorio.
+        equipo.setCodigoInventario(null);
 
         // Todo equipo nuevo comienza DISPONIBLE.
         equipo.setEstado(EstadoEquipo.DISPONIBLE);
@@ -94,14 +97,31 @@ public class EquipoService {
 
         Equipo actual = existente.get();
 
-        // No permitir cambiar el laboratorio de un equipo
-        // que no esté disponible.
-        if (actual.getIdLaboratorio() != equipo.getIdLaboratorio()
-                && actual.getEstado() != EstadoEquipo.DISPONIBLE) {
+        // Conservar el código de inventario original.
+        equipo.setCodigoInventario(
+                actual.getCodigoInventario()
+        );
+
+        // Conservar el estado real del equipo.
+        equipo.setEstado(
+                actual.getEstado()
+        );
+
+        // Solo se pueden actualizar equipos disponibles.
+        if (actual.getEstado() != EstadoEquipo.DISPONIBLE) {
 
             throw new IllegalArgumentException(
-                    "No puede cambiar de laboratorio un equipo "
-                            + "que no está DISPONIBLE."
+                    "Solo se pueden actualizar equipos DISPONIBLES."
+            );
+        }
+
+        // Conservar el laboratorio original.
+        if (actual.getIdLaboratorio()
+                != equipo.getIdLaboratorio()) {
+
+            throw new IllegalArgumentException(
+                    "No se puede cambiar el laboratorio "
+                            + "asignado al equipo."
             );
         }
 
@@ -125,16 +145,14 @@ public class EquipoService {
     private void validarEquipo(Equipo equipo) {
 
         if (equipo == null) {
+
             throw new IllegalArgumentException(
                     "Los datos del equipo son obligatorios."
             );
         }
 
-        validarTexto(
-                equipo.getCodigoInventario(),
-                "Código de inventario",
-                30
-        );
+        // El código de inventario NO se valida aquí
+        // porque se genera automáticamente al guardar.
 
         validarTexto(
                 equipo.getNumeroSerie(),
@@ -143,12 +161,14 @@ public class EquipoService {
         );
 
         if (equipo.getIdProducto() <= 0) {
+
             throw new IllegalArgumentException(
                     "Debe seleccionar un producto válido."
             );
         }
 
         if (equipo.getIdLaboratorio() <= 0) {
+
             throw new IllegalArgumentException(
                     "Debe seleccionar un laboratorio válido."
             );
@@ -163,27 +183,26 @@ public class EquipoService {
             );
         }
 
-        equipo.setCodigoInventario(
-                equipo.getCodigoInventario().trim()
-        );
-
         equipo.setNumeroSerie(
                 equipo.getNumeroSerie().trim()
         );
     }
 
+    // VALIDAR TEXTO OBLIGATORIO
     private void validarTexto(
             String valor,
             String campo,
             int maximo) {
 
         if (valor == null || valor.isBlank()) {
+
             throw new IllegalArgumentException(
                     campo + " es obligatorio."
             );
         }
 
         if (valor.length() > maximo) {
+
             throw new IllegalArgumentException(
                     campo + " no puede superar "
                             + maximo + " caracteres."
@@ -191,4 +210,5 @@ public class EquipoService {
         }
     }
 }
+
 

@@ -262,55 +262,56 @@ public class LaboratorioRepository {
                 "SELECT codigo FROM dbo.Laboratorio " +
                         (bloquearParaGuardar
                                 ? "WITH (TABLOCKX, HOLDLOCK) "
-                                : "") +
-                        "WHERE codigo LIKE ?";
+                                : "");
 
         int maximo = 0;
 
         try (PreparedStatement statement =
-                     connection.prepareStatement(sql)) {
+                     connection.prepareStatement(sql);
+             ResultSet rs = statement.executeQuery()) {
 
-            statement.setString(1, prefijo + "%");
+            while (rs.next()) {
 
-            try (ResultSet rs = statement.executeQuery()) {
+                String codigo = rs.getString("codigo");
 
-                while (rs.next()) {
+                if (codigo == null) {
+                    continue;
+                }
 
-                    String codigo = rs.getString("codigo");
+                codigo = codigo.trim();
 
-                    if (codigo == null ||
-                            !codigo.startsWith(prefijo)) {
-                        continue;
-                    }
+                int posicion = codigo.lastIndexOf('-');
 
-                    String sufijo =
-                            codigo.substring(prefijo.length());
+                if (posicion < 0) {
+                    continue;
+                }
 
-                    if (sufijo.matches("[0-9]{3,4}")) {
+                String sufijo =
+                        codigo.substring(posicion + 1);
 
-                        try {
+                if (!sufijo.matches("[0-9]{3,4}")) {
+                    continue;
+                }
 
-                            int numero =
-                                    Integer.parseInt(sufijo);
+                try {
 
-                            maximo = Math.max(maximo, numero);
+                    int numero = Integer.parseInt(sufijo);
 
-                        } catch (NumberFormatException ex) {
+                    maximo = Math.max(maximo, numero);
 
-                            throw new SQLException(
-                                    "Correlativo fuera de rango: " + codigo,
-                                    ex
-                            );
-                        }
-                    }
+                } catch (NumberFormatException ex) {
+
+                    throw new SQLException(
+                            "Correlativo inválido: " + codigo,
+                            ex
+                    );
                 }
             }
         }
 
         if (maximo >= 9999) {
             throw new SQLException(
-                    "Se alcanzó el límite de 9999 laboratorios " +
-                            "para el prefijo " + prefijo
+                    "Se alcanzó el límite de 9999 códigos de laboratorio."
             );
         }
 
@@ -343,7 +344,8 @@ public class LaboratorioRepository {
 
             if (codigo.length() > 20) {
                 throw new SQLException(
-                        "El código supera los 20 caracteres permitidos."
+                        "El código supera los 20 caracteres permitidos: "
+                                + codigo
                 );
             }
 
@@ -573,3 +575,4 @@ public class LaboratorioRepository {
         return laboratorio;
     }
 }
+
