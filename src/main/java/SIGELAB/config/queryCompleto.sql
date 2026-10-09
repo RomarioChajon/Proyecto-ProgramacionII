@@ -78,7 +78,15 @@ CREATE TABLE dbo.Laboratorio (
                                  ubicacion      NVARCHAR(200) NOT NULL,           -- Excel: "tendrá ubicación"
                                  capacidad      INT           NOT NULL,
                                  estado         NVARCHAR(10)  NOT NULL CONSTRAINT DF_Laboratorio_Estado DEFAULT 'ACTIVO',
-                                 fecha_creacion DATETIME2(0)  NOT NULL CONSTRAINT DF_Laboratorio_Fecha  DEFAULT SYSDATETIME(),
+                                 fecha_creacion DATETIME2(0) NOT NULL
+                                     CONSTRAINT DF_Laboratorio_Fecha
+                                     DEFAULT (
+                                         CAST(
+                                             SYSUTCDATETIME() AT TIME ZONE 'UTC'
+                                             AT TIME ZONE 'Central America Standard Time'
+                                             AS DATETIME2(0)
+                                         )
+                                     ),
                                  CONSTRAINT PK_Laboratorio        PRIMARY KEY (id_laboratorio),
                                  CONSTRAINT UQ_Laboratorio_Codigo UNIQUE (codigo),                       -- RN-03
                                  CONSTRAINT CK_Laboratorio_Capacidad CHECK (capacidad > 0),

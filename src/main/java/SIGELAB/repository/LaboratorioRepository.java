@@ -1,3 +1,4 @@
+
 package SIGELAB.repository;
 
 import SIGELAB.config.DatabaseConnection;
@@ -21,7 +22,6 @@ public class LaboratorioRepository {
             "id_laboratorio, codigo, nombre, ubicacion, " +
                     "capacidad, estado, fecha_creacion";
 
-    // LISTAR LABORATORIOS
     public List<Laboratorio> listar() throws SQLException {
 
         String sql =
@@ -43,7 +43,6 @@ public class LaboratorioRepository {
         return laboratorios;
     }
 
-    // BUSCAR POR ID
     public Optional<Laboratorio> buscarPorId(int idLaboratorio)
             throws SQLException {
 
@@ -77,7 +76,6 @@ public class LaboratorioRepository {
         return Optional.empty();
     }
 
-    // BUSCAR POR CÓDIGO
     public Optional<Laboratorio> buscarPorCodigo(String codigo)
             throws SQLException {
 
@@ -102,7 +100,6 @@ public class LaboratorioRepository {
         return Optional.empty();
     }
 
-    // BUSCAR POR TEXTO
     public List<Laboratorio> buscar(String texto)
             throws SQLException {
 
@@ -138,7 +135,6 @@ public class LaboratorioRepository {
         return laboratorios;
     }
 
-    // GUARDAR CON CÓDIGO AUTOMÁTICO
     public Laboratorio guardar(Laboratorio laboratorio)
             throws SQLException {
 
@@ -165,14 +161,17 @@ public class LaboratorioRepository {
 
             try {
 
-                // Bloqueo exclusivo de tabla dentro de la misma transaccion JDBC.
                 int siguiente =
-                        obtenerSiguienteCorrelativo(connection, prefijo, true);
+                        obtenerSiguienteCorrelativo(
+                                connection,
+                                prefijo,
+                                true
+                        );
 
                 String codigo =
                         prefijo + String.format(
                                 Locale.ROOT,
-                                "%03d",
+                                "%04d",
                                 siguiente
                         );
 
@@ -253,7 +252,6 @@ public class LaboratorioRepository {
         }
     }
 
-    // OBTENER SIGUIENTE CORRELATIVO
     private int obtenerSiguienteCorrelativo(
             Connection connection,
             String prefijo,
@@ -262,7 +260,9 @@ public class LaboratorioRepository {
 
         String sql =
                 "SELECT codigo FROM dbo.Laboratorio " +
-                        (bloquearParaGuardar ? "WITH (TABLOCKX, HOLDLOCK) " : "") +
+                        (bloquearParaGuardar
+                                ? "WITH (TABLOCKX, HOLDLOCK) "
+                                : "") +
                         "WHERE codigo LIKE ?";
 
         int maximo = 0;
@@ -286,15 +286,17 @@ public class LaboratorioRepository {
                     String sufijo =
                             codigo.substring(prefijo.length());
 
-                    if (sufijo.matches("[0-9]+")) {
+                    if (sufijo.matches("[0-9]{3,4}")) {
 
                         try {
+
                             int numero =
                                     Integer.parseInt(sufijo);
 
                             maximo = Math.max(maximo, numero);
 
                         } catch (NumberFormatException ex) {
+
                             throw new SQLException(
                                     "Correlativo fuera de rango: " + codigo,
                                     ex
@@ -305,16 +307,16 @@ public class LaboratorioRepository {
             }
         }
 
-        if (maximo == Integer.MAX_VALUE) {
+        if (maximo >= 9999) {
             throw new SQLException(
-                    "Se agotaron los correlativos del prefijo " + prefijo
+                    "Se alcanzó el límite de 9999 laboratorios " +
+                            "para el prefijo " + prefijo
             );
         }
 
         return maximo + 1;
     }
 
-    // VISTA PREVIA DEL CÓDIGO
     public String previsualizarCodigo(
             String nombre,
             String ubicacion
@@ -326,12 +328,16 @@ public class LaboratorioRepository {
         try (Connection connection = DatabaseConnection.getConnection()) {
 
             int siguiente =
-                    obtenerSiguienteCorrelativo(connection, prefijo, false);
+                    obtenerSiguienteCorrelativo(
+                            connection,
+                            prefijo,
+                            false
+                    );
 
             String codigo =
                     prefijo + String.format(
                             Locale.ROOT,
-                            "%03d",
+                            "%04d",
                             siguiente
                     );
 
@@ -345,7 +351,6 @@ public class LaboratorioRepository {
         }
     }
 
-    // CONSTRUIR PREFIJO AUTOMÁTICO
     private String construirPrefijo(
             String nombre,
             String ubicacion
@@ -432,7 +437,6 @@ public class LaboratorioRepository {
                 "-SEDE" + abreviaturaMunicipio + "-";
     }
 
-    // NORMALIZAR TEXTO
     private String normalizar(String texto) {
 
         if (texto == null) {
@@ -447,7 +451,6 @@ public class LaboratorioRepository {
                 .toUpperCase(Locale.ROOT);
     }
 
-    // ACTUALIZAR SIN CAMBIAR CÓDIGO
     public boolean actualizar(Laboratorio laboratorio)
             throws SQLException {
 
@@ -488,7 +491,6 @@ public class LaboratorioRepository {
         }
     }
 
-    // DESACTIVAR LABORATORIO
     public boolean desactivar(int idLaboratorio)
             throws SQLException {
 
@@ -498,7 +500,6 @@ public class LaboratorioRepository {
         );
     }
 
-    // ACTIVAR LABORATORIO
     public boolean activar(int idLaboratorio)
             throws SQLException {
 
@@ -529,7 +530,6 @@ public class LaboratorioRepository {
         }
     }
 
-    // CONVERTIR RESULTADO SQL A OBJETO
     private Laboratorio mapear(ResultSet rs)
             throws SQLException {
 

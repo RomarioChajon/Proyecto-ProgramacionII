@@ -1,4 +1,3 @@
-
 package SIGELAB.repository;
 
 import SIGELAB.config.DatabaseConnection;
@@ -198,7 +197,7 @@ public class TipoEquipoRepository {
                                     codigoExistente.toUpperCase(Locale.ROOT);
 
                             if (codigoNormalizado.matches(
-                                    "CAT-[A-Z]{4}-[0-9]{3}"
+                                    "CAT-[A-Z]{4}-[0-9]{3,4}"
                             )) {
 
                                 int numero = Integer.parseInt(
@@ -216,15 +215,15 @@ public class TipoEquipoRepository {
 
                 int siguienteNumero = ultimoNumero + 1;
 
-                if (siguienteNumero > 999) {
+                if (siguienteNumero > 9999) {
                     throw new SQLException(
-                            "Se alcanzó el límite de 999 categorías."
+                            "Se alcanzó el límite de 9999 categorías."
                     );
                 }
 
                 String codigo = String.format(
                         Locale.ROOT,
-                        "CAT-%s-%03d",
+                        "CAT-%s-%04d",
                         prefijo,
                         siguienteNumero
                 );
@@ -499,6 +498,7 @@ public class TipoEquipoRepository {
         return tipoEquipo;
     }
 }
+
 
 
 
