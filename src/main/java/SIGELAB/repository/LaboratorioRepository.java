@@ -31,8 +31,7 @@ public class LaboratorioRepository {
         List<Laboratorio> laboratorios = new ArrayList<>();
 
         try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement statement =
-                     connection.prepareStatement(sql);
+             PreparedStatement statement = connection.prepareStatement(sql);
              ResultSet rs = statement.executeQuery()) {
 
             while (rs.next()) {
@@ -66,7 +65,6 @@ public class LaboratorioRepository {
             statement.setInt(1, idLaboratorio);
 
             try (ResultSet rs = statement.executeQuery()) {
-
                 if (rs.next()) {
                     return Optional.of(mapear(rs));
                 }
@@ -90,7 +88,6 @@ public class LaboratorioRepository {
             statement.setString(1, codigo);
 
             try (ResultSet rs = statement.executeQuery()) {
-
                 if (rs.next()) {
                     return Optional.of(mapear(rs));
                 }
@@ -125,7 +122,6 @@ public class LaboratorioRepository {
             statement.setString(3, criterio);
 
             try (ResultSet rs = statement.executeQuery()) {
-
                 while (rs.next()) {
                     laboratorios.add(mapear(rs));
                 }
@@ -160,20 +156,13 @@ public class LaboratorioRepository {
             connection.setAutoCommit(false);
 
             try {
+                int siguiente = obtenerSiguienteCorrelativo(
+                        connection, prefijo, true
+                );
 
-                int siguiente =
-                        obtenerSiguienteCorrelativo(
-                                connection,
-                                prefijo,
-                                true
-                        );
-
-                String codigo =
-                        prefijo + String.format(
-                                Locale.ROOT,
-                                "%04d",
-                                siguiente
-                        );
+                String codigo = prefijo + String.format(
+                        Locale.ROOT, "%04d", siguiente
+                );
 
                 if (codigo.length() > 20) {
                     throw new SQLException(
@@ -189,20 +178,16 @@ public class LaboratorioRepository {
 
                     statement.setString(1, codigo);
                     statement.setString(
-                            2,
-                            laboratorio.getNombre().trim()
+                            2, laboratorio.getNombre().trim()
                     );
                     statement.setString(
-                            3,
-                            laboratorio.getUbicacion().trim()
+                            3, laboratorio.getUbicacion().trim()
                     );
                     statement.setInt(
-                            4,
-                            laboratorio.getCapacidad()
+                            4, laboratorio.getCapacidad()
                     );
                     statement.setString(
-                            5,
-                            laboratorio.getEstado().name()
+                            5, laboratorio.getEstado().name()
                     );
 
                     try (ResultSet rs = statement.executeQuery()) {
@@ -219,11 +204,9 @@ public class LaboratorioRepository {
 
                 Laboratorio guardado =
                         buscarPorId(connection, id)
-                                .orElseThrow(
-                                        () -> new SQLException(
-                                                "No se encontró el laboratorio recién creado."
-                                        )
-                                );
+                                .orElseThrow(() -> new SQLException(
+                                        "No se encontró el laboratorio recién creado."
+                                ));
 
                 connection.commit();
 
@@ -252,11 +235,34 @@ public class LaboratorioRepository {
         }
     }
 
+    /*
+     * Correlativo independiente por sede.
+     *
+     * LABINF-SEDESANJ-0001
+     * LABRED-SEDESANJ-0002
+     *
+     * Otra sede inicia su propio correlativo:
+     *
+     * LABINF-SEDECENT-0001
+     *
+     * Se conservan los bloqueos para evitar duplicados
+     * durante registros simultáneos.
+     */
     private int obtenerSiguienteCorrelativo(
             Connection connection,
             String prefijo,
             boolean bloquearParaGuardar
     ) throws SQLException {
+
+        int inicioSede = prefijo.indexOf("-SEDE");
+
+        if (inicioSede < 0) {
+            throw new SQLException(
+                    "Prefijo de laboratorio inválido: " + prefijo
+            );
+        }
+
+        String identificadorSede = prefijo.substring(inicioSede);
 
         String sql =
                 "SELECT codigo FROM dbo.Laboratorio " +
@@ -278,40 +284,35 @@ public class LaboratorioRepository {
                     continue;
                 }
 
-                codigo = codigo.trim();
+                codigo = codigo.trim().toUpperCase(Locale.ROOT);
 
-                int posicion = codigo.lastIndexOf('-');
+                int inicio = codigo.indexOf("-SEDE");
 
-                if (posicion < 0) {
+                if (inicio < 0) {
+                    continue;
+                }
+
+                String resto = codigo.substring(inicio);
+
+                if (!resto.startsWith(identificadorSede)) {
                     continue;
                 }
 
                 String sufijo =
-                        codigo.substring(posicion + 1);
+                        resto.substring(identificadorSede.length());
 
                 if (!sufijo.matches("[0-9]{3,4}")) {
                     continue;
                 }
 
-                try {
-
-                    int numero = Integer.parseInt(sufijo);
-
-                    maximo = Math.max(maximo, numero);
-
-                } catch (NumberFormatException ex) {
-
-                    throw new SQLException(
-                            "Correlativo inválido: " + codigo,
-                            ex
-                    );
-                }
+                int numero = Integer.parseInt(sufijo);
+                maximo = Math.max(maximo, numero);
             }
         }
 
         if (maximo >= 9999) {
             throw new SQLException(
-                    "Se alcanzó el límite de 9999 códigos de laboratorio."
+                    "Se alcanzó el límite de 9999 laboratorios para esta sede."
             );
         }
 
@@ -323,24 +324,17 @@ public class LaboratorioRepository {
             String ubicacion
     ) throws SQLException {
 
-        String prefijo =
-                construirPrefijo(nombre, ubicacion);
+        String prefijo = construirPrefijo(nombre, ubicacion);
 
         try (Connection connection = DatabaseConnection.getConnection()) {
 
-            int siguiente =
-                    obtenerSiguienteCorrelativo(
-                            connection,
-                            prefijo,
-                            false
-                    );
+            int siguiente = obtenerSiguienteCorrelativo(
+                    connection, prefijo, false
+            );
 
-            String codigo =
-                    prefijo + String.format(
-                            Locale.ROOT,
-                            "%04d",
-                            siguiente
-                    );
+            String codigo = prefijo + String.format(
+                    Locale.ROOT, "%04d", siguiente
+            );
 
             if (codigo.length() > 20) {
                 throw new SQLException(
@@ -353,77 +347,83 @@ public class LaboratorioRepository {
         }
     }
 
+    /*
+     * Genera el prefijo según el nombre del laboratorio
+     * y la sede indicada en el campo ubicación.
+     */
     private String construirPrefijo(
             String nombre,
             String ubicacion
     ) {
 
-        String tipo = normalizar(nombre);
+        String tipo = normalizar(nombre)
+                .replaceFirst("^LABORATORIO( DE(L)? )?", "")
+                .replaceFirst("^DE ", "")
+                .trim();
 
-        tipo = tipo.replaceFirst(
-                "^LABORATORIO( DE(L)? )?",
-                ""
-        ).trim();
-
-        tipo = tipo.replaceFirst("^DE ", "").trim();
-
-        if (tipo.isEmpty()) {
-            throw new IllegalArgumentException(
-                    "Indique el tipo o nombre del laboratorio."
-            );
-        }
-
-        String letrasTipo =
-                tipo.replaceAll("[^A-Z]", "");
+        String letrasTipo = tipo.replaceAll("[^A-Z]", "");
 
         if (letrasTipo.isEmpty()) {
             throw new IllegalArgumentException(
-                    "El nombre debe contener letras."
+                    "Indique el nombre del laboratorio."
             );
         }
 
         String abreviaturaTipo =
                 (letrasTipo + "XXX").substring(0, 3);
 
-        String municipio =
-                normalizar(ubicacion)
-                        .replaceAll("\\s+", " ")
-                        .trim();
+        String sede = normalizar(ubicacion)
+                .replaceAll("\\s+", " ")
+                .trim();
 
-        if (municipio.isEmpty()) {
+        if (sede.isEmpty()) {
             throw new IllegalArgumentException(
-                    "Indique el municipio en Ubicación."
+                    "Indique la sede en Ubicación."
             );
         }
 
-        String abreviaturaMunicipio;
+        String abreviaturaSede;
 
-        if (municipio.startsWith("SAN ")) {
+        if (sede.contains("SAN JUAN SACATEPEQUEZ")) {
 
-            String resto =
-                    municipio.substring(4)
-                            .replaceAll("[^A-Z]", "");
+            abreviaturaSede = "SANJ";
 
-            abreviaturaMunicipio =
-                    "SAN" + (resto.isEmpty()
+        } else if (sede.contains("CAMPUS CENTRAL")
+                || sede.contains("SEDE CENTRAL")) {
+
+            abreviaturaSede = "CENT";
+
+        } else if (sede.contains("ANTIGUA GUATEMALA")) {
+
+            abreviaturaSede = "ANTI";
+
+        } else if (sede.contains("CHIMALTENANGO")) {
+
+            abreviaturaSede = "CHIM";
+
+        } else if (sede.startsWith("SAN ")) {
+
+            String resto = sede.substring(4)
+                    .replaceAll("[^A-Z]", "");
+
+            abreviaturaSede = "SAN" +
+                    (resto.isEmpty()
                             ? "X"
                             : resto.substring(0, 1));
 
-        } else if (municipio.startsWith("SANTA ")) {
+        } else if (sede.startsWith("SANTA ")) {
 
-            String resto =
-                    municipio.substring(6)
-                            .replaceAll("[^A-Z]", "");
+            String resto = sede.substring(6)
+                    .replaceAll("[^A-Z]", "");
 
-            abreviaturaMunicipio =
-                    "STA" + (resto.isEmpty()
+            abreviaturaSede = "STA" +
+                    (resto.isEmpty()
                             ? "X"
                             : resto.substring(0, 1));
 
         } else {
 
-            String letras =
-                    municipio.replaceAll("[^A-Z]", "");
+            String letras = sede.replaceAll("[^A-Z]", "");
 
             if (letras.isEmpty()) {
                 throw new IllegalArgumentException(
@@ -431,12 +431,12 @@ public class LaboratorioRepository {
                 );
             }
 
-            abreviaturaMunicipio =
+            abreviaturaSede =
                     (letras + "XXXX").substring(0, 4);
         }
 
         return "LAB" + abreviaturaTipo +
-                "-SEDE" + abreviaturaMunicipio + "-";
+                "-SEDE" + abreviaturaSede + "-";
     }
 
     private String normalizar(String texto) {
@@ -468,26 +468,11 @@ public class LaboratorioRepository {
              PreparedStatement statement =
                      connection.prepareStatement(sql)) {
 
-            statement.setString(
-                    1,
-                    laboratorio.getNombre()
-            );
-            statement.setString(
-                    2,
-                    laboratorio.getUbicacion()
-            );
-            statement.setInt(
-                    3,
-                    laboratorio.getCapacidad()
-            );
-            statement.setString(
-                    4,
-                    laboratorio.getEstado().name()
-            );
-            statement.setInt(
-                    5,
-                    laboratorio.getIdLaboratorio()
-            );
+            statement.setString(1, laboratorio.getNombre());
+            statement.setString(2, laboratorio.getUbicacion());
+            statement.setInt(3, laboratorio.getCapacidad());
+            statement.setString(4, laboratorio.getEstado().name());
+            statement.setInt(5, laboratorio.getIdLaboratorio());
 
             return statement.executeUpdate() > 0;
         }
@@ -563,8 +548,7 @@ public class LaboratorioRepository {
                 )
         );
 
-        Timestamp fecha =
-                rs.getTimestamp("fecha_creacion");
+        Timestamp fecha = rs.getTimestamp("fecha_creacion");
 
         if (fecha != null) {
             laboratorio.setFechaCreacion(
@@ -575,4 +559,5 @@ public class LaboratorioRepository {
         return laboratorio;
     }
 }
+
 

@@ -1,3 +1,4 @@
+
 package SIGELAB.repository;
 
 import SIGELAB.config.DatabaseConnection;
@@ -5,6 +6,7 @@ import SIGELAB.enums.EstadoEquipo;
 import SIGELAB.model.Equipo;
 
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -12,11 +14,20 @@ import java.util.Optional;
 
 public class EquipoRepository {
 
+    // COLUMNAS DE LA TABLA EQUIPO
+
     private static final String COLUMNAS = """
-            id_equipo, codigo_inventario, id_producto,
-            numero_serie, id_laboratorio, estado,
-            observaciones, fecha_registro
+            id_equipo,
+            codigo_inventario,
+            id_producto,
+            numero_serie,
+            id_laboratorio,
+            estado,
+            observaciones,
+            fecha_registro
             """;
+
+    // LISTAR TODOS LOS EQUIPOS
 
     public List<Equipo> listar() throws SQLException {
 
@@ -30,12 +41,15 @@ public class EquipoRepository {
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
+
                 equipos.add(mapear(rs));
             }
         }
 
         return equipos;
     }
+
+    // BUSCAR EQUIPO POR ID
 
     public Optional<Equipo> buscarPorId(int idEquipo)
             throws SQLException {
@@ -51,6 +65,7 @@ public class EquipoRepository {
             try (ResultSet rs = ps.executeQuery()) {
 
                 if (rs.next()) {
+
                     return Optional.of(mapear(rs));
                 }
             }
@@ -58,6 +73,8 @@ public class EquipoRepository {
 
         return Optional.empty();
     }
+
+    // BUSCAR EQUIPO POR CÓDIGO DE INVENTARIO
 
     public Optional<Equipo> buscarPorCodigo(String codigo)
             throws SQLException {
@@ -73,6 +90,7 @@ public class EquipoRepository {
             try (ResultSet rs = ps.executeQuery()) {
 
                 if (rs.next()) {
+
                     return Optional.of(mapear(rs));
                 }
             }
@@ -80,6 +98,8 @@ public class EquipoRepository {
 
         return Optional.empty();
     }
+
+    // BUSCAR EQUIPOS POR TEXTO
 
     public List<Equipo> buscar(String texto)
             throws SQLException {
@@ -93,6 +113,7 @@ public class EquipoRepository {
                 """;
 
         List<Equipo> equipos = new ArrayList<>();
+
         String filtro = "%" + texto + "%";
 
         try (Connection cn = DatabaseConnection.getConnection();
@@ -105,6 +126,7 @@ public class EquipoRepository {
             try (ResultSet rs = ps.executeQuery()) {
 
                 while (rs.next()) {
+
                     equipos.add(mapear(rs));
                 }
             }
@@ -112,6 +134,8 @@ public class EquipoRepository {
 
         return equipos;
     }
+
+    // GENERAR CÓDIGO DE INVENTARIO AUTOMÁTICO
 
     private String generarCodigoInventario(Connection cn)
             throws SQLException {
@@ -133,6 +157,7 @@ public class EquipoRepository {
 
                 if (codigo == null ||
                         !codigo.matches("INV-[0-9]{4,}")) {
+
                     continue;
                 }
 
@@ -143,6 +168,7 @@ public class EquipoRepository {
                     );
 
                     if (numero > maximo) {
+
                         maximo = numero;
                     }
 
@@ -181,19 +207,32 @@ public class EquipoRepository {
         return codigo;
     }
 
+    // GUARDAR NUEVO EQUIPO
+
     public Equipo guardar(Equipo equipo)
             throws SQLException {
 
+        /*
+         * SQL Server genera fecha_registro
+         * automáticamente mediante su DEFAULT.
+         *
+         * El repositorio no envía una fecha
+         * manualmente durante el INSERT.
+         */
+
         String sql = """
                 INSERT INTO dbo.Equipo
-                (codigo_inventario,
-                 id_producto,
-                 numero_serie,
-                 id_laboratorio,
-                 estado,
-                 observaciones)
-                OUTPUT INSERTED.id_equipo,
-                       INSERTED.fecha_registro
+                (
+                    codigo_inventario,
+                    id_producto,
+                    numero_serie,
+                    id_laboratorio,
+                    estado,
+                    observaciones
+                )
+                OUTPUT
+                    INSERTED.id_equipo,
+                    INSERTED.fecha_registro
                 VALUES (?, ?, ?, ?, ?, ?)
                 """;
 
@@ -203,6 +242,8 @@ public class EquipoRepository {
 
             try {
 
+                // GENERAR CÓDIGO ÚNICO
+
                 String codigo =
                         generarCodigoInventario(cn);
 
@@ -210,13 +251,27 @@ public class EquipoRepository {
                              cn.prepareStatement(sql)) {
 
                     ps.setString(1, codigo);
-                    ps.setInt(2, equipo.getIdProducto());
-                    ps.setString(3, equipo.getNumeroSerie());
-                    ps.setInt(4, equipo.getIdLaboratorio());
+
+                    ps.setInt(
+                            2,
+                            equipo.getIdProducto()
+                    );
+
+                    ps.setString(
+                            3,
+                            equipo.getNumeroSerie()
+                    );
+
+                    ps.setInt(
+                            4,
+                            equipo.getIdLaboratorio()
+                    );
+
                     ps.setString(
                             5,
                             EstadoEquipo.DISPONIBLE.name()
                     );
+
                     ps.setString(
                             6,
                             equipo.getObservaciones()
@@ -232,36 +287,40 @@ public class EquipoRepository {
                             );
                         }
 
+                        // ID GENERADO POR SQL SERVER
+
                         equipo.setIdEquipo(
                                 rs.getInt("id_equipo")
                         );
 
-                        Timestamp fecha =
-                                rs.getTimestamp(
-                                        "fecha_registro"
-                                );
+                        // LEER DATETIME2 SIN CONVERSIÓN
+                        // DE ZONA HORARIA
 
-                        if (fecha != null) {
+                        LocalDateTime fecha =
+                                obtenerFechaRegistro(rs);
 
-                            equipo.setFechaRegistro(
-                                    fecha.toLocalDateTime()
-                            );
-                        }
+                        equipo.setFechaRegistro(fecha);
                     }
                 }
 
                 cn.commit();
 
                 equipo.setCodigoInventario(codigo);
-                equipo.setEstado(EstadoEquipo.DISPONIBLE);
+
+                equipo.setEstado(
+                        EstadoEquipo.DISPONIBLE
+                );
 
                 return equipo;
 
             } catch (SQLException | RuntimeException ex) {
 
                 try {
+
                     cn.rollback();
+
                 } catch (SQLException rollbackEx) {
+
                     ex.addSuppressed(rollbackEx);
                 }
 
@@ -269,6 +328,8 @@ public class EquipoRepository {
             }
         }
     }
+
+    // ACTUALIZAR EQUIPO
 
     public boolean actualizar(Equipo equipo)
             throws SQLException {
@@ -285,15 +346,36 @@ public class EquipoRepository {
         try (Connection cn = DatabaseConnection.getConnection();
              PreparedStatement ps = cn.prepareStatement(sql)) {
 
-            ps.setInt(1, equipo.getIdProducto());
-            ps.setString(2, equipo.getNumeroSerie());
-            ps.setInt(3, equipo.getIdLaboratorio());
-            ps.setString(4, equipo.getObservaciones());
-            ps.setInt(5, equipo.getIdEquipo());
+            ps.setInt(
+                    1,
+                    equipo.getIdProducto()
+            );
+
+            ps.setString(
+                    2,
+                    equipo.getNumeroSerie()
+            );
+
+            ps.setInt(
+                    3,
+                    equipo.getIdLaboratorio()
+            );
+
+            ps.setString(
+                    4,
+                    equipo.getObservaciones()
+            );
+
+            ps.setInt(
+                    5,
+                    equipo.getIdEquipo()
+            );
 
             return ps.executeUpdate() > 0;
         }
     }
+
+    // LISTAR EQUIPOS POR LABORATORIO
 
     public List<Equipo> listarPorLaboratorio(
             int idLaboratorio
@@ -310,11 +392,15 @@ public class EquipoRepository {
         try (Connection cn = DatabaseConnection.getConnection();
              PreparedStatement ps = cn.prepareStatement(sql)) {
 
-            ps.setInt(1, idLaboratorio);
+            ps.setInt(
+                    1,
+                    idLaboratorio
+            );
 
             try (ResultSet rs = ps.executeQuery()) {
 
                 while (rs.next()) {
+
                     equipos.add(mapear(rs));
                 }
             }
@@ -322,6 +408,30 @@ public class EquipoRepository {
 
         return equipos;
     }
+
+    // LEER FECHA DE SQL SERVER
+
+    private LocalDateTime obtenerFechaRegistro(ResultSet rs)
+            throws SQLException {
+
+        /*
+         * fecha_registro es DATETIME2.
+         *
+         * LocalDateTime permite recuperar
+         * directamente el valor almacenado,
+         * sin aplicar otra conversión horaria.
+         *
+         * La fecha debe haberse generado
+         * correctamente en SQL Server.
+         */
+
+        return rs.getObject(
+                "fecha_registro",
+                LocalDateTime.class
+        );
+    }
+
+    // MAPEAR RESULTADO A OBJETO EQUIPO
 
     private Equipo mapear(ResultSet rs)
             throws SQLException {
@@ -348,25 +458,22 @@ public class EquipoRepository {
                 rs.getInt("id_laboratorio")
         );
 
+        String estado =
+                rs.getString("estado");
+
         equipo.setEstado(
-                EstadoEquipo.valueOf(
-                        rs.getString("estado")
-                )
+                EstadoEquipo.valueOf(estado)
         );
 
         equipo.setObservaciones(
                 rs.getString("observaciones")
         );
 
-        Timestamp fecha =
-                rs.getTimestamp("fecha_registro");
+        // FECHA REGISTRO SIN DESFASE ADICIONAL
 
-        if (fecha != null) {
-
-            equipo.setFechaRegistro(
-                    fecha.toLocalDateTime()
-            );
-        }
+        equipo.setFechaRegistro(
+                obtenerFechaRegistro(rs)
+        );
 
         return equipo;
     }
