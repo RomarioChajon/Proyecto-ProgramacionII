@@ -14,7 +14,7 @@ public class DatabaseConnection {
             "sigelab.db.user", "DB_USER", "sa");
 
     private static final String PASSWORD = configuracion(
-            "sigelab.db.password", "DB_PASSWORD",   null);
+            "sigelab.db.password", "DB_PASSWORD",   "Dev2025!");
 
     private DatabaseConnection() {
     }

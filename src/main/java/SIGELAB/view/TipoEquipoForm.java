@@ -38,92 +38,122 @@ public class TipoEquipoForm {
     private boolean cargandoTabla = false;
 
     public TipoEquipoForm() {
-
         controller = new TipoEquipoController();
 
-        verificarComponentes();
-        prepararCampoCodigo();
+        if (!componentesDisponibles()) {
+            crearInterfaz();
+        }
+
         configurarFormulario();
         configurarTabla();
         configurarEventos();
-
         cargarTiposEquipo();
         nuevo();
     }
 
-    private void verificarComponentes() {
-
-        StringBuilder faltantes = new StringBuilder();
-
-        if (panelPrincipal == null) faltantes.append("panelPrincipal\n");
-        if (txtId == null) faltantes.append("txtId\n");
-        if (txtNombre == null) faltantes.append("txtNombre\n");
-        if (txtDescripcion == null) faltantes.append("txtDescripcion\n");
-        if (cmbEstado == null) faltantes.append("cmbEstado\n");
-        if (btnNuevo == null) faltantes.append("btnNuevo\n");
-        if (btnGuardar == null) faltantes.append("btnGuardar\n");
-        if (btnActualizar == null) faltantes.append("btnActualizar\n");
-        if (btnDesactivar == null) faltantes.append("btnDesactivar\n");
-        if (btnSalir == null) faltantes.append("btnSalir\n");
-        if (btnBuscar == null) faltantes.append("btnBuscar\n");
-        if (textField1 == null) faltantes.append("textField1\n");
-        if (tblTipoEquipo == null) faltantes.append("tblTipoEquipo\n");
-
-        if (faltantes.length() > 0) {
-            throw new IllegalStateException(
-                    "Componentes sin vincular en TipoEquipoForm.form:\n\n"
-                            + faltantes
-            );
-        }
+    private boolean componentesDisponibles() {
+        return panelPrincipal != null
+                && txtId != null
+                && txtCodigo != null
+                && txtNombre != null
+                && txtDescripcion != null
+                && cmbEstado != null
+                && btnNuevo != null
+                && btnGuardar != null
+                && btnBuscar != null
+                && btnActualizar != null
+                && btnDesactivar != null
+                && btnSalir != null
+                && tblTipoEquipo != null;
     }
 
-    private void prepararCampoCodigo() {
-
-        if (txtCodigo != null) {
-            return;
-        }
-
-        txtCodigo = new JTextField(16);
-        txtCodigo.setEditable(false);
-        txtCodigo.setFocusable(false);
-
-        JPanel panelCodigo = new JPanel(
-                new FlowLayout(FlowLayout.LEFT, 10, 5)
+    private void crearInterfaz() {
+        panelPrincipal = new JPanel(new BorderLayout(10, 10));
+        panelPrincipal.setBorder(
+                BorderFactory.createEmptyBorder(15, 15, 15, 15)
         );
 
-        panelCodigo.add(new JLabel("Código de categoría:"));
-        panelCodigo.add(txtCodigo);
+        JLabel titulo = new JLabel(
+                "Gestión de Tipos de Equipo",
+                SwingConstants.CENTER
+        );
+        titulo.setFont(titulo.getFont().deriveFont(Font.BOLD, 18f));
 
-        JPanel contenidoOriginal = panelPrincipal;
+        txtId = new JTextField();
+        txtCodigo = new JTextField();
+        txtNombre = new JTextField();
+        txtDescripcion = new JTextField();
+        cmbEstado = new JComboBox<>();
 
-        JPanel contenedor = new JPanel(new BorderLayout());
+        JPanel campos = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 8, 5, 8);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        contenedor.add(panelCodigo, BorderLayout.NORTH);
-        contenedor.add(contenidoOriginal, BorderLayout.CENTER);
+        agregarCampo(campos, gbc, 0, "ID", txtId);
+        agregarCampo(campos, gbc, 1, "Código", txtCodigo);
+        agregarCampo(campos, gbc, 2, "Categoría", txtNombre);
+        agregarCampo(campos, gbc, 3, "Descripción", txtDescripcion);
+        agregarCampo(campos, gbc, 4, "Estado", cmbEstado);
 
-        panelPrincipal = contenedor;
+        btnNuevo = new JButton("Nuevo");
+        btnGuardar = new JButton("Guardar");
+        btnBuscar = new JButton("Buscar");
+        btnActualizar = new JButton("Actualizar");
+        btnDesactivar = new JButton("Desactivar");
+        btnSalir = new JButton("Salir");
+
+        JPanel botones = new JPanel(
+                new FlowLayout(FlowLayout.CENTER, 8, 8)
+        );
+
+        botones.add(btnNuevo);
+        botones.add(btnGuardar);
+        botones.add(btnBuscar);
+        botones.add(btnActualizar);
+        botones.add(btnDesactivar);
+        botones.add(btnSalir);
+
+        JPanel superior = new JPanel(new BorderLayout(8, 8));
+        superior.add(titulo, BorderLayout.NORTH);
+        superior.add(campos, BorderLayout.CENTER);
+        superior.add(botones, BorderLayout.SOUTH);
+
+        tblTipoEquipo = new JTable();
+
+        panelPrincipal.add(superior, BorderLayout.NORTH);
+        panelPrincipal.add(
+                new JScrollPane(tblTipoEquipo),
+                BorderLayout.CENTER
+        );
+
+        panelPrincipal.setPreferredSize(new Dimension(950, 620));
+    }
+
+    private void agregarCampo(
+            JPanel panel,
+            GridBagConstraints gbc,
+            int fila,
+            String etiqueta,
+            JComponent componente
+    ) {
+        gbc.gridx = 0;
+        gbc.gridy = fila;
+        gbc.weightx = 0;
+        panel.add(new JLabel(etiqueta), gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 1;
+        panel.add(componente, gbc);
     }
 
     private void configurarFormulario() {
-
         txtId.setEditable(false);
-        txtId.setFocusable(false);
-
         txtCodigo.setEditable(false);
-        txtCodigo.setFocusable(false);
-
-        txtCodigo.setToolTipText(
-                "Código generado automáticamente al guardar la categoría."
-        );
 
         cmbEstado.removeAllItems();
         cmbEstado.addItem("ACTIVO");
         cmbEstado.addItem("INACTIVO");
-        cmbEstado.setSelectedItem("ACTIVO");
-
-        textField1.setToolTipText(
-                "Buscar por ID, código, categoría, descripción o estado."
-        );
 
         btnGuardar.setEnabled(true);
         btnActualizar.setEnabled(false);
@@ -131,7 +161,6 @@ public class TipoEquipoForm {
     }
 
     private void configurarTabla() {
-
         DefaultTableModel modelo = new DefaultTableModel(
                 new Object[]{
                         "ID",
@@ -149,71 +178,46 @@ public class TipoEquipoForm {
         };
 
         tblTipoEquipo.setModel(modelo);
-
         tblTipoEquipo.setSelectionMode(
                 ListSelectionModel.SINGLE_SELECTION
         );
-
         tblTipoEquipo.setAutoCreateRowSorter(true);
         tblTipoEquipo.setFillsViewportHeight(true);
-
-        tblTipoEquipo.getTableHeader()
-                .setReorderingAllowed(false);
+        tblTipoEquipo.setRowHeight(25);
+        tblTipoEquipo.getTableHeader().setReorderingAllowed(false);
     }
 
     private void configurarEventos() {
-
         btnNuevo.addActionListener(e -> nuevo());
-
         btnGuardar.addActionListener(e -> guardar());
-
+        btnBuscar.addActionListener(e -> buscar());
         btnActualizar.addActionListener(e -> actualizar());
-
         btnDesactivar.addActionListener(e -> desactivar());
-
         btnSalir.addActionListener(e -> salir());
 
-        btnBuscar.addActionListener(e -> buscar());
-
-        textField1.addActionListener(e -> buscar());
-
-        tblTipoEquipo.getSelectionModel()
-                .addListSelectionListener(e -> {
-
-                    if (!e.getValueIsAdjusting() && !cargandoTabla) {
-                        cargarTipoSeleccionado();
-                    }
-                });
+        tblTipoEquipo.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting() && !cargandoTabla) {
+                cargarTipoSeleccionado();
+            }
+        });
     }
 
     private void cargarTiposEquipo() {
-
         try {
-
             cargarTabla(controller.listar());
-
         } catch (SQLException ex) {
-
             mostrarError(
-                    "No se pudieron cargar los tipos de equipo.\n\n"
+                    "No se pudieron cargar los tipos de equipo.\n"
                             + ex.getMessage()
             );
         }
     }
 
     private void cargarTabla(List<TipoEquipo> tipos) {
-
         cargandoTabla = true;
 
         try {
-
             tblTipoEquipo.clearSelection();
-
-            if (tblTipoEquipo.getRowSorter() != null) {
-                tblTipoEquipo.getRowSorter().setSortKeys(
-                        new ArrayList<>()
-                );
-            }
 
             DefaultTableModel modelo =
                     (DefaultTableModel) tblTipoEquipo.getModel();
@@ -221,7 +225,6 @@ public class TipoEquipoForm {
             modelo.setRowCount(0);
 
             for (TipoEquipo tipo : tipos) {
-
                 modelo.addRow(new Object[]{
                         tipo.getIdTipoEquipo(),
                         tipo.getCodigo(),
@@ -230,49 +233,41 @@ public class TipoEquipoForm {
                         tipo.getEstado()
                 });
             }
-
         } finally {
-
             cargandoTabla = false;
         }
     }
 
     private void nuevo() {
-
         limpiarCampos();
-
         txtNombre.requestFocusInWindow();
     }
 
     private void guardar() {
+        if (!txtId.getText().trim().isEmpty()) {
+            mostrarAdvertencia(
+                    "Presione Nuevo antes de registrar otra categoría."
+            );
+            return;
+        }
 
         if (!validarCampos()) {
             return;
         }
 
         try {
-
-            String estado = String.valueOf(
-                    cmbEstado.getSelectedItem()
-            );
-
             TipoEquipo tipo = controller.guardar(
                     txtNombre.getText().trim(),
                     txtDescripcion.getText().trim(),
-                    estado
+                    String.valueOf(cmbEstado.getSelectedItem())
             );
 
             cargarTiposEquipo();
-
-            limpiarCampos();
-
-            mostrarTipo(tipo);
-
             seleccionarFilaPorId(tipo.getIdTipoEquipo());
 
             JOptionPane.showMessageDialog(
                     panelPrincipal,
-                    "Tipo de equipo guardado correctamente.\n\n"
+                    "Tipo de equipo guardado correctamente.\n"
                             + "ID: " + tipo.getIdTipoEquipo()
                             + "\nCódigo: " + tipo.getCodigo()
                             + "\nCategoría: " + tipo.getNombre(),
@@ -281,26 +276,21 @@ public class TipoEquipoForm {
             );
 
         } catch (IllegalArgumentException ex) {
-
             mostrarAdvertencia(ex.getMessage());
 
         } catch (SQLException ex) {
-
             mostrarError(
-                    "No se pudo guardar el tipo de equipo.\n\n"
+                    "No se pudo guardar el tipo de equipo.\n"
                             + ex.getMessage()
             );
         }
     }
 
     private void actualizar() {
-
         if (txtId.getText().trim().isEmpty()) {
-
             mostrarAdvertencia(
-                    "Seleccione un tipo de equipo de la tabla."
+                    "Seleccione una categoría de la tabla."
             );
-
             return;
         }
 
@@ -309,85 +299,62 @@ public class TipoEquipoForm {
         }
 
         try {
-
-            int id = Integer.parseInt(
-                    txtId.getText().trim()
-            );
-
-            String codigoAnterior = txtCodigo.getText();
-
-            String estado = String.valueOf(
-                    cmbEstado.getSelectedItem()
-            );
+            int id = Integer.parseInt(txtId.getText().trim());
 
             boolean actualizado = controller.actualizar(
                     id,
                     txtNombre.getText().trim(),
                     txtDescripcion.getText().trim(),
-                    estado
+                    String.valueOf(cmbEstado.getSelectedItem())
             );
 
             if (actualizado) {
-
                 cargarTiposEquipo();
-
                 seleccionarFilaPorId(id);
 
                 JOptionPane.showMessageDialog(
                         panelPrincipal,
-                        "Tipo de equipo actualizado correctamente.\n\n"
-                                + "Código conservado: " + codigoAnterior,
+                        "Tipo de equipo actualizado correctamente.",
                         "SIGELAB",
                         JOptionPane.INFORMATION_MESSAGE
                 );
-
             } else {
-
                 mostrarAdvertencia(
                         "No se pudo actualizar el tipo de equipo."
                 );
             }
 
         } catch (IllegalArgumentException ex) {
-
             mostrarAdvertencia(ex.getMessage());
 
         } catch (SQLException ex) {
-
             mostrarError(
-                    "No se pudo actualizar el tipo de equipo.\n\n"
+                    "No se pudo actualizar el tipo de equipo.\n"
                             + ex.getMessage()
             );
         }
     }
 
     private void desactivar() {
-
         if (txtId.getText().trim().isEmpty()) {
-
             mostrarAdvertencia(
-                    "Seleccione un tipo de equipo de la tabla."
+                    "Seleccione una categoría de la tabla."
             );
-
             return;
         }
 
-        String estado = String.valueOf(
-                cmbEstado.getSelectedItem()
-        );
-
-        if ("INACTIVO".equalsIgnoreCase(estado)) {
-
+        if ("INACTIVO".equals(
+                String.valueOf(cmbEstado.getSelectedItem())
+        )) {
             mostrarAdvertencia(
-                    "El tipo de equipo ya está inactivo."
+                    "Esta categoría ya está inactiva."
             );
-
             return;
         }
 
         int respuesta = JOptionPane.showConfirmDialog(
                 panelPrincipal,
-                "¿Desea desactivar este tipo de equipo?",
+                "¿Desea desactivar esta categoría?",
                 "Confirmar desactivación",
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.QUESTION_MESSAGE
@@ -398,166 +365,152 @@ public class TipoEquipoForm {
         }
 
         try {
-
-            int id = Integer.parseInt(
-                    txtId.getText().trim()
-            );
+            int id = Integer.parseInt(txtId.getText().trim());
 
             boolean desactivado = controller.desactivar(id);
 
             if (desactivado) {
-
                 cargarTiposEquipo();
-
                 seleccionarFilaPorId(id);
 
                 JOptionPane.showMessageDialog(
                         panelPrincipal,
-                        "Tipo de equipo desactivado correctamente.\n\n"
-                                + "Su código se conserva.",
+                        "Categoría desactivada correctamente.",
                         "SIGELAB",
                         JOptionPane.INFORMATION_MESSAGE
                 );
-
             } else {
-
                 mostrarAdvertencia(
-                        "No se pudo desactivar el tipo de equipo."
+                        "No se pudo desactivar la categoría."
                 );
             }
 
         } catch (IllegalArgumentException ex) {
-
             mostrarAdvertencia(ex.getMessage());
 
         } catch (SQLException ex) {
-
             mostrarError(
-                    "No se pudo desactivar el tipo de equipo.\n\n"
+                    "No se pudo desactivar la categoría.\n"
                             + ex.getMessage()
             );
         }
     }
 
     private void buscar() {
+        String entrada = JOptionPane.showInputDialog(
+                panelPrincipal,
+                "Buscar por ID, código, categoría, descripción o estado.\n"
+                        + "Deje vacío para mostrar todos:",
+                "Buscar tipo de equipo",
+                JOptionPane.QUESTION_MESSAGE
+        );
 
-        String criterio = textField1.getText().trim();
+        if (entrada == null) {
+            return;
+        }
+
+        String criterio = entrada.trim();
 
         if (criterio.isEmpty()) {
-
             cargarTiposEquipo();
             nuevo();
             return;
         }
 
         try {
-
-            List<TipoEquipo> todos = controller.listar();
-
-            List<TipoEquipo> resultados = new ArrayList<>();
+            List<TipoEquipo> exactos = new ArrayList<>();
+            List<TipoEquipo> parciales = new ArrayList<>();
 
             String filtro = criterio.toLowerCase(Locale.ROOT);
 
-            for (TipoEquipo tipo : todos) {
-
-                String id = String.valueOf(
-                        tipo.getIdTipoEquipo()
-                );
-
-                String codigo = tipo.getCodigo() == null
-                        ? ""
-                        : tipo.getCodigo();
-
-                String nombre = tipo.getNombre() == null
-                        ? ""
-                        : tipo.getNombre();
-
-                String descripcion = tipo.getDescripcion() == null
-                        ? ""
-                        : tipo.getDescripcion();
-
+            for (TipoEquipo tipo : controller.listar()) {
+                String id = String.valueOf(tipo.getIdTipoEquipo());
+                String codigo = textoSeguro(tipo.getCodigo());
+                String nombre = textoSeguro(tipo.getNombre());
+                String descripcion = textoSeguro(tipo.getDescripcion());
                 String estado = tipo.getEstado() == null
                         ? ""
                         : tipo.getEstado().toString();
 
-                if (id.contains(filtro)
-                        || codigo.toLowerCase(Locale.ROOT).contains(filtro)
-                        || nombre.toLowerCase(Locale.ROOT).contains(filtro)
-                        || descripcion.toLowerCase(Locale.ROOT).contains(filtro)
-                        || estado.toLowerCase(Locale.ROOT).contains(filtro)) {
-
-                    resultados.add(tipo);
+                if (id.equals(criterio)
+                        || codigo.equalsIgnoreCase(criterio)
+                        || nombre.equalsIgnoreCase(criterio)) {
+                    exactos.add(tipo);
+                } else if (
+                        codigo.toLowerCase(Locale.ROOT).contains(filtro)
+                                || nombre.toLowerCase(Locale.ROOT).contains(filtro)
+                                || descripcion.toLowerCase(Locale.ROOT).contains(filtro)
+                                || estado.toLowerCase(Locale.ROOT).contains(filtro)
+                ) {
+                    parciales.add(tipo);
                 }
             }
 
-            cargarTabla(resultados);
+            List<TipoEquipo> resultados =
+                    exactos.isEmpty() ? parciales : exactos;
 
+            cargarTabla(resultados);
             limpiarCampos();
 
             if (resultados.isEmpty()) {
-
                 mostrarAdvertencia(
-                        "No se encontraron tipos de equipo con ese criterio."
+                        "No se encontraron categorías con ese criterio."
+                );
+            } else if (resultados.size() == 1) {
+                seleccionarFilaPorId(
+                        resultados.get(0).getIdTipoEquipo()
                 );
             }
 
         } catch (SQLException ex) {
-
             mostrarError(
-                    "No se pudo realizar la búsqueda.\n\n"
+                    "No se pudo realizar la búsqueda.\n"
                             + ex.getMessage()
             );
         }
     }
 
-    private void seleccionarFilaPorId(int idTipoEquipo) {
+    private String textoSeguro(String texto) {
+        return texto == null ? "" : texto.trim();
+    }
 
+    private void seleccionarFilaPorId(int id) {
         DefaultTableModel modelo =
                 (DefaultTableModel) tblTipoEquipo.getModel();
 
         for (int fila = 0; fila < modelo.getRowCount(); fila++) {
-
             Object valor = modelo.getValueAt(fila, 0);
 
-            if (valor instanceof Number
-                    && ((Number) valor).intValue() == idTipoEquipo) {
+            if (valor != null
+                    && String.valueOf(valor).equals(String.valueOf(id))) {
 
-                int filaVista =
-                        tblTipoEquipo.convertRowIndexToView(fila);
+                int filaVista = tblTipoEquipo.convertRowIndexToView(fila);
 
                 if (filaVista >= 0) {
-
                     tblTipoEquipo.setRowSelectionInterval(
                             filaVista,
                             filaVista
                     );
 
                     tblTipoEquipo.scrollRectToVisible(
-                            tblTipoEquipo.getCellRect(
-                                    filaVista,
-                                    0,
-                                    true
-                            )
+                            tblTipoEquipo.getCellRect(filaVista, 0, true)
                     );
 
                     cargarTipoSeleccionado();
                 }
-
                 return;
             }
         }
     }
 
     private void cargarTipoSeleccionado() {
-
         if (cargandoTabla) {
             return;
         }
 
         int filaVista = tblTipoEquipo.getSelectedRow();
 
-        if (filaVista < 0
-                || filaVista >= tblTipoEquipo.getRowCount()) {
+        if (filaVista < 0) {
             return;
         }
 
@@ -567,118 +520,56 @@ public class TipoEquipoForm {
         DefaultTableModel modelo =
                 (DefaultTableModel) tblTipoEquipo.getModel();
 
-        if (filaModelo < 0 || filaModelo >= modelo.getRowCount()) {
-            return;
-        }
+        txtId.setText(valorTexto(modelo.getValueAt(filaModelo, 0)));
+        txtCodigo.setText(valorTexto(modelo.getValueAt(filaModelo, 1)));
+        txtNombre.setText(valorTexto(modelo.getValueAt(filaModelo, 2)));
+        txtDescripcion.setText(valorTexto(modelo.getValueAt(filaModelo, 3)));
 
-        Object id = modelo.getValueAt(filaModelo, 0);
-        Object codigo = modelo.getValueAt(filaModelo, 1);
-        Object nombre = modelo.getValueAt(filaModelo, 2);
-        Object descripcion = modelo.getValueAt(filaModelo, 3);
-        Object estado = modelo.getValueAt(filaModelo, 4);
-
-        txtId.setText(
-                id == null ? "" : id.toString()
+        String estado = valorTexto(
+                modelo.getValueAt(filaModelo, 4)
         );
 
-        txtCodigo.setText(
-                codigo == null ? "" : codigo.toString()
-        );
-
-        txtNombre.setText(
-                nombre == null ? "" : nombre.toString()
-        );
-
-        txtDescripcion.setText(
-                descripcion == null ? "" : descripcion.toString()
-        );
-
-        String estadoTexto =
-                estado == null ? "" : estado.toString();
-
-        cmbEstado.setSelectedItem(estadoTexto);
+        cmbEstado.setSelectedItem(estado);
 
         btnGuardar.setEnabled(false);
         btnActualizar.setEnabled(true);
-
         btnDesactivar.setEnabled(
-                "ACTIVO".equalsIgnoreCase(estadoTexto)
+                "ACTIVO".equalsIgnoreCase(estado)
         );
     }
 
-    private void mostrarTipo(TipoEquipo tipo) {
-
-        txtId.setText(
-                String.valueOf(tipo.getIdTipoEquipo())
-        );
-
-        txtCodigo.setText(
-                tipo.getCodigo() == null ? "" : tipo.getCodigo()
-        );
-
-        txtNombre.setText(
-                tipo.getNombre() == null ? "" : tipo.getNombre()
-        );
-
-        txtDescripcion.setText(
-                tipo.getDescripcion() == null
-                        ? "" : tipo.getDescripcion()
-        );
-
-        cmbEstado.setSelectedItem(
-                tipo.getEstado().name()
-        );
-
-        btnGuardar.setEnabled(false);
-        btnActualizar.setEnabled(true);
-
-        btnDesactivar.setEnabled(
-                "ACTIVO".equals(tipo.getEstado().name())
-        );
+    private String valorTexto(Object valor) {
+        return valor == null ? "" : valor.toString();
     }
 
     private boolean validarCampos() {
-
         String nombre = txtNombre.getText().trim();
-
         String descripcion = txtDescripcion.getText().trim();
 
         if (nombre.isEmpty()) {
-
             mostrarAdvertencia(
-                    "Ingrese el nombre del tipo de equipo."
+                    "Ingrese el nombre de la categoría."
             );
-
             txtNombre.requestFocusInWindow();
             return false;
         }
 
         if (nombre.length() > 50) {
-
             mostrarAdvertencia(
-                    "El nombre no puede superar los 50 caracteres."
+                    "La categoría no puede superar 50 caracteres."
             );
-
-            txtNombre.requestFocusInWindow();
             return false;
         }
 
         if (descripcion.length() > 200) {
-
             mostrarAdvertencia(
-                    "La descripción no puede superar los 200 caracteres."
+                    "La descripción no puede superar 200 caracteres."
             );
-
-            txtDescripcion.requestFocusInWindow();
             return false;
         }
 
         if (cmbEstado.getSelectedItem() == null) {
-
-            mostrarAdvertencia(
-                    "Seleccione un estado."
-            );
-
+            mostrarAdvertencia("Seleccione un estado.");
             return false;
         }
 
@@ -686,7 +577,6 @@ public class TipoEquipoForm {
     }
 
     private void limpiarCampos() {
-
         txtId.setText("");
         txtCodigo.setText("");
         txtNombre.setText("");
@@ -695,13 +585,9 @@ public class TipoEquipoForm {
         cmbEstado.setSelectedItem("ACTIVO");
 
         cargandoTabla = true;
-
         try {
-
             tblTipoEquipo.clearSelection();
-
         } finally {
-
             cargandoTabla = false;
         }
 
@@ -711,7 +597,6 @@ public class TipoEquipoForm {
     }
 
     private void mostrarAdvertencia(String mensaje) {
-
         JOptionPane.showMessageDialog(
                 panelPrincipal,
                 mensaje,
@@ -721,7 +606,6 @@ public class TipoEquipoForm {
     }
 
     private void mostrarError(String mensaje) {
-
         JOptionPane.showMessageDialog(
                 panelPrincipal,
                 mensaje,
@@ -731,7 +615,6 @@ public class TipoEquipoForm {
     }
 
     private void salir() {
-
         Window ventana =
                 SwingUtilities.getWindowAncestor(panelPrincipal);
 
@@ -744,3 +627,4 @@ public class TipoEquipoForm {
         return panelPrincipal;
     }
 }
+

@@ -1,3 +1,4 @@
+
 package SIGELAB.view;
 
 import SIGELAB.controller.ProductoController;
@@ -9,20 +10,24 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class ProductoForm {
 
-    private JTextField txtId;
     private JPanel panelPrincipal;
+
+    private JTextField txtId;
     private JTextField txtCodigo;
     private JTextField txtNombre;
-    private JComboBox<TipoEquipo> cmbTipoEquipo;
     private JTextField txtMarca;
     private JTextField txtModelo;
     private JTextField txtDescripcion;
+
+    private JComboBox<TipoEquipo> cmbTipoEquipo;
     private JComboBox<String> cmbEstado;
 
     private JButton btnNuevo;
@@ -31,24 +36,27 @@ public class ProductoForm {
     private JButton btnDesactivar;
     private JButton btnSalir;
     private JButton buscarButton;
+    private JButton btnBuscar;
 
-    private JTextField textField1;
     private JTable tblProducto;
 
     private final ProductoController productoController;
     private final TipoEquipoController tipoEquipoController;
 
-    private final Map<Integer, String> codigosTipos = new HashMap<>();
+    private final Map<Integer, String> nombresTipos = new HashMap<>();
     private final Map<Integer, Integer> tiposPorProducto = new HashMap<>();
 
+    private DefaultTableModel modeloTabla;
     private boolean cargandoTabla = false;
 
     public ProductoForm() {
-
         productoController = new ProductoController();
         tipoEquipoController = new TipoEquipoController();
 
-        verificarComponentes();
+        if (!componentesDisponibles()) {
+            crearInterfaz();
+        }
+
         configurarFormulario();
         configurarTabla();
         configurarEventos();
@@ -58,45 +66,123 @@ public class ProductoForm {
         nuevo();
     }
 
-    private void verificarComponentes() {
+    private boolean componentesDisponibles() {
+        return panelPrincipal != null
+                && txtId != null
+                && txtCodigo != null
+                && txtNombre != null
+                && txtMarca != null
+                && txtModelo != null
+                && txtDescripcion != null
+                && cmbTipoEquipo != null
+                && cmbEstado != null
+                && btnNuevo != null
+                && btnGuardar != null
+                && btnActualizar != null
+                && btnDesactivar != null
+                && btnSalir != null
+                && (buscarButton != null || btnBuscar != null)
+                && tblProducto != null;
+    }
 
-        StringBuilder faltantes = new StringBuilder();
+    private void crearInterfaz() {
+        panelPrincipal = new JPanel(new BorderLayout(10, 10));
+        panelPrincipal.setBorder(
+                BorderFactory.createEmptyBorder(15, 15, 15, 15)
+        );
 
-        if (panelPrincipal == null) faltantes.append("panelPrincipal\n");
-        if (txtId == null) faltantes.append("txtId\n");
-        if (txtCodigo == null) faltantes.append("txtCodigo\n");
-        if (txtNombre == null) faltantes.append("txtNombre\n");
-        if (cmbTipoEquipo == null) faltantes.append("cmbTipoEquipo\n");
-        if (txtMarca == null) faltantes.append("txtMarca\n");
-        if (txtModelo == null) faltantes.append("txtModelo\n");
-        if (txtDescripcion == null) faltantes.append("txtDescripcion\n");
-        if (cmbEstado == null) faltantes.append("cmbEstado\n");
-        if (btnNuevo == null) faltantes.append("btnNuevo\n");
-        if (btnGuardar == null) faltantes.append("btnGuardar\n");
-        if (btnActualizar == null) faltantes.append("btnActualizar\n");
-        if (btnDesactivar == null) faltantes.append("btnDesactivar\n");
-        if (btnSalir == null) faltantes.append("btnSalir\n");
-        if (buscarButton == null) faltantes.append("buscarButton\n");
-        if (textField1 == null) faltantes.append("textField1\n");
-        if (tblProducto == null) faltantes.append("tblProducto\n");
+        JLabel titulo = new JLabel(
+                "Gestión de Producto",
+                SwingConstants.CENTER
+        );
+        titulo.setFont(titulo.getFont().deriveFont(Font.BOLD, 18f));
 
-        if (faltantes.length() > 0) {
-            throw new IllegalStateException(
-                    "Faltan componentes vinculados en ProductoForm.form:\n\n"
-                            + faltantes
-            );
-        }
+        txtId = new JTextField();
+        txtCodigo = new JTextField();
+        txtNombre = new JTextField();
+        txtMarca = new JTextField();
+        txtModelo = new JTextField();
+        txtDescripcion = new JTextField();
+
+        cmbTipoEquipo = new JComboBox<>();
+        cmbEstado = new JComboBox<>();
+
+        JPanel campos = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 8, 5, 8);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        agregarCampo(campos, gbc, 0, "ID", txtId);
+        agregarCampo(campos, gbc, 1, "Código", txtCodigo);
+        agregarCampo(campos, gbc, 2, "Nombre", txtNombre);
+        agregarCampo(campos, gbc, 3, "Tipo Equipo", cmbTipoEquipo);
+        agregarCampo(campos, gbc, 4, "Marca", txtMarca);
+        agregarCampo(campos, gbc, 5, "Modelo", txtModelo);
+        agregarCampo(campos, gbc, 6, "Descripción", txtDescripcion);
+        agregarCampo(campos, gbc, 7, "Estado", cmbEstado);
+
+        btnNuevo = new JButton("Nuevo");
+        btnGuardar = new JButton("Guardar");
+        btnActualizar = new JButton("Actualizar");
+        btnDesactivar = new JButton("Desactivar");
+        buscarButton = new JButton("Buscar");
+        btnSalir = new JButton("Salir");
+
+        JPanel botones = new JPanel(
+                new FlowLayout(FlowLayout.CENTER, 8, 8)
+        );
+
+        botones.add(btnNuevo);
+        botones.add(btnGuardar);
+        botones.add(btnActualizar);
+        botones.add(btnDesactivar);
+        botones.add(buscarButton);
+        botones.add(btnSalir);
+
+        JPanel superior = new JPanel(new BorderLayout(8, 8));
+        superior.add(titulo, BorderLayout.NORTH);
+        superior.add(campos, BorderLayout.CENTER);
+        superior.add(botones, BorderLayout.SOUTH);
+
+        tblProducto = new JTable();
+
+        panelPrincipal.add(superior, BorderLayout.NORTH);
+        panelPrincipal.add(
+                new JScrollPane(tblProducto),
+                BorderLayout.CENTER
+        );
+
+        panelPrincipal.setPreferredSize(
+                new Dimension(1050, 680)
+        );
+    }
+
+    private void agregarCampo(
+            JPanel panel,
+            GridBagConstraints gbc,
+            int fila,
+            String etiqueta,
+            JComponent componente
+    ) {
+        gbc.gridx = 0;
+        gbc.gridy = fila;
+        gbc.weightx = 0;
+        panel.add(new JLabel(etiqueta), gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 1;
+        panel.add(componente, gbc);
     }
 
     private void configurarFormulario() {
-
         txtId.setEditable(false);
-        txtId.setFocusable(false);
-
         txtCodigo.setEditable(false);
+
+        txtId.setFocusable(false);
         txtCodigo.setFocusable(false);
+
         txtCodigo.setToolTipText(
-                "El código del producto se genera automáticamente al guardar."
+                "El código se genera automáticamente al guardar."
         );
 
         cmbEstado.removeAllItems();
@@ -104,32 +190,13 @@ public class ProductoForm {
         cmbEstado.addItem("INACTIVO");
         cmbEstado.setSelectedItem("ACTIVO");
 
-        cmbTipoEquipo.setToolTipText(
-                "Seleccione la categoría del producto."
-        );
-
         btnGuardar.setEnabled(true);
         btnActualizar.setEnabled(false);
         btnDesactivar.setEnabled(false);
     }
 
     private void configurarTabla() {
-
-        tblProducto.setModel(crearModeloTabla());
-
-        tblProducto.setSelectionMode(
-                ListSelectionModel.SINGLE_SELECTION
-        );
-
-        tblProducto.setAutoCreateRowSorter(true);
-        tblProducto.setFillsViewportHeight(true);
-
-        tblProducto.getTableHeader().setReorderingAllowed(false);
-    }
-
-    private DefaultTableModel crearModeloTabla() {
-
-        return new DefaultTableModel(
+        modeloTabla = new DefaultTableModel(
                 new Object[]{
                         "ID",
                         "Código",
@@ -147,114 +214,101 @@ public class ProductoForm {
                 return false;
             }
         };
+
+        tblProducto.setModel(modeloTabla);
+        tblProducto.setSelectionMode(
+                ListSelectionModel.SINGLE_SELECTION
+        );
+        tblProducto.setAutoCreateRowSorter(true);
+        tblProducto.setFillsViewportHeight(true);
+        tblProducto.setRowHeight(25);
+        tblProducto.getTableHeader().setReorderingAllowed(false);
     }
 
     private void configurarEventos() {
-
         btnNuevo.addActionListener(e -> nuevo());
         btnGuardar.addActionListener(e -> guardar());
         btnActualizar.addActionListener(e -> actualizar());
         btnDesactivar.addActionListener(e -> desactivar());
         btnSalir.addActionListener(e -> salir());
-        buscarButton.addActionListener(e -> buscar());
-        textField1.addActionListener(e -> buscar());
 
-        tblProducto.getSelectionModel()
-                .addListSelectionListener(e -> {
+        if (buscarButton != null) {
+            buscarButton.addActionListener(e -> buscar());
+        }
 
-                    if (!e.getValueIsAdjusting() && !cargandoTabla) {
-                        cargarProductoSeleccionado();
-                    }
-                });
+        if (btnBuscar != null && btnBuscar != buscarButton) {
+            btnBuscar.addActionListener(e -> buscar());
+        }
+
+        tblProducto.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting() && !cargandoTabla) {
+                cargarProductoSeleccionado();
+            }
+        });
     }
 
     private void cargarTiposEquipo() {
-
         try {
-
             List<TipoEquipo> tipos = tipoEquipoController.listar();
 
-            codigosTipos.clear();
+            nombresTipos.clear();
             cmbTipoEquipo.removeAllItems();
 
             for (TipoEquipo tipo : tipos) {
-
-                codigosTipos.put(
+                nombresTipos.put(
                         tipo.getIdTipoEquipo(),
-                        tipo.getCodigo()
+                        tipo.getNombre()
                 );
 
                 if (tipo.getEstado() != null
                         && "ACTIVO".equals(tipo.getEstado().name())) {
-
                     cmbTipoEquipo.addItem(tipo);
                 }
             }
 
-            if (cmbTipoEquipo.getItemCount() > 0) {
-                cmbTipoEquipo.setSelectedIndex(0);
-            } else {
-                cmbTipoEquipo.setSelectedIndex(-1);
-            }
+            cmbTipoEquipo.setSelectedIndex(-1);
 
         } catch (SQLException ex) {
-
             mostrarError(
-                    "No se pudieron cargar los tipos de equipo.\n\n"
+                    "No se pudieron cargar los tipos de equipo.\n"
                             + ex.getMessage()
             );
         }
     }
 
-    private String obtenerCodigoTipoEquipo(int idTipoEquipo) {
-
-        String codigo = codigosTipos.get(idTipoEquipo);
-
-        if (codigo == null || codigo.isBlank()) {
-            return "SIN CÓDIGO";
-        }
-
-        return codigo;
-    }
-
     private void cargarProductos() {
-
         try {
-
             cargarTabla(productoController.listar());
 
         } catch (SQLException ex) {
-
             mostrarError(
-                    "No se pudieron cargar los productos.\n\n"
+                    "No se pudieron cargar los productos.\n"
                             + ex.getMessage()
             );
         }
     }
 
     private void cargarTabla(List<Producto> productos) {
-
         cargandoTabla = true;
 
         try {
-
-            DefaultTableModel modelo = crearModeloTabla();
-
+            tblProducto.clearSelection();
+            modeloTabla.setRowCount(0);
             tiposPorProducto.clear();
 
             for (Producto producto : productos) {
-
                 tiposPorProducto.put(
                         producto.getIdProducto(),
                         producto.getIdTipoEquipo()
                 );
 
-                modelo.addRow(new Object[]{
+                modeloTabla.addRow(new Object[]{
                         producto.getIdProducto(),
                         producto.getCodigoProducto(),
                         producto.getNombre(),
-                        obtenerCodigoTipoEquipo(
-                                producto.getIdTipoEquipo()
+                        nombresTipos.getOrDefault(
+                                producto.getIdTipoEquipo(),
+                                String.valueOf(producto.getIdTipoEquipo())
                         ),
                         producto.getMarca(),
                         producto.getModelo(),
@@ -263,84 +317,67 @@ public class ProductoForm {
                 });
             }
 
-            tblProducto.setModel(modelo);
-
         } finally {
-
             cargandoTabla = false;
         }
     }
 
     private void nuevo() {
-
         limpiarCampos();
         txtNombre.requestFocusInWindow();
     }
 
     private void guardar() {
+        if (!txtId.getText().trim().isEmpty()) {
+            mostrarAdvertencia(
+                    "Presione Nuevo antes de registrar otro producto."
+            );
+            return;
+        }
 
         if (!validarCampos()) {
             return;
         }
 
-        TipoEquipo tipoEquipo =
+        TipoEquipo tipo =
                 (TipoEquipo) cmbTipoEquipo.getSelectedItem();
 
-        if (tipoEquipo == null) {
-            mostrarAdvertencia(
-                    "Debe seleccionar un tipo de equipo."
-            );
-            return;
-        }
-
         try {
-
-            String estado = String.valueOf(
-                    cmbEstado.getSelectedItem()
-            );
-
             Producto producto = productoController.guardar(
                     "",
                     txtNombre.getText().trim(),
-                    tipoEquipo.getIdTipoEquipo(),
+                    tipo.getIdTipoEquipo(),
                     txtMarca.getText().trim(),
                     txtModelo.getText().trim(),
                     txtDescripcion.getText().trim(),
-                    estado
+                    String.valueOf(cmbEstado.getSelectedItem())
             );
+
+            cargarProductos();
+            seleccionarFilaPorId(producto.getIdProducto());
 
             JOptionPane.showMessageDialog(
                     panelPrincipal,
                     "Producto guardado correctamente.\n\n"
                             + "ID: " + producto.getIdProducto()
-                            + "\nCódigo del producto: "
-                            + producto.getCodigoProducto()
-                            + "\nCódigo de categoría: "
-                            + obtenerCodigoTipoEquipo(
-                            tipoEquipo.getIdTipoEquipo()
-                    ),
+                            + "\nCódigo: " + producto.getCodigoProducto()
+                            + "\nNombre: " + producto.getNombre(),
                     "SIGELAB",
                     JOptionPane.INFORMATION_MESSAGE
             );
 
-            cargarProductos();
-            nuevo();
-
         } catch (IllegalArgumentException ex) {
-
             mostrarAdvertencia(ex.getMessage());
 
         } catch (SQLException ex) {
-
             mostrarError(
-                    "No se pudo guardar el producto.\n\n"
+                    "No se pudo guardar el producto.\n"
                             + ex.getMessage()
             );
         }
     }
 
     private void actualizar() {
-
         if (txtId.getText().trim().isEmpty()) {
             mostrarAdvertencia(
                     "Seleccione un producto de la tabla."
@@ -352,73 +389,52 @@ public class ProductoForm {
             return;
         }
 
-        TipoEquipo tipoEquipo =
+        TipoEquipo tipo =
                 (TipoEquipo) cmbTipoEquipo.getSelectedItem();
 
-        if (tipoEquipo == null) {
-            mostrarAdvertencia(
-                    "El tipo de equipo del producto no está disponible."
-            );
-            return;
-        }
-
         try {
-
-            int idProducto = Integer.parseInt(
-                    txtId.getText().trim()
-            );
-
-            String estado = String.valueOf(
-                    cmbEstado.getSelectedItem()
-            );
+            int id = Integer.parseInt(txtId.getText().trim());
 
             boolean actualizado = productoController.actualizar(
-                    idProducto,
+                    id,
                     txtCodigo.getText().trim(),
                     txtNombre.getText().trim(),
-                    tipoEquipo.getIdTipoEquipo(),
+                    tipo.getIdTipoEquipo(),
                     txtMarca.getText().trim(),
                     txtModelo.getText().trim(),
                     txtDescripcion.getText().trim(),
-                    estado
+                    String.valueOf(cmbEstado.getSelectedItem())
             );
 
             if (actualizado) {
+                cargarProductos();
+                seleccionarFilaPorId(id);
 
                 JOptionPane.showMessageDialog(
                         panelPrincipal,
-                        "Producto actualizado correctamente.\n\n"
-                                + "Código conservado: "
-                                + txtCodigo.getText(),
+                        "Producto actualizado correctamente.",
                         "SIGELAB",
                         JOptionPane.INFORMATION_MESSAGE
                 );
 
-                cargarProductos();
-                nuevo();
-
             } else {
-
                 mostrarAdvertencia(
                         "No se pudo actualizar el producto."
                 );
             }
 
         } catch (IllegalArgumentException ex) {
-
             mostrarAdvertencia(ex.getMessage());
 
         } catch (SQLException ex) {
-
             mostrarError(
-                    "No se pudo actualizar el producto.\n\n"
+                    "No se pudo actualizar el producto.\n"
                             + ex.getMessage()
             );
         }
     }
 
     private void desactivar() {
-
         if (txtId.getText().trim().isEmpty()) {
             mostrarAdvertencia(
                     "Seleccione un producto de la tabla."
@@ -426,13 +442,11 @@ public class ProductoForm {
             return;
         }
 
-        String estado = String.valueOf(
-                cmbEstado.getSelectedItem()
-        );
-
-        if ("INACTIVO".equals(estado)) {
+        if ("INACTIVO".equalsIgnoreCase(
+                String.valueOf(cmbEstado.getSelectedItem())
+        )) {
             mostrarAdvertencia(
-                    "El producto ya está inactivo."
+                    "Este producto ya está inactivo."
             );
             return;
         }
@@ -440,8 +454,9 @@ public class ProductoForm {
         int respuesta = JOptionPane.showConfirmDialog(
                 panelPrincipal,
                 "¿Desea desactivar este producto?",
-                "Confirmar",
-                JOptionPane.YES_NO_OPTION
+                "Confirmar desactivación",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE
         );
 
         if (respuesta != JOptionPane.YES_OPTION) {
@@ -449,15 +464,13 @@ public class ProductoForm {
         }
 
         try {
+            int id = Integer.parseInt(txtId.getText().trim());
 
-            int idProducto = Integer.parseInt(
-                    txtId.getText().trim()
-            );
-
-            boolean desactivado =
-                    productoController.desactivar(idProducto);
+            boolean desactivado = productoController.desactivar(id);
 
             if (desactivado) {
+                cargarProductos();
+                seleccionarFilaPorId(id);
 
                 JOptionPane.showMessageDialog(
                         panelPrincipal,
@@ -466,68 +479,146 @@ public class ProductoForm {
                         JOptionPane.INFORMATION_MESSAGE
                 );
 
-                cargarProductos();
-                nuevo();
-
             } else {
-
                 mostrarAdvertencia(
                         "No se pudo desactivar el producto."
                 );
             }
 
         } catch (IllegalArgumentException ex) {
-
             mostrarAdvertencia(ex.getMessage());
 
         } catch (SQLException ex) {
-
             mostrarError(
-                    "No se pudo desactivar el producto.\n\n"
+                    "No se pudo desactivar el producto.\n"
                             + ex.getMessage()
             );
         }
     }
 
     private void buscar() {
+        String entrada = JOptionPane.showInputDialog(
+                panelPrincipal,
+                "Buscar por ID, código, nombre, tipo de equipo,\n"
+                        + "marca, modelo, descripción o estado.\n\n"
+                        + "Deje vacío para mostrar todos:",
+                "Buscar producto",
+                JOptionPane.QUESTION_MESSAGE
+        );
 
-        String texto = textField1.getText().trim();
+        if (entrada == null) {
+            return;
+        }
 
-        if (texto.isEmpty()) {
+        String criterio = entrada.trim();
+
+        if (criterio.isEmpty()) {
             cargarProductos();
             nuevo();
             return;
         }
 
         try {
+            List<Producto> exactos = new ArrayList<>();
+            List<Producto> parciales = new ArrayList<>();
 
-            List<Producto> productos =
-                    productoController.buscar(texto);
+            String filtro = criterio.toLowerCase(Locale.ROOT);
 
-            cargarTabla(productos);
+            for (Producto producto : productoController.listar()) {
+                String id = String.valueOf(producto.getIdProducto());
+                String codigo = textoSeguro(producto.getCodigoProducto());
+                String nombre = textoSeguro(producto.getNombre());
+                String tipo = textoSeguro(
+                        nombresTipos.get(producto.getIdTipoEquipo())
+                );
+                String marca = textoSeguro(producto.getMarca());
+                String modelo = textoSeguro(producto.getModelo());
+                String descripcion = textoSeguro(producto.getDescripcion());
+                String estado = producto.getEstado() == null
+                        ? ""
+                        : producto.getEstado().toString();
+
+                if (id.equals(criterio)
+                        || codigo.equalsIgnoreCase(criterio)
+                        || nombre.equalsIgnoreCase(criterio)) {
+                    exactos.add(producto);
+
+                } else if (
+                        codigo.toLowerCase(Locale.ROOT).contains(filtro)
+                                || nombre.toLowerCase(Locale.ROOT).contains(filtro)
+                                || tipo.toLowerCase(Locale.ROOT).contains(filtro)
+                                || marca.toLowerCase(Locale.ROOT).contains(filtro)
+                                || modelo.toLowerCase(Locale.ROOT).contains(filtro)
+                                || descripcion.toLowerCase(Locale.ROOT).contains(filtro)
+                                || estado.toLowerCase(Locale.ROOT).contains(filtro)
+                ) {
+                    parciales.add(producto);
+                }
+            }
+
+            List<Producto> resultados =
+                    exactos.isEmpty() ? exactos : exactos;
+
+            if (exactos.isEmpty()) {
+                resultados = parciales;
+            }
+
+            cargarTabla(resultados);
             limpiarCampos();
 
-            if (productos.isEmpty()) {
-
+            if (resultados.isEmpty()) {
                 JOptionPane.showMessageDialog(
                         panelPrincipal,
-                        "No se encontraron productos.",
+                        "No se encontraron productos con el criterio:\n"
+                                + criterio,
                         "SIGELAB",
                         JOptionPane.INFORMATION_MESSAGE
+                );
+
+            } else if (resultados.size() == 1) {
+                seleccionarFilaPorId(
+                        resultados.get(0).getIdProducto()
                 );
             }
 
         } catch (SQLException ex) {
-
             mostrarError(
-                    "No se pudo realizar la búsqueda.\n\n"
+                    "No se pudo realizar la búsqueda.\n"
                             + ex.getMessage()
             );
         }
     }
 
-    private void cargarProductoSeleccionado() {
+    private void seleccionarFilaPorId(int idProducto) {
+        for (int fila = 0; fila < modeloTabla.getRowCount(); fila++) {
+            Object valor = modeloTabla.getValueAt(fila, 0);
 
+            if (valor != null
+                    && String.valueOf(valor).equals(
+                    String.valueOf(idProducto)
+            )) {
+
+                int filaVista =
+                        tblProducto.convertRowIndexToView(fila);
+
+                if (filaVista >= 0) {
+                    tblProducto.setRowSelectionInterval(
+                            filaVista,
+                            filaVista
+                    );
+
+                    tblProducto.scrollRectToVisible(
+                            tblProducto.getCellRect(filaVista, 0, true)
+                    );
+
+                    cargarProductoSeleccionado();
+                }
+                return;
+            }
+        }
+    }
+
+    private void cargarProductoSeleccionado() {
         if (cargandoTabla) {
             return;
         }
@@ -540,124 +631,91 @@ public class ProductoForm {
 
         int fila = tblProducto.convertRowIndexToModel(filaVista);
 
-        DefaultTableModel modelo =
-                (DefaultTableModel) tblProducto.getModel();
+        int idProducto = Integer.parseInt(
+                valorTabla(fila, 0)
+        );
 
-        if (fila < 0 || fila >= modelo.getRowCount()) {
+        Integer idTipoEquipo = tiposPorProducto.get(idProducto);
+
+        txtId.setText(String.valueOf(idProducto));
+        txtCodigo.setText(valorTabla(fila, 1));
+        txtNombre.setText(valorTabla(fila, 2));
+        txtMarca.setText(valorTabla(fila, 4));
+        txtModelo.setText(valorTabla(fila, 5));
+        txtDescripcion.setText(valorTabla(fila, 6));
+
+        seleccionarTipoEquipo(idTipoEquipo);
+
+        String estado = valorTabla(fila, 7);
+        cmbEstado.setSelectedItem(estado);
+
+        cmbTipoEquipo.setEnabled(false);
+
+        btnGuardar.setEnabled(false);
+        btnActualizar.setEnabled(
+                cmbTipoEquipo.getSelectedItem() != null
+        );
+        btnDesactivar.setEnabled(
+                "ACTIVO".equalsIgnoreCase(estado)
+        );
+    }
+
+    private void seleccionarTipoEquipo(Integer idTipoEquipo) {
+        cmbTipoEquipo.setSelectedIndex(-1);
+
+        if (idTipoEquipo == null) {
             return;
         }
 
-        try {
-
-            int idProducto = Integer.parseInt(
-                    valorTabla(modelo, fila, 0)
-            );
-
-            Integer idTipoEquipo =
-                    tiposPorProducto.get(idProducto);
-
-            if (idTipoEquipo == null) {
-                mostrarAdvertencia(
-                        "No se encontró el tipo de equipo del producto."
-                );
-                return;
-            }
-
-            txtId.setText(String.valueOf(idProducto));
-
-            txtCodigo.setText(
-                    valorTabla(modelo, fila, 1)
-            );
-
-            txtNombre.setText(
-                    valorTabla(modelo, fila, 2)
-            );
-
-            seleccionarTipoEquipo(idTipoEquipo);
-
-            txtMarca.setText(
-                    valorTabla(modelo, fila, 4)
-            );
-
-            txtModelo.setText(
-                    valorTabla(modelo, fila, 5)
-            );
-
-            txtDescripcion.setText(
-                    valorTabla(modelo, fila, 6)
-            );
-
-            String estado = valorTabla(modelo, fila, 7);
-
-            cmbEstado.setSelectedItem(estado);
-
-            cmbTipoEquipo.setEnabled(false);
-
-            btnGuardar.setEnabled(false);
-
-            btnActualizar.setEnabled(
-                    cmbTipoEquipo.getSelectedItem() != null
-            );
-
-            btnDesactivar.setEnabled(
-                    "ACTIVO".equals(estado)
-            );
-
-        } catch (NumberFormatException ex) {
-
-            mostrarAdvertencia(
-                    "El ID del producto seleccionado no es válido."
-            );
-        }
-    }
-
-    private void seleccionarTipoEquipo(int idTipoEquipo) {
-
-        cmbTipoEquipo.setSelectedIndex(-1);
-
         for (int i = 0; i < cmbTipoEquipo.getItemCount(); i++) {
-
             TipoEquipo tipo = cmbTipoEquipo.getItemAt(i);
 
             if (tipo != null
                     && tipo.getIdTipoEquipo() == idTipoEquipo) {
-
                 cmbTipoEquipo.setSelectedIndex(i);
                 return;
             }
         }
     }
 
-    private String valorTabla(
-            DefaultTableModel modelo,
-            int fila,
-            int columna
-    ) {
-
-        Object valor = modelo.getValueAt(fila, columna);
-
+    private String valorTabla(int fila, int columna) {
+        Object valor = modeloTabla.getValueAt(fila, columna);
         return valor == null ? "" : valor.toString();
     }
 
+    private String textoSeguro(String texto) {
+        return texto == null ? "" : texto.trim();
+    }
+
     private boolean validarCampos() {
+        String nombre = txtNombre.getText().trim();
 
-        if (txtNombre.getText().trim().isEmpty()) {
-
+        if (nombre.isEmpty()) {
             mostrarAdvertencia(
                     "Ingrese el nombre del producto."
             );
-
             txtNombre.requestFocusInWindow();
             return false;
         }
 
-        if (cmbTipoEquipo.getSelectedItem() == null) {
-
+        if (nombre.length() > 100) {
             mostrarAdvertencia(
-                    "Debe seleccionar un tipo de equipo activo."
+                    "El nombre no puede superar 100 caracteres."
             );
+            return false;
+        }
 
-            cmbTipoEquipo.requestFocusInWindow();
+        if (cmbTipoEquipo.getSelectedItem() == null) {
+            mostrarAdvertencia(
+                    "Seleccione un tipo de equipo activo."
+            );
+            return false;
+        }
+
+        if (cmbEstado.getSelectedItem() == null) {
+            mostrarAdvertencia(
+                    "Seleccione el estado del producto."
+            );
             return false;
         }
 
@@ -665,7 +723,6 @@ public class ProductoForm {
     }
 
     private void limpiarCampos() {
-
         txtId.setText("");
         txtCodigo.setText("");
         txtNombre.setText("");
@@ -697,7 +754,6 @@ public class ProductoForm {
     }
 
     private void mostrarAdvertencia(String mensaje) {
-
         JOptionPane.showMessageDialog(
                 panelPrincipal,
                 mensaje,
@@ -707,7 +763,6 @@ public class ProductoForm {
     }
 
     private void mostrarError(String mensaje) {
-
         JOptionPane.showMessageDialog(
                 panelPrincipal,
                 mensaje,
@@ -717,7 +772,6 @@ public class ProductoForm {
     }
 
     private void salir() {
-
         Window ventana =
                 SwingUtilities.getWindowAncestor(panelPrincipal);
 
@@ -730,3 +784,4 @@ public class ProductoForm {
         return panelPrincipal;
     }
 }
+
