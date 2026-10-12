@@ -45,3 +45,6 @@ facial-service/**/__pycache__/
 facial-service/tmp/*.log
 .idea/
 *.iml
+
+# QR generados por el modulo de equipos
+qr-equipos/
