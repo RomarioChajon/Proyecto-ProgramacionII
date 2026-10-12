@@ -37,3 +37,11 @@ build/
 
 ### Mac OS ###
 .DS_Store
+### SIGELAB: secretos y archivos locales (NO subir a GitHub) ###
+src/main/resources/db.properties
+facial-service/.env
+facial-service/.venv/
+facial-service/**/__pycache__/
+facial-service/tmp/*.log
+.idea/
+*.iml
