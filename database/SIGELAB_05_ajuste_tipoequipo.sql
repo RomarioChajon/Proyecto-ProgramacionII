@@ -14,7 +14,9 @@ IF COL_LENGTH('dbo.TipoEquipo', 'codigo') IS NULL
     ALTER TABLE dbo.TipoEquipo ADD codigo NVARCHAR(30) NULL;
 GO
 
-/* Rellena el código de las categorías existentes: CAT-<4 letras del nombre>-<número> */
+/* Rellena el código de las categorías existentes: CAT-<4 letras del nombre>-<número>
+   Todo va dentro de BEGIN...END para que DBeaver lo ejecute como UN solo bloque. */
+BEGIN
 DECLARE @id INT, @nombre NVARCHAR(100), @txt NVARCHAR(100), @pref NVARCHAR(4),
         @i INT, @c NCHAR(1), @n INT;
 
@@ -49,6 +51,7 @@ BEGIN
 END
 CLOSE cur;
 DEALLOCATE cur;
+END
 GO
 
 /* Obligatoria, única y con formato */
