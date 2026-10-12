@@ -11,17 +11,7 @@ import java.util.Properties;
 
 /**
  * Punto ÚNICO de acceso a la conexión con SQL Server.
- *
- * <p>La URL, el usuario y la contraseña NO están escritos en el código (así no
- * se suben a GitHub). Se leen, en este orden de prioridad:</p>
- * <ol>
- *   <li>Propiedad de la JVM:  {@code -Dsigelab.db.url=...}  ({@code .user}, {@code .password})</li>
- *   <li>Variable de entorno:  {@code SIGELAB_DB_URL}, {@code SIGELAB_DB_USER}, {@code SIGELAB_DB_PASSWORD}</li>
- *   <li>Archivo {@code db.properties} en {@code src/main/resources}
- *       (claves {@code db.url}, {@code db.user}, {@code db.password}).</li>
- * </ol>
- * <p>El archivo real {@code db.properties} está en el .gitignore; en el repositorio
- * solo vive {@code db.properties.example}.</p>
+
  */
 public final class DatabaseConnection {
 
