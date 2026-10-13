@@ -37,8 +37,13 @@ import java.util.logging.Logger;
 public class LoginForm {
 
     private static final String TITULO = "SIGELAB";
-    private static final Logger LOG = Logger.getLogger(LoginForm.class.getName());
 
+    // Control temporal del reconocimiento facial
+    // false = ingresar solo con usuario y contraseña
+    // true  = exigir también reconocimiento facial
+    private static final boolean FACIAL_HABILITADO = false;
+
+    private static final Logger LOG = Logger.getLogger(LoginForm.class.getName());
     /** Mensaje que pide el enunciado para quienes no son estudiantes. */
     static final String AVISO_COLABORADOR =
             "Si usted es colaborador de la institución por favor contactarse con el administrador.";
@@ -151,18 +156,31 @@ public class LoginForm {
         if (ocupado) {
             return;
         }
+
         final String usuario = txtUsuario.getText();
         final String password = new String(txtPassword.getPassword());
+
         ejecutar(() -> {
-            // Paso 1: contraseña. Si falla NO se abre la cámara.
+
+            // Paso 1: validar usuario y contraseña en SQL Server.
             Usuario autenticado = authController.autenticar(usuario, password);
-            // Paso 2: rostro. Java solo envía el id; la cámara y la comparación las hace el servicio Python.
-            FacialVerificationResult resultado = facialClient.verify(autenticado.getIdUsuario());
-            if (!resultado.matched()
-                    || (resultado.userId() != 0 && resultado.userId() != autenticado.getIdUsuario())) {
-                throw new BusinessException(mensajeNoCoincide(resultado));
+
+            // Paso 2: verificar rostro solo cuando esté habilitado.
+            if (FACIAL_HABILITADO) {
+                FacialVerificationResult resultado =
+                        facialClient.verify(autenticado.getIdUsuario());
+
+                if (!resultado.matched()
+                        || (resultado.userId() != 0
+                        && resultado.userId() != autenticado.getIdUsuario())) {
+
+                    throw new BusinessException(mensajeNoCoincide(resultado));
+                }
             }
+
+            // Acceder al menú principal.
             return autenticado;
+
         }, this::entrar);
     }
 
