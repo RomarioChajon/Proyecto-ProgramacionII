@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.umg</groupId>
@@ -15,37 +16,50 @@
 
     <dependencies>
 
-        <!-- SQL Server (JDBC) -->
+        <!-- SQL Server JDBC -->
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>mssql-jdbc</artifactId>
             <version>13.4.0.jre11</version>
         </dependency>
 
-        <!-- Hash de contraseñas -->
+        <!-- BCrypt -->
         <dependency>
             <groupId>org.mindrot</groupId>
             <artifactId>jbcrypt</artifactId>
             <version>0.4</version>
         </dependency>
 
-        <!-- Selector de fechas para Swing -->
+        <!-- Calendario Swing -->
         <dependency>
             <groupId>com.toedter</groupId>
             <artifactId>jcalendar</artifactId>
             <version>1.4</version>
         </dependency>
 
-        <!-- QR: generar y leer -->
+        <!-- ZXing: generacion y lectura de QR -->
         <dependency>
             <groupId>com.google.zxing</groupId>
             <artifactId>core</artifactId>
             <version>3.5.3</version>
         </dependency>
+
         <dependency>
             <groupId>com.google.zxing</groupId>
             <artifactId>javase</artifactId>
             <version>3.5.3</version>
+        </dependency>
+
+        <!-- IntelliJ GUI Designer: clases para formularios Swing -->
+        <!-- IntelliJ GUI Designer Runtime -->
+        <!-- IntelliJ GUI Designer Runtime -->
+        <!-- IntelliJ GUI Designer Runtime -->
+        <dependency>
+            <groupId>com.intellij</groupId>
+            <artifactId>forms_rt</artifactId>
+            <version>7.0.3</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/forms_rt.jar</systemPath>
         </dependency>
 
     </dependencies>

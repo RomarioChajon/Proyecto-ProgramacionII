@@ -137,6 +137,7 @@ CREATE TABLE dbo.Usuario (
                              nombre_usuario NVARCHAR(30)  NOT NULL,
                              password_hash  NVARCHAR(100) NOT NULL,           -- hash BCrypt (60 caracteres)
                              correo         NVARCHAR(120) NOT NULL,
+                             foto           VARBINARY(MAX) NULL,             -- fotografía opcional del usuario
                              id_rol         INT           NOT NULL,
                              id_laboratorio INT           NULL,               -- solo para ENCARGADO
                              estado         NVARCHAR(10)  NOT NULL CONSTRAINT DF_Usuario_Estado DEFAULT 'ACTIVO',
