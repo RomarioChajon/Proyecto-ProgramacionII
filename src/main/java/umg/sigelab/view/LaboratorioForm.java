@@ -888,4 +888,5 @@ public class LaboratorioForm {
     public JPanel getPanelPrincipal() {
         return panelPrincipal;
     }
+
 }

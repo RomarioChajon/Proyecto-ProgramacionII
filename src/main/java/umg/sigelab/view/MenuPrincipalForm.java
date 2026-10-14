@@ -3,13 +3,12 @@ package umg.sigelab.view;
 import umg.sigelab.model.Usuario;
 import umg.sigelab.util.Sesion;
 
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.WindowConstants;
-import java.awt.Dimension;
+import javax.swing.*;
+import javax.swing.plaf.FontUIResource;
+import javax.swing.text.StyleContext;
+import java.awt.*;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -44,9 +43,13 @@ public class MenuPrincipalForm {
 
     private final Usuario usuario;
     private final Runnable alCerrarSesion;
-    /** Ventana de usuarios: se reutiliza para no abrir varias copias. */
+    /**
+     * Ventana de usuarios: se reutiliza para no abrir varias copias.
+     */
     private JFrame ventanaUsuarios;
-    /** Ventanas de los módulos de inventario, por título (una sola copia de cada una). */
+    /**
+     * Ventanas de los módulos de inventario, por título (una sola copia de cada una).
+     */
     private final Map<String, JFrame> ventanasModulos = new HashMap<>();
 
     /**
@@ -93,7 +96,9 @@ public class MenuPrincipalForm {
         Mensajes.informar(panelPrincipal, opcion, "Opción aún en desarrollo.");
     }
 
-    /** Abre el CRUD de usuarios en su propia ventana (o la trae al frente si ya está abierta). */
+    /**
+     * Abre el CRUD de usuarios en su propia ventana (o la trae al frente si ya está abierta).
+     */
     private void abrirUsuarios() {
         if (ventanaUsuarios != null && ventanaUsuarios.isDisplayable()) {
             ventanaUsuarios.toFront();
@@ -152,4 +157,5 @@ public class MenuPrincipalForm {
         }
         ventanasModulos.clear();
     }
+
 }

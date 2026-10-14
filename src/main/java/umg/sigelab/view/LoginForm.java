@@ -8,15 +8,11 @@ import umg.sigelab.integration.facial.FacialVerificationResult;
 import umg.sigelab.model.Usuario;
 import umg.sigelab.util.BusinessException;
 
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JPasswordField;
-import javax.swing.JTabbedPane;
-import javax.swing.JTextField;
-import javax.swing.SwingWorker;
-import javax.swing.Timer;
-import java.awt.Color;
+import javax.swing.*;
+import javax.swing.plaf.FontUIResource;
+import javax.swing.text.StyleContext;
+import java.awt.*;
+import java.util.Locale;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
@@ -44,7 +40,9 @@ public class LoginForm {
     private static final boolean FACIAL_HABILITADO = false;
 
     private static final Logger LOG = Logger.getLogger(LoginForm.class.getName());
-    /** Mensaje que pide el enunciado para quienes no son estudiantes. */
+    /**
+     * Mensaje que pide el enunciado para quienes no son estudiantes.
+     */
     static final String AVISO_COLABORADOR =
             "Si usted es colaborador de la institución por favor contactarse con el administrador.";
 
@@ -87,9 +85,13 @@ public class LoginForm {
     private final Consumer<Usuario> alIngresar;
     private final Runnable alAbrirServicioFacial;
 
-    /** true mientras corre una operación larga (cámara, base de datos): bloquea los botones. */
+    /**
+     * true mientras corre una operación larga (cámara, base de datos): bloquea los botones.
+     */
     private boolean ocupado;
-    /** Id del usuario cuyo rostro YA fue verificado en el reinicio de contraseña (0 = ninguno). */
+    /**
+     * Id del usuario cuyo rostro YA fue verificado en el reinicio de contraseña (0 = ninguno).
+     */
     private int reinicioVerificadoId;
     private boolean comprobandoServicio;
     private Timer temporizadorServicio;
@@ -98,7 +100,9 @@ public class LoginForm {
         this(new AuthController(), new FacialAuthClient(), alIngresar, alAbrirServicioFacial);
     }
 
-    /** Constructor completo: permite inyectar controlador y cliente falsos en pruebas. */
+    /**
+     * Constructor completo: permite inyectar controlador y cliente falsos en pruebas.
+     */
     public LoginForm(AuthController authController, FacialAuthClient facialClient,
                      Consumer<Usuario> alIngresar, Runnable alAbrirServicioFacial) {
         this.authController = authController;
@@ -116,7 +120,9 @@ public class LoginForm {
         return panelPrincipal;
     }
 
-    /** Detiene el temporizador que consulta el servicio facial. Llamar al salir de esta pantalla. */
+    /**
+     * Detiene el temporizador que consulta el servicio facial. Llamar al salir de esta pantalla.
+     */
     public void cerrar() {
         if (temporizadorServicio != null) {
             temporizadorServicio.stop();
@@ -298,7 +304,9 @@ public class LoginForm {
         });
     }
 
-    /** Vuelve la pestaña de reinicio al paso 1 y borra todo lo escrito. */
+    /**
+     * Vuelve la pestaña de reinicio al paso 1 y borra todo lo escrito.
+     */
     private void cancelarReinicio() {
         reinicioVerificadoId = 0;
         txtResUsuario.setText("");
@@ -357,7 +365,9 @@ public class LoginForm {
         return r.message() == null || r.message().isBlank() ? "El rostro no coincide con el usuario." : r.message();
     }
 
-    /** Habilita o bloquea botones y campos según el estado actual (ocupado / paso del reinicio). */
+    /**
+     * Habilita o bloquea botones y campos según el estado actual (ocupado / paso del reinicio).
+     */
     private void refrescarControles() {
         boolean libre = !ocupado;
         btnIngresar.setEnabled(libre);
@@ -428,4 +438,5 @@ public class LoginForm {
             }
         }.execute();
     }
+
 }

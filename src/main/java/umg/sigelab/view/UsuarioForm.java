@@ -13,26 +13,11 @@ import umg.sigelab.model.Usuario;
 import umg.sigelab.util.DateUtils;
 import umg.sigelab.util.ImagenUtils;
 
-import javax.swing.BorderFactory;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JFileChooser;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JPasswordField;
-import javax.swing.JTable;
-import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
-import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
+import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Font;
-import java.awt.Window;
+import java.awt.*;
 import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 
@@ -52,7 +37,9 @@ import java.util.concurrent.ExecutionException;
 public class UsuarioForm {
 
     private static final String TITULO = "Usuarios";
-    /** Lado del cuadro donde se dibuja la foto (el JLabel mide 180x180 con borde). */
+    /**
+     * Lado del cuadro donde se dibuja la foto (el JLabel mide 180x180 con borde).
+     */
     private static final int LADO_FOTO = 176;
 
     // Posición de cada columna en la tabla.
@@ -91,21 +78,33 @@ public class UsuarioForm {
     private final UsuarioController usuarioController;
     private final LaboratorioController laboratorioController;
     private final FacialAuthClient facialClient;
-    /** Usuario con la sesión abierta (null si todavía no hay login). */
+    /**
+     * Usuario con la sesión abierta (null si todavía no hay login).
+     */
     private final Usuario usuarioAutenticado;
 
     // ---- Estado de la pantalla ----
-    /** Usuario cargado en el formulario; null cuando se está creando uno nuevo. */
+    /**
+     * Usuario cargado en el formulario; null cuando se está creando uno nuevo.
+     */
     private Usuario usuarioSeleccionado;
-    /** Foto elegida en esta pantalla y todavía no guardada (JPEG ya reducido). */
+    /**
+     * Foto elegida en esta pantalla y todavía no guardada (JPEG ya reducido).
+     */
     private byte[] fotoNueva;
-    /** true si el usuario eligió o quitó la foto y falta guardar el cambio. */
+    /**
+     * true si el usuario eligió o quitó la foto y falta guardar el cambio.
+     */
     private boolean fotoModificada;
-    /** true mientras se llena la tabla por código (evita que la selección dispare eventos). */
+    /**
+     * true mientras se llena la tabla por código (evita que la selección dispare eventos).
+     */
     private boolean cargandoTabla;
     private boolean perfilFacialRegistrado;
 
-    /** Opciones del filtro por estado. */
+    /**
+     * Opciones del filtro por estado.
+     */
     private enum FiltroEstado {
         TODOS("Todos los estados", null),
         ACTIVOS("Solo activos", EstadoRegistro.ACTIVO),
@@ -133,12 +132,16 @@ public class UsuarioForm {
         this(null);
     }
 
-    /** @param usuarioAutenticado quien tiene la sesión abierta (null si aún no hay login) */
+    /**
+     * @param usuarioAutenticado quien tiene la sesión abierta (null si aún no hay login)
+     */
     public UsuarioForm(Usuario usuarioAutenticado) {
         this(new UsuarioController(), new LaboratorioController(), new FacialAuthClient(), usuarioAutenticado);
     }
 
-    /** Constructor completo: permite inyectar controladores falsos en pruebas. */
+    /**
+     * Constructor completo: permite inyectar controladores falsos en pruebas.
+     */
     public UsuarioForm(UsuarioController usuarioController, LaboratorioController laboratorioController,
                        FacialAuthClient facialClient, Usuario usuarioAutenticado) {
         this.usuarioController = usuarioController;
@@ -255,7 +258,9 @@ public class UsuarioForm {
     // Acciones de los botones
     // ------------------------------------------------------------------
 
-    /** Prepara el formulario para registrar un usuario nuevo. */
+    /**
+     * Prepara el formulario para registrar un usuario nuevo.
+     */
     private void nuevo() {
         usuarioSeleccionado = null;
         perfilFacialRegistrado = false;
@@ -316,7 +321,9 @@ public class UsuarioForm {
         }
     }
 
-    /** Desactiva o reactiva al usuario seleccionado. No se borra nada: se conserva el historial. */
+    /**
+     * Desactiva o reactiva al usuario seleccionado. No se borra nada: se conserva el historial.
+     */
     private void cambiarEstado() {
         if (usuarioSeleccionado == null) {
             Mensajes.advertir(panelPrincipal, TITULO, "Seleccione un usuario de la lista.");
@@ -373,14 +380,18 @@ public class UsuarioForm {
         marcarFoto(true);
     }
 
-    /** Dibuja la foto en el cuadro, o el texto "Sin foto" si no hay. */
+    /**
+     * Dibuja la foto en el cuadro, o el texto "Sin foto" si no hay.
+     */
     private void mostrarFoto(byte[] foto) {
         ImageIcon icono = ImagenUtils.aIcono(foto, LADO_FOTO, LADO_FOTO);
         lblFoto.setIcon(icono);
         lblFoto.setText(icono == null ? "Sin foto" : "");
     }
 
-    /** Borde naranja = hay un cambio de foto pendiente de guardar; gris = foto tal como está guardada. */
+    /**
+     * Borde naranja = hay un cambio de foto pendiente de guardar; gris = foto tal como está guardada.
+     */
     private void marcarFoto(boolean pendiente) {
         lblFoto.setBorder(BorderFactory.createLineBorder(pendiente ? new Color(0xE67E22) : Color.LIGHT_GRAY, 2));
         lblFoto.setToolTipText(pendiente ? "Cambio de foto pendiente: se guarda al presionar Guardar o Actualizar." : null);
@@ -390,7 +401,9 @@ public class UsuarioForm {
     // Tabla y búsqueda
     // ------------------------------------------------------------------
 
-    /** Llena la tabla con los usuarios que cumplen el texto y el estado del filtro. */
+    /**
+     * Llena la tabla con los usuarios que cumplen el texto y el estado del filtro.
+     */
     private void cargarUsuarios() {
         try {
             FiltroEstado filtro = (FiltroEstado) cmbFiltroEstado.getSelectedItem();
@@ -416,7 +429,9 @@ public class UsuarioForm {
         }
     }
 
-    /** Se ejecuta cuando el usuario hace clic en una fila: carga ese usuario completo (con foto). */
+    /**
+     * Se ejecuta cuando el usuario hace clic en una fila: carga ese usuario completo (con foto).
+     */
     private void seleccionarDesdeTabla() {
         int fila = tblUsuarios.getSelectedRow();
         if (fila < 0) {
@@ -460,7 +475,9 @@ public class UsuarioForm {
     // Pasar datos entre formulario y modelo
     // ------------------------------------------------------------------
 
-    /** Muestra un usuario existente en el formulario y deja la pantalla en modo edición. */
+    /**
+     * Muestra un usuario existente en el formulario y deja la pantalla en modo edición.
+     */
     private void mostrarUsuario(Usuario u) {
         usuarioSeleccionado = u;
 
@@ -489,7 +506,9 @@ public class UsuarioForm {
         consultarEstadoRostro(u);
     }
 
-    /** Lee el formulario y arma un Usuario. NO valida reglas: de eso se encarga el Service. */
+    /**
+     * Lee el formulario y arma un Usuario. NO valida reglas: de eso se encarga el Service.
+     */
     private Usuario construirUsuario() {
         Usuario u = new Usuario();
         u.setNombre(txtNombre.getText());
@@ -502,7 +521,9 @@ public class UsuarioForm {
         return u;
     }
 
-    /** El combo de laboratorio solo se usa cuando el rol es ENCARGADO. */
+    /**
+     * El combo de laboratorio solo se usa cuando el rol es ENCARGADO.
+     */
     private void actualizarCampoLaboratorio() {
         RolUsuario rol = (RolUsuario) cmbRol.getSelectedItem();
         boolean requiere = rol != null && rol.requiereLaboratorio();
@@ -546,7 +567,9 @@ public class UsuarioForm {
         btnRegistrarRostro.setText("Registrar rostro");
     }
 
-    /** Consulta si el usuario ya tiene rostro registrado y ajusta los botones. */
+    /**
+     * Consulta si el usuario ya tiene rostro registrado y ajusta los botones.
+     */
     private void consultarEstadoRostro(Usuario usuario) {
         if (!usuario.isActivo()) {
             deshabilitarRostro("Usuario inactivo: actívelo para registrar su rostro.");
@@ -660,7 +683,9 @@ public class UsuarioForm {
         }.execute();
     }
 
-    /** Vuelve a consultar el estado facial si el usuario sigue siendo el seleccionado. */
+    /**
+     * Vuelve a consultar el estado facial si el usuario sigue siendo el seleccionado.
+     */
     private void refrescarEstadoRostro(int id) {
         if (usuarioSeleccionado != null && usuarioSeleccionado.getIdUsuario() == id) {
             consultarEstadoRostro(usuarioSeleccionado);
