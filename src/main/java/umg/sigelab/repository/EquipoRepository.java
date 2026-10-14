@@ -1,4 +1,3 @@
-
 package umg.sigelab.repository;
 
 import umg.sigelab.config.DatabaseConnection;
