@@ -2,25 +2,17 @@ package umg.sigelab.view;
 
 import umg.sigelab.integration.facial.FacialServiceLauncher;
 
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JDialog;
-import javax.swing.JFileChooser;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
-import javax.swing.Timer;
-import javax.swing.WindowConstants;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Window;
+import javax.swing.*;
+import javax.swing.plaf.FontUIResource;
+import javax.swing.text.StyleContext;
+import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Locale;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
 /**
@@ -59,7 +51,9 @@ public class ServicioFacialForm {
         this(FacialServiceLauncher.getInstance());
     }
 
-    /** Constructor con el lanzador inyectado (permite pruebas con uno falso). */
+    /**
+     * Constructor con el lanzador inyectado (permite pruebas con uno falso).
+     */
     public ServicioFacialForm(FacialServiceLauncher launcher) {
         this.launcher = launcher;
 
@@ -82,7 +76,9 @@ public class ServicioFacialForm {
         return panelPrincipal;
     }
 
-    /** Abre la ventana (no modal: el login y el menú siguen usables) centrada sobre {@code padre}. */
+    /**
+     * Abre la ventana (no modal: el login y el menú siguen usables) centrada sobre {@code padre}.
+     */
     public static void abrir(Component padre) {
         ServicioFacialForm formulario = new ServicioFacialForm();
         Window propietario = padre == null ? null : SwingUtilities.getWindowAncestor(padre);
@@ -101,7 +97,9 @@ public class ServicioFacialForm {
         dialogo.setVisible(true);
     }
 
-    /** Detiene el temporizador y deja de escuchar el registro. */
+    /**
+     * Detiene el temporizador y deja de escuchar el registro.
+     */
     public void liberar() {
         temporizador.stop();
         launcher.quitarOyente(oyenteLog);
@@ -129,7 +127,9 @@ public class ServicioFacialForm {
         }
     }
 
-    /** Valida y recuerda la carpeta escrita. @return true si es válida */
+    /**
+     * Valida y recuerda la carpeta escrita. @return true si es válida
+     */
     private boolean guardarRuta() {
         Path carpeta = Paths.get(txtRuta.getText().trim());
         String error = FacialServiceLauncher.validarCarpeta(carpeta);
@@ -174,8 +174,10 @@ public class ServicioFacialForm {
         });
     }
 
-    /** Corre la acción en segundo plano bloqueando los botones hasta que termine. */
-    private void ejecutar(java.util.concurrent.Callable<?> accion) {
+    /**
+     * Corre la acción en segundo plano bloqueando los botones hasta que termine.
+     */
+    private void ejecutar(Callable<?> accion) {
         ocupado = true;
         actualizarBotones();
         new SwingWorker<Object, Void>() {
@@ -191,7 +193,7 @@ public class ServicioFacialForm {
                     get();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                } catch (java.util.concurrent.ExecutionException e) {
+                } catch (ExecutionException e) {
                     Mensajes.error(panelPrincipal, TITULO, String.valueOf(e.getCause().getMessage()));
                 }
                 refrescarEstado();
@@ -203,7 +205,9 @@ public class ServicioFacialForm {
     // Estado y registro
     // ------------------------------------------------------------------
 
-    /** Consulta (fuera del hilo de Swing) si el servicio responde y si está instalado, y actualiza las etiquetas. */
+    /**
+     * Consulta (fuera del hilo de Swing) si el servicio responde y si está instalado, y actualiza las etiquetas.
+     */
     private void refrescarEstado() {
         if (consultando) {
             return;
@@ -227,7 +231,7 @@ public class ServicioFacialForm {
                     lblInstalacion.setForeground(estado[1] ? new Color(0x15803D) : new Color(0xB45309));
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                } catch (java.util.concurrent.ExecutionException e) {
+                } catch (ExecutionException e) {
                     lblServicio.setText("Servicio: desconocido");
                 }
                 actualizarBotones();
@@ -247,4 +251,5 @@ public class ServicioFacialForm {
         txtLog.append(linea + "\n");
         txtLog.setCaretPosition(txtLog.getDocument().getLength()); // siempre muestra lo último
     }
+
 }

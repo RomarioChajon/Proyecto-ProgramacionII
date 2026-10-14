@@ -2,9 +2,11 @@ package umg.sigelab.view;
 
 import umg.sigelab.model.Usuario;
 
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
+import javax.swing.*;
+import javax.swing.plaf.FontUIResource;
+import javax.swing.text.StyleContext;
+import java.awt.*;
+import java.util.Locale;
 
 /**
  * Pantalla de bienvenida para el ENCARGADO DE LABORATORIO. La vista real (aprobar préstamos, despacho,
@@ -23,7 +25,9 @@ public class InicioEncargadoForm {
         configurar(usuario, alCerrarSesion);
     }
 
-    /** Escribe los textos y conecta el botón (separado del constructor para poder probarlo). */
+    /**
+     * Escribe los textos y conecta el botón (separado del constructor para poder probarlo).
+     */
     private void configurar(Usuario usuario, Runnable alCerrarSesion) {
         // Pedido del enunciado: "Bienvenido" + usuario + nombre + id.
         lblMensaje.setText("Bienvenido " + usuario.getNombreUsuario() + " - " + usuario.getNombreCompleto()
@@ -38,4 +42,5 @@ public class InicioEncargadoForm {
     public JPanel getPanelPrincipal() {
         return panelPrincipal;
     }
+
 }

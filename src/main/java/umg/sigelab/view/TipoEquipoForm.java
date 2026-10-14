@@ -626,5 +626,6 @@ public class TipoEquipoForm {
     public JPanel getPanelPrincipal() {
         return panelPrincipal;
     }
+
 }
 

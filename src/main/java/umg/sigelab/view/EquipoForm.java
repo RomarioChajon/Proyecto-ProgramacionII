@@ -17,6 +17,7 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -951,7 +952,7 @@ public class EquipoForm {
         JFileChooser selector = new JFileChooser();
         selector.setDialogTitle("Guardar código QR");
         selector.setSelectedFile(
-                new java.io.File(codigo + ".png")
+                new File(codigo + ".png")
         );
 
         int resultado = selector.showSaveDialog(panelPrincipal);
@@ -1035,6 +1036,7 @@ public class EquipoForm {
     public JPanel getPanelPrincipal() {
         return panelPrincipal;
     }
+
 }
 
 

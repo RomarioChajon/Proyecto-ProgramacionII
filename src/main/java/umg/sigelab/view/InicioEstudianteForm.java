@@ -2,9 +2,11 @@ package umg.sigelab.view;
 
 import umg.sigelab.model.Usuario;
 
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
+import javax.swing.*;
+import javax.swing.plaf.FontUIResource;
+import javax.swing.text.StyleContext;
+import java.awt.*;
+import java.util.Locale;
 
 /**
  * Pantalla de bienvenida para ESTUDIANTE y DOCENTE. La vista real (solicitar préstamos, etc.)
@@ -23,7 +25,9 @@ public class InicioEstudianteForm {
         configurar(usuario, alCerrarSesion);
     }
 
-    /** Escribe los textos y conecta el botón (separado del constructor para poder probarlo). */
+    /**
+     * Escribe los textos y conecta el botón (separado del constructor para poder probarlo).
+     */
     private void configurar(Usuario usuario, Runnable alCerrarSesion) {
         // Estudiante y docente comparten esta pantalla de bienvenida (por ahora).
         lblMensaje.setText("Bienvenido " + usuario.getNombreCompleto() + " (" + usuario.getNombreUsuario() + ")");
@@ -35,4 +39,5 @@ public class InicioEstudianteForm {
     public JPanel getPanelPrincipal() {
         return panelPrincipal;
     }
+
 }

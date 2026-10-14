@@ -783,5 +783,6 @@ public class ProductoForm {
     public JPanel getPanelPrincipal() {
         return panelPrincipal;
     }
+
 }
 
