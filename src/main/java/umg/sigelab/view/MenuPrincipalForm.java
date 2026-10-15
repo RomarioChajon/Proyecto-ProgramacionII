@@ -7,9 +7,11 @@ import umg.sigelab.model.Usuario;
 import umg.sigelab.util.Sesion;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.FontUIResource;
 import javax.swing.text.StyleContext;
 import java.awt.*;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -17,7 +19,7 @@ import java.util.function.Supplier;
 
 public class MenuPrincipalForm {
 
-    // COMPONENTES VINCULADOS CON MenuPrincipalForm.form
+    // COMPONENTES DEL FORMULARIO ORIGINAL
 
     private JPanel panelPrincipal;
     private JLabel lblTitulo;
@@ -46,6 +48,10 @@ public class MenuPrincipalForm {
     private final Map<String, JFrame> ventanasModulos =
             new HashMap<>();
 
+    // ==========================================
+    // CONSTRUCTOR
+    // ==========================================
+
     public MenuPrincipalForm(
             Usuario usuario,
             Runnable alCerrarSesion
@@ -58,10 +64,8 @@ public class MenuPrincipalForm {
                 lblUsuarioActual == null) {
 
             throw new IllegalStateException(
-                    "MenuPrincipalForm no tiene inicializados " +
-                            "sus componentes. Verifique " +
-                            "MenuPrincipalForm.form y la compilación " +
-                            "con IntelliJ GUI Designer."
+                    "No se inicializaron los componentes de " +
+                            "MenuPrincipalForm. Revise el archivo .form."
             );
         }
 
@@ -84,6 +88,10 @@ public class MenuPrincipalForm {
         return panelPrincipal;
     }
 
+    // ==========================================
+    // EVENTOS DE TODOS LOS BOTONES
+    // ==========================================
+
     private void configurarEventos() {
 
         // USUARIOS
@@ -98,6 +106,7 @@ public class MenuPrincipalForm {
 
         // CERRAR SESIÓN
         btnCerrarSesion.addActionListener(e -> {
+
             cerrarVentanasHijas();
 
             if (alCerrarSesion != null) {
@@ -105,7 +114,7 @@ public class MenuPrincipalForm {
             }
         });
 
-        // LABORATORIOS / SEDES
+        // LABORATORIOS
         btnLaboratorios.addActionListener(e ->
                 abrirModulo(
                         "Laboratorios / sedes",
@@ -141,22 +150,26 @@ public class MenuPrincipalForm {
                 )
         );
 
+        // ==========================================
         // PRÉSTAMOS Y DESPACHO
-        // Abre temporalmente SolicitudPrestamoForm.
-        // La gestión de autorizaciones y despacho
-        // debe implementarse en su pantalla correspondiente.
+        // ==========================================
+
         btnPrestamos.addActionListener(e ->
                 abrirModulo(
                         "Préstamos y despacho",
-                        () -> new SolicitudPrestamoForm()
-                                .getPanelPrincipal()
+                        this::crearMenuPrestamos
                 )
         );
 
+        // ==========================================
         // DEVOLUCIONES
-        // Pendiente de conectar con el formulario real.
+        // ==========================================
+
         btnDevoluciones.addActionListener(e ->
-                enDesarrollo("Devoluciones")
+                abrirModulo(
+                        "Devoluciones",
+                        this::crearPanelDevoluciones
+                )
         );
 
         // MANTENIMIENTO
@@ -180,6 +193,319 @@ public class MenuPrincipalForm {
         );
     }
 
+    // ==========================================
+    // MENÚ INTERMEDIO DE PRÉSTAMOS
+    // ==========================================
+
+
+    private JPanel crearMenuPrestamos() {
+
+        JPanel panel = new JPanel(
+                new BorderLayout(15, 20)
+        );
+
+        panel.setBorder(
+                new EmptyBorder(30, 30, 30, 30)
+        );
+
+        JLabel titulo = new JLabel(
+                "Módulo de Préstamos y Despacho",
+                SwingConstants.CENTER
+        );
+
+        titulo.setFont(
+                new Font("SansSerif", Font.BOLD, 23)
+        );
+
+        panel.add(titulo, BorderLayout.NORTH);
+
+        // OPCIONES DE PRÉSTAMOS
+        JPanel opciones = new JPanel(
+                new GridLayout(1, 2, 20, 0)
+        );
+
+        JButton btnSolicitud = crearTarjeta(
+                "Solicitud de Préstamos",
+                "DOCENTE / ESTUDIANTE",
+                "Solicitar equipos disponibles"
+        );
+
+        JButton btnGestion = crearTarjeta(
+                "Gestión de Préstamos",
+                "ADMIN / ENCARGADO",
+                "Aprobar, rechazar y despachar"
+        );
+
+        btnSolicitud.addActionListener(
+                e -> abrirSolicitudPrestamo()
+        );
+
+        btnGestion.addActionListener(
+                e -> abrirGestionPrestamos()
+        );
+
+        opciones.add(btnSolicitud);
+        opciones.add(btnGestion);
+
+        panel.add(opciones, BorderLayout.CENTER);
+
+        // PANEL INFERIOR
+        JPanel panelInferior = new JPanel(
+                new BorderLayout(10, 10)
+        );
+
+        JLabel ayuda = new JLabel(
+                "Seleccione una opción para continuar.",
+                SwingConstants.CENTER
+        );
+
+        panelInferior.add(ayuda, BorderLayout.NORTH);
+
+        // BOTÓN REGRESAR
+        JButton btnRegresar = new JButton(
+                "← Regresar al panel principal"
+        );
+
+        btnRegresar.setFont(
+                new Font("SansSerif", Font.BOLD, 14)
+        );
+
+        btnRegresar.setFocusPainted(false);
+
+        btnRegresar.setCursor(
+                Cursor.getPredefinedCursor(
+                        Cursor.HAND_CURSOR
+                )
+        );
+
+        btnRegresar.addActionListener(e -> {
+
+            JFrame ventana = (JFrame)
+                    SwingUtilities.getWindowAncestor(panel);
+
+            if (ventana != null) {
+                ventana.dispose();
+            }
+
+            ventanasModulos.remove("Préstamos y despacho");
+        });
+
+        JPanel panelBoton = new JPanel(
+                new FlowLayout(FlowLayout.CENTER)
+        );
+
+        panelBoton.add(btnRegresar);
+
+        panelInferior.add(
+                panelBoton,
+                BorderLayout.CENTER
+        );
+
+        panel.add(
+                panelInferior,
+                BorderLayout.SOUTH
+        );
+
+        return panel;
+    }
+
+
+    // ==========================================
+    // TARJETAS DEL MENÚ DE PRÉSTAMOS
+    // ==========================================
+
+    private JButton crearTarjeta(
+            String titulo,
+            String rol,
+            String descripcion
+    ) {
+
+        String texto =
+                "<html><center>" +
+                        "<h2>" + titulo + "</h2>" +
+                        "<p>" + rol + "</p>" +
+                        "<p>" + descripcion + "</p>" +
+                        "</center></html>";
+
+        JButton boton = new JButton(texto);
+
+        boton.setFont(
+                new Font("SansSerif", Font.PLAIN, 14)
+        );
+
+        boton.setFocusPainted(false);
+
+        boton.setCursor(
+                Cursor.getPredefinedCursor(
+                        Cursor.HAND_CURSOR
+                )
+        );
+
+        boton.setPreferredSize(
+                new Dimension(320, 220)
+        );
+
+        return boton;
+    }
+
+    // ==========================================
+    // ABRIR SOLICITUD DE PRÉSTAMOS
+    // ==========================================
+
+    private void abrirSolicitudPrestamo() {
+
+        abrirModulo(
+                "Solicitud de préstamos",
+                () -> new SolicitudPrestamoForm()
+                        .getPanelPrincipal()
+        );
+    }
+
+    // ==========================================
+    // ABRIR GESTIÓN DE PRÉSTAMOS
+    // ==========================================
+
+    private void abrirGestionPrestamos() {
+
+        final String titulo = "Gestión de préstamos";
+
+        JFrame abierta = ventanasModulos.get(titulo);
+
+        if (abierta != null && abierta.isDisplayable()) {
+            abierta.toFront();
+            abierta.requestFocus();
+            return;
+        }
+
+        try {
+
+            Object formulario = new GestionPrestamos();
+
+            // Compatible con GestionPrestamos si es JFrame.
+            if (formulario instanceof JFrame) {
+
+                JFrame ventana = (JFrame) formulario;
+
+                ventana.setDefaultCloseOperation(
+                        WindowConstants.DISPOSE_ON_CLOSE
+                );
+
+                if (ventana.getWidth() < 900 ||
+                        ventana.getHeight() < 650) {
+
+                    ventana.setSize(
+                            Math.max(900, ventana.getWidth()),
+                            Math.max(650, ventana.getHeight())
+                    );
+                }
+
+                ventana.setLocationRelativeTo(panelPrincipal);
+
+                ventanasModulos.put(titulo, ventana);
+
+                ventana.setVisible(true);
+
+                return;
+            }
+
+            // Compatible con GestionPrestamos si ofrece
+            // el método getPanelPrincipal().
+            Method metodo = formulario.getClass()
+                    .getMethod("getPanelPrincipal");
+
+            Object resultado = metodo.invoke(formulario);
+
+            if (!(resultado instanceof JPanel)) {
+                throw new IllegalStateException(
+                        "GestionPrestamos no devolvió un JPanel."
+                );
+            }
+
+            JPanel panel = (JPanel) resultado;
+
+            JFrame ventana = new JFrame(
+                    "SIGELAB - " + titulo
+            );
+
+            ventana.setContentPane(panel);
+
+            ventana.setDefaultCloseOperation(
+                    WindowConstants.DISPOSE_ON_CLOSE
+            );
+
+            ventana.pack();
+
+            ventana.setSize(
+                    Math.max(900, ventana.getWidth()),
+                    Math.max(650, ventana.getHeight())
+            );
+
+            ventana.setLocationRelativeTo(panelPrincipal);
+
+            ventanasModulos.put(titulo, ventana);
+
+            ventana.setVisible(true);
+
+        } catch (Exception | LinkageError ex) {
+
+            Mensajes.error(
+                    panelPrincipal,
+                    titulo,
+                    "No se pudo abrir Gestión de préstamos.\n\n" +
+                            "Detalle: " +
+                            (
+                                    ex.getMessage() == null
+                                            ? ex.getClass().getSimpleName()
+                                            : ex.getMessage()
+                            )
+            );
+        }
+    }
+
+    // ==========================================
+    // PANTALLA PROVISIONAL DE DEVOLUCIONES
+    // ==========================================
+
+    private JPanel crearPanelDevoluciones() {
+
+        JPanel panel = new JPanel(
+                new BorderLayout(15, 20)
+        );
+
+        panel.setBorder(
+                new EmptyBorder(30, 30, 30, 30)
+        );
+
+        JLabel titulo = new JLabel(
+                "Módulo de Devoluciones",
+                SwingConstants.CENTER
+        );
+
+        titulo.setFont(
+                new Font("SansSerif", Font.BOLD, 23)
+        );
+
+        panel.add(titulo, BorderLayout.NORTH);
+
+        JLabel mensaje = new JLabel(
+                "<html><center>" +
+                        "<h2>Gestión de Devoluciones</h2>" +
+                        "<p>Registro de devolución de equipos</p>" +
+                        "<p>Devoluciones totales y parciales</p>" +
+                        "<p>Formulario pendiente de implementar</p>" +
+                        "</center></html>",
+                SwingConstants.CENTER
+        );
+
+        panel.add(mensaje, BorderLayout.CENTER);
+
+        return panel;
+    }
+
+    // ==========================================
+    // AVISO DE OPCIONES EN DESARROLLO
+    // ==========================================
+
     private void enDesarrollo(String opcion) {
 
         Mensajes.informar(
@@ -188,6 +514,10 @@ public class MenuPrincipalForm {
                 "Opción aún en desarrollo."
         );
     }
+
+    // ==========================================
+    // ABRIR USUARIOS
+    // ==========================================
 
     private void abrirUsuarios() {
 
@@ -223,11 +553,17 @@ public class MenuPrincipalForm {
         );
 
         ventanaUsuarios.pack();
+
         ventanaUsuarios.setLocationRelativeTo(
                 panelPrincipal
         );
+
         ventanaUsuarios.setVisible(true);
     }
+
+    // ==========================================
+    // ABRIR MÓDULOS
+    // ==========================================
 
     private void abrirModulo(
             String titulo,
@@ -236,7 +572,8 @@ public class MenuPrincipalForm {
 
         JFrame abierta = ventanasModulos.get(titulo);
 
-        if (abierta != null && abierta.isDisplayable()) {
+        if (abierta != null &&
+                abierta.isDisplayable()) {
 
             abierta.toFront();
             abierta.requestFocus();
@@ -251,8 +588,7 @@ public class MenuPrincipalForm {
 
                 throw new IllegalStateException(
                         "El panel del módulo no se creó. " +
-                                "Verifique el archivo .form y " +
-                                "compile con IntelliJ GUI Designer."
+                                "Verifique su archivo .form."
                 );
             }
 
@@ -267,7 +603,6 @@ public class MenuPrincipalForm {
 
             ventana.pack();
 
-            // Tamaño mínimo para formularios grandes.
             if (ventana.getWidth() < 900 ||
                     ventana.getHeight() < 650) {
 
@@ -281,9 +616,9 @@ public class MenuPrincipalForm {
                     panelPrincipal
             );
 
-            ventana.setVisible(true);
-
             ventanasModulos.put(titulo, ventana);
+
+            ventana.setVisible(true);
 
         } catch (Exception | LinkageError ex) {
 
@@ -294,13 +629,16 @@ public class MenuPrincipalForm {
                             titulo + "\".\n\nDetalle: " +
                             (
                                     ex.getMessage() == null
-                                            ? ex.getClass()
-                                            .getSimpleName()
+                                            ? ex.getClass().getSimpleName()
                                             : ex.getMessage()
                             )
             );
         }
     }
+
+    // ==========================================
+    // CERRAR VENTANAS HIJAS
+    // ==========================================
 
     private void cerrarVentanasHijas() {
 
@@ -319,6 +657,10 @@ public class MenuPrincipalForm {
 
         ventanasModulos.clear();
     }
+
+    // ==========================================
+    // CÓDIGO GENERADO POR INTELLIJ GUI DESIGNER
+    // ==========================================
 
     {
 // GUI initializer generated by IntelliJ IDEA GUI Designer
@@ -424,8 +766,34 @@ public class MenuPrincipalForm {
         return panelPrincipal;
     }
 
-    // No agregar manualmente $$$setupUI$$$().
-    // IntelliJ GUI Designer genera la inicialización
-    // de los componentes vinculados al archivo .form.
+    // ==========================================
+    // RESTRICCIONES PARA BOTONES DEL FORMULARIO
+    // ==========================================
+
+    private GridConstraints crearRestriccionBoton(
+            int fila,
+            int columna
+    ) {
+
+        return new GridConstraints(
+                fila,
+                columna,
+                1,
+                1,
+                GridConstraints.ANCHOR_CENTER,
+                GridConstraints.FILL_HORIZONTAL,
+                GridConstraints.SIZEPOLICY_CAN_SHRINK |
+                        GridConstraints.SIZEPOLICY_CAN_GROW,
+                GridConstraints.SIZEPOLICY_FIXED,
+                null,
+                null,
+                null,
+                0,
+                false
+        );
+    }
+
 }
+
+
 
