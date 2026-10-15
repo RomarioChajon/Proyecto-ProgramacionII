@@ -1,5 +1,7 @@
 package umg.sigelab.view;
 
+import com.intellij.uiDesigner.core.GridConstraints;
+import com.intellij.uiDesigner.core.GridLayoutManager;
 import umg.sigelab.model.Usuario;
 
 import javax.swing.*;
@@ -56,24 +58,24 @@ public class InicioEstudianteForm {
      */
     private void $$$setupUI$$$() {
         panelPrincipal = new JPanel();
-        panelPrincipal.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(4, 1, new Insets(30, 30, 30, 30), -1, -1));
+        panelPrincipal.setLayout(new GridLayoutManager(4, 1, new Insets(30, 30, 30, 30), -1, -1));
         lblTitulo = new JLabel();
         Font lblTituloFont = this.$$$getFont$$$(null, Font.BOLD, 30, lblTitulo.getFont());
         if (lblTituloFont != null) lblTitulo.setFont(lblTituloFont);
         lblTitulo.setHorizontalAlignment(0);
         lblTitulo.setText("¡Bienvenido!");
-        panelPrincipal.add(lblTitulo, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panelPrincipal.add(lblTitulo, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         lblMensaje = new JLabel();
         lblMensaje.setHorizontalAlignment(0);
         lblMensaje.setText("Bienvenido");
-        panelPrincipal.add(lblMensaje, new com.intellij.uiDesigner.core.GridConstraints(1, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panelPrincipal.add(lblMensaje, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         lblDetalle = new JLabel();
         lblDetalle.setHorizontalAlignment(0);
         lblDetalle.setText("-");
-        panelPrincipal.add(lblDetalle, new com.intellij.uiDesigner.core.GridConstraints(2, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panelPrincipal.add(lblDetalle, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         btnCerrarSesion = new JButton();
         btnCerrarSesion.setText("CERRAR SESIÓN");
-        panelPrincipal.add(btnCerrarSesion, new com.intellij.uiDesigner.core.GridConstraints(3, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panelPrincipal.add(btnCerrarSesion, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
     }
 
     /**
@@ -104,4 +106,5 @@ public class InicioEstudianteForm {
     public JComponent $$$getRootComponent$$$() {
         return panelPrincipal;
     }
+
 }
