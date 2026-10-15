@@ -48,3 +48,5 @@ facial-service/tmp/*.log
 
 # QR generados por el modulo de equipos
 qr-equipos/
+
+lib/
