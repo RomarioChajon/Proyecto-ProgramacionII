@@ -3,7 +3,7 @@
   <grid id="27dc6" binding="panelPrincipal" layout-manager="GridLayoutManager" row-count="21" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
     <margin top="0" left="0" bottom="0" right="0"/>
     <constraints>
-      <xy x="20" y="20" width="556" height="702"/>
+      <xy x="20" y="20" width="556" height="722"/>
     </constraints>
     <properties/>
     <border type="none"/>
@@ -132,22 +132,6 @@
           <text value="3. Equipo agregado al Prestamo"/>
         </properties>
       </component>
-      <component id="fab47" class="javax.swing.JLabel" binding="lblTotalEquipos">
-        <constraints>
-          <grid row="13" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-        </constraints>
-        <properties>
-          <text value="Total: 0 Equipo"/>
-        </properties>
-      </component>
-      <component id="ba5bc" class="javax.swing.JLabel">
-        <constraints>
-          <grid row="14" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-        </constraints>
-        <properties>
-          <text value="4.Datos del Prestamo"/>
-        </properties>
-      </component>
       <component id="c694" class="javax.swing.JLabel">
         <constraints>
           <grid row="15" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
@@ -155,14 +139,6 @@
         <properties>
           <text value="Dias Solicitados(maximo 30 dias)"/>
         </properties>
-      </component>
-      <component id="a0132" class="javax.swing.JTextField" binding="txtDiasPrestamo">
-        <constraints>
-          <grid row="16" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false">
-            <preferred-size width="150" height="-1"/>
-          </grid>
-        </constraints>
-        <properties/>
       </component>
       <component id="87080" class="javax.swing.JLabel">
         <constraints>
@@ -174,7 +150,7 @@
       </component>
       <component id="f06e8" class="javax.swing.JTextArea" binding="txtObservaciones">
         <constraints>
-          <grid row="18" column="0" row-span="1" col-span="3" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false">
+          <grid row="18" column="0" row-span="1" col-span="2" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false">
             <preferred-size width="150" height="50"/>
           </grid>
         </constraints>
@@ -256,6 +232,28 @@
         <properties>
           <text value="Estado"/>
         </properties>
+      </component>
+      <component id="ba5bc" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="14" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="4.Datos del Prestamo"/>
+        </properties>
+      </component>
+      <component id="fab47" class="javax.swing.JLabel" binding="lblTotalEquipos">
+        <constraints>
+          <grid row="13" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="Total: 0 Equipo"/>
+        </properties>
+      </component>
+      <component id="1a419" class="javax.swing.JComboBox" binding="cmbDiasPrestamo">
+        <constraints>
+          <grid row="16" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties/>
       </component>
     </children>
   </grid>

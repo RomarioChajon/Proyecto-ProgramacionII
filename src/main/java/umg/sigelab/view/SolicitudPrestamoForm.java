@@ -1,4 +1,3 @@
-
 package umg.sigelab.view;
 
 import com.intellij.uiDesigner.core.GridConstraints;
@@ -51,6 +50,7 @@ public class SolicitudPrestamoForm extends JPanel {
     private JTable tblSolicituddePrestamo;
     private JTable tblEquiposDisponibles;
     private JTable tblEquiposAgregados;
+    private JComboBox<String> cmbDiasPrestamo;
 
     private JRadioButton chkEquipoDisponibles;
 
@@ -153,22 +153,14 @@ public class SolicitudPrestamoForm extends JPanel {
         final JLabel label10 = new JLabel();
         label10.setText("3. Equipo agregado al Prestamo");
         panelPrincipal.add(label10, new GridConstraints(11, 0, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 1, false));
-        lblTotalEquipos = new JLabel();
-        lblTotalEquipos.setText("Total: 0 Equipo");
-        panelPrincipal.add(lblTotalEquipos, new GridConstraints(13, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label11 = new JLabel();
-        label11.setText("4.Datos del Prestamo");
-        panelPrincipal.add(label11, new GridConstraints(14, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        label11.setText("Dias Solicitados(maximo 30 dias)");
+        panelPrincipal.add(label11, new GridConstraints(15, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label12 = new JLabel();
-        label12.setText("Dias Solicitados(maximo 30 dias)");
-        panelPrincipal.add(label12, new GridConstraints(15, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        txtDiasPrestamo = new JTextField();
-        panelPrincipal.add(txtDiasPrestamo, new GridConstraints(16, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
-        final JLabel label13 = new JLabel();
-        label13.setText("Observaciones");
-        panelPrincipal.add(label13, new GridConstraints(17, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        label12.setText("Observaciones");
+        panelPrincipal.add(label12, new GridConstraints(17, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         txtObservaciones = new JTextArea();
-        panelPrincipal.add(txtObservaciones, new GridConstraints(18, 0, 1, 3, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(150, 50), null, 0, false));
+        panelPrincipal.add(txtObservaciones, new GridConstraints(18, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(150, 50), null, 0, false));
         bmtNuevaSolicitud = new JButton();
         bmtNuevaSolicitud.setText("Nueva Solicitud");
         panelPrincipal.add(bmtNuevaSolicitud, new GridConstraints(19, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -192,9 +184,17 @@ public class SolicitudPrestamoForm extends JPanel {
         btnSalir = new JButton();
         btnSalir.setText("Salir");
         panelPrincipal.add(btnSalir, new GridConstraints(10, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label13 = new JLabel();
+        label13.setText("Estado");
+        panelPrincipal.add(label13, new GridConstraints(8, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label14 = new JLabel();
-        label14.setText("Estado");
-        panelPrincipal.add(label14, new GridConstraints(8, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        label14.setText("4.Datos del Prestamo");
+        panelPrincipal.add(label14, new GridConstraints(14, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        lblTotalEquipos = new JLabel();
+        lblTotalEquipos.setText("Total: 0 Equipo");
+        panelPrincipal.add(lblTotalEquipos, new GridConstraints(13, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        cmbDiasPrestamo = new JComboBox();
+        panelPrincipal.add(cmbDiasPrestamo, new GridConstraints(16, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
     }
 
     /**
@@ -254,6 +254,7 @@ public class SolicitudPrestamoForm extends JPanel {
 
         add(panelPrincipal, BorderLayout.CENTER);
 
+        instalarSelectorDias();
         configurarTablas();
         configurarCampos();
         configurarEventos();
@@ -262,12 +263,59 @@ public class SolicitudPrestamoForm extends JPanel {
         cargarDatosDesdeBD();
     }
 
+    /**
+     * Utiliza el JComboBox de días existente en el .form.
+     * Si el .form aún contiene un JTextField, muestra un selector alternativo.
+     */
+    private void instalarSelectorDias() {
+        JComboBox<String> selectorExistente = buscarComboDias(panelPrincipal);
+        if (selectorExistente != null) {
+            cmbDiasPrestamo = selectorExistente;
+        } else {
+            cmbDiasPrestamo = new JComboBox<>();
+            if (txtDiasPrestamo != null) {
+                txtDiasPrestamo.setVisible(false);
+            }
+            JPanel panelDias = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 6));
+            panelDias.add(new JLabel("Días de préstamo (1 a 30):"));
+            panelDias.add(cmbDiasPrestamo);
+            add(panelDias, BorderLayout.NORTH);
+        }
+        cmbDiasPrestamo.removeAllItems();
+        for (int dia = 1; dia <= 30; dia++) {
+            cmbDiasPrestamo.addItem(dia == 1 ? "1 día" : dia + " días");
+        }
+        cmbDiasPrestamo.setSelectedItem("1 día");
+        revalidate();
+        repaint();
+    }
+
+    @SuppressWarnings("unchecked")
+    private JComboBox<String> buscarComboDias(Container contenedor) {
+        for (Component componente : contenedor.getComponents()) {
+            if (componente instanceof JComboBox<?> combo
+                    && componente != cmbSede
+                    && componente != cmbLaboratorio
+                    && componente != cmbCategoria
+                    && componente != cmbEstado) {
+                return (JComboBox<String>) combo;
+            }
+            if (componente instanceof Container hijo) {
+                JComboBox<String> encontrado = buscarComboDias(hijo);
+                if (encontrado != null) {
+                    return encontrado;
+                }
+            }
+        }
+        return null;
+    }
+
     private void configurarCampos() {
 
         txtUsuario.setEditable(false);
         txtRol.setEditable(false);
 
-        txtDiasPrestamo.setText("1");
+        cmbDiasPrestamo.setSelectedItem("1 día");
 
         if (cmbEstado != null) {
             cmbEstado.removeAllItems();
@@ -1317,7 +1365,7 @@ public class SolicitudPrestamoForm extends JPanel {
         agregados.clear();
         actualizarTablaAgregados();
 
-        txtDiasPrestamo.setText("1");
+        cmbDiasPrestamo.setSelectedItem("1 día");
         txtObservaciones.setText("");
 
         if (txtBuscarEquipo != null) {
@@ -1379,32 +1427,20 @@ public class SolicitudPrestamoForm extends JPanel {
             return;
         }
 
+        Object diasSeleccionados = cmbDiasPrestamo.getSelectedItem();
         int dias;
-
         try {
-
-            dias = Integer.parseInt(
-                    txtDiasPrestamo.getText().trim()
-            );
-
-        } catch (NumberFormatException ex) {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Ingresa un número válido de días."
-            );
-
+            if (diasSeleccionados == null) {
+                throw new IllegalArgumentException("No hay días seleccionados");
+            }
+            String valor = diasSeleccionados.toString().trim();
+            dias = Integer.parseInt(valor.split("\\s+")[0]);
+        } catch (IllegalArgumentException ex) {
+            JOptionPane.showMessageDialog(this, "Selecciona entre 1 y 30 días.");
             return;
         }
-
         if (dias < 1 || dias > 30) {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "El préstamo debe durar entre "
-                            + "1 y 30 días."
-            );
-
+            JOptionPane.showMessageDialog(this, "Selecciona entre 1 y 30 días.");
             return;
         }
 
@@ -1787,4 +1823,3 @@ public class SolicitudPrestamoForm extends JPanel {
         });
     }
 }
-
