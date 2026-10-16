@@ -74,3 +74,6 @@ GO
 /* Resultado: las categorías con su código */
 SELECT id_tipo_equipo, codigo, nombre, estado FROM dbo.TipoEquipo ORDER BY id_tipo_equipo;
 GO
+
+
+
