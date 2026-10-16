@@ -65,8 +65,8 @@ public class EquipoService {
 
         validarEquipo(equipo);
 
-        // El código de inventario lo genera el repositorio.
-        equipo.setCodigoInventario(null);
+        // Código vacío = lo genera el repositorio; escrito = se usa el del usuario.
+        equipo.setCodigoInventario(validarCodigoOpcional(equipo.getCodigoInventario(), null));
 
         // Todo equipo nuevo comienza DISPONIBLE.
         equipo.setEstado(EstadoEquipo.DISPONIBLE);
@@ -97,9 +97,11 @@ public class EquipoService {
 
         Equipo actual = existente.get();
 
-        // Conservar el código de inventario original.
+        // El código de inventario ahora es editable (si queda vacío se conserva el actual).
+        String codigoNuevo = validarCodigoOpcional(
+                equipo.getCodigoInventario(), equipo.getIdEquipo());
         equipo.setCodigoInventario(
-                actual.getCodigoInventario()
+                codigoNuevo != null ? codigoNuevo : actual.getCodigoInventario()
         );
 
         // Conservar el estado real del equipo.
@@ -139,6 +141,35 @@ public class EquipoService {
         }
 
         return repository.listarPorLaboratorio(idLaboratorio);
+    }
+
+    // VALIDAR CÓDIGO ESCRITO POR EL USUARIO (null si viene vacío)
+    private String validarCodigoOpcional(String codigo, Integer idActual)
+            throws SQLException {
+
+        if (codigo == null || codigo.isBlank()) {
+            return null;
+        }
+
+        String limpio = codigo.trim().toUpperCase(java.util.Locale.ROOT);
+
+        if (limpio.length() > 30) {
+            throw new IllegalArgumentException(
+                    "El código de inventario no puede superar los 30 caracteres.");
+        }
+
+        if (!limpio.matches("[A-Z0-9_-]+")) {
+            throw new IllegalArgumentException(
+                    "El código solo puede tener letras, números, guion y guion bajo.");
+        }
+
+        Optional<Equipo> otro = repository.buscarPorCodigo(limpio);
+        if (otro.isPresent() && (idActual == null || otro.get().getIdEquipo() != idActual)) {
+            throw new IllegalArgumentException(
+                    "Ya existe un equipo con el código " + limpio + ".");
+        }
+
+        return limpio;
     }
 
     // VALIDACIONES GENERALES

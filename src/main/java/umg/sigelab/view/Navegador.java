@@ -40,9 +40,10 @@ public final class Navegador {
             case ADMIN -> mostrar("SIGELAB - Panel principal",
                     new MenuPrincipalForm(usuario, Navegador::mostrarLogin).getPanelPrincipal(), new Dimension(860, 520));
             case ENCARGADO -> mostrar("SIGELAB - Encargado de laboratorio",
-                    new InicioEncargadoForm(usuario, Navegador::mostrarLogin).getPanelPrincipal(), new Dimension(640, 360));
-            case DOCENTE, ESTUDIANTE -> mostrar("SIGELAB - Bienvenido",
-                    new InicioEstudianteForm(usuario, Navegador::mostrarLogin).getPanelPrincipal(), new Dimension(640, 360));
+                    new PanelOperacionesForm(usuario, Navegador::mostrarLogin, "Cerrar sesión",
+                            PanelOperacionesForm.ORDENES).getPanelPrincipal(), new Dimension(1100, 680));
+            case DOCENTE, ESTUDIANTE -> mostrar("SIGELAB - Préstamo de equipos",
+                    new SolicitudPrestamoForm(usuario, Navegador::mostrarLogin).getPanelPrincipal(), new Dimension(1100, 680));
         }
     }
 

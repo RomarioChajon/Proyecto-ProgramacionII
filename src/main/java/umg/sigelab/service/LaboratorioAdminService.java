@@ -50,9 +50,10 @@ public class LaboratorioAdminService {
 
         Laboratorio laboratorio = new Laboratorio();
 
-        // El código se genera automáticamente en el repositorio.
-        // Se conserva el parámetro codigo para mantener
-        // compatibilidad con el controlador existente.
+        // Código vacío = se genera automáticamente en el repositorio.
+        // Código escrito = se usa el del usuario (si es válido y no existe).
+        String codigoLimpio = validarCodigoOpcional(codigo, null);
+        laboratorio.setCodigo(codigoLimpio);
         laboratorio.setNombre(nombre.trim());
         laboratorio.setUbicacion(ubicacion.trim());
         laboratorio.setCapacidad(capacidad);
@@ -84,8 +85,11 @@ public class LaboratorioAdminService {
 
         Laboratorio laboratorio = existente.get();
 
-        // Se conserva el código original del laboratorio.
-        // No se permite cambiarlo manualmente.
+        // El código ahora es editable: se valida formato y que no lo use otro laboratorio.
+        String codigoNuevo = validarCodigoOpcional(codigo, idLaboratorio);
+        if (codigoNuevo != null) {
+            laboratorio.setCodigo(codigoNuevo);
+        }
         laboratorio.setNombre(nombre.trim());
         laboratorio.setUbicacion(ubicacion.trim());
         laboratorio.setCapacidad(capacidad);
@@ -120,6 +124,38 @@ public class LaboratorioAdminService {
         }
 
         return repository.activar(idLaboratorio);
+    }
+
+    /**
+     * Valida el código escrito por el usuario. Devuelve null si está vacío (se generará solo).
+     *
+     * @param idActual id del laboratorio que se edita (null al crear), para permitir conservar su propio código
+     */
+    private String validarCodigoOpcional(String codigo, Integer idActual) throws SQLException {
+
+        if (codigo == null || codigo.isBlank()) {
+            return null;
+        }
+
+        String limpio = codigo.trim().toUpperCase(java.util.Locale.ROOT);
+
+        if (limpio.length() > 20) {
+            throw new IllegalArgumentException(
+                    "El código no puede superar los 20 caracteres.");
+        }
+
+        if (!limpio.matches("[A-Z0-9_-]+")) {
+            throw new IllegalArgumentException(
+                    "El código solo puede tener letras, números, guion y guion bajo.");
+        }
+
+        Optional<Laboratorio> otro = repository.buscarPorCodigo(limpio);
+        if (otro.isPresent() && (idActual == null || otro.get().getIdLaboratorio() != idActual)) {
+            throw new IllegalArgumentException(
+                    "Ya existe un laboratorio con el código " + limpio + ".");
+        }
+
+        return limpio;
     }
 
     private void validarId(int idLaboratorio) {

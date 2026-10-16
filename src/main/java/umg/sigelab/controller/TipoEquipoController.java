@@ -31,6 +31,7 @@ public class TipoEquipoController {
     }
 
     public TipoEquipo guardar(
+            String codigo,
             String nombre,
             String descripcion,
             String estado)
@@ -40,6 +41,7 @@ public class TipoEquipoController {
                 convertirEstado(estado);
 
         return service.guardar(
+                codigo,
                 nombre,
                 descripcion,
                 estadoTipoEquipo
@@ -48,6 +50,7 @@ public class TipoEquipoController {
 
     public boolean actualizar(
             int idTipoEquipo,
+            String codigo,
             String nombre,
             String descripcion,
             String estado)
@@ -58,6 +61,7 @@ public class TipoEquipoController {
 
         return service.actualizar(
                 idTipoEquipo,
+                codigo,
                 nombre,
                 descripcion,
                 estadoTipoEquipo

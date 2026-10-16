@@ -134,6 +134,12 @@ public class TipoEquipoRepository {
         }
 
         String nombre = tipoEquipo.getNombre().trim();
+
+        // Código escrito por el usuario: se inserta tal cual (el Service ya lo validó).
+        if (tipoEquipo.getCodigo() != null && !tipoEquipo.getCodigo().isBlank()) {
+            return guardarConCodigoManual(tipoEquipo, nombre);
+        }
+
         String prefijo = generarPrefijo(nombre);
 
         String sqlInsertar =
@@ -403,22 +409,56 @@ public class TipoEquipoRepository {
         return normalizado.substring(0, 4);
     }
 
+    /** Inserta una categoría usando el código que escribió el usuario. */
+    private TipoEquipo guardarConCodigoManual(TipoEquipo tipoEquipo, String nombre)
+            throws SQLException {
+
+        String sql = "INSERT INTO dbo.TipoEquipo (codigo, nombre, descripcion, estado) "
+                + "VALUES (?, ?, ?, ?)";
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement =
+                     connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            statement.setString(1, tipoEquipo.getCodigo().trim());
+            statement.setString(2, nombre);
+            statement.setString(3, tipoEquipo.getDescripcion());
+            statement.setString(4, tipoEquipo.getEstado().name());
+
+            if (statement.executeUpdate() != 1) {
+                throw new SQLException("No se pudo guardar el tipo de equipo.");
+            }
+
+            try (ResultSet keys = statement.getGeneratedKeys()) {
+                if (!keys.next()) {
+                    throw new SQLException("No se obtuvo el ID generado.");
+                }
+                tipoEquipo.setIdTipoEquipo(keys.getInt(1));
+            }
+        }
+
+        tipoEquipo.setCodigo(tipoEquipo.getCodigo().trim());
+        tipoEquipo.setNombre(nombre);
+        return tipoEquipo;
+    }
+
     public boolean actualizar(TipoEquipo tipoEquipo)
             throws SQLException {
 
         String sql =
                 "UPDATE dbo.TipoEquipo " +
-                        "SET nombre = ?, descripcion = ?, estado = ? " +
+                        "SET codigo = ?, nombre = ?, descripcion = ?, estado = ? " +
                         "WHERE id_tipo_equipo = ?";
 
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement =
                      connection.prepareStatement(sql)) {
 
-            statement.setString(1, tipoEquipo.getNombre());
-            statement.setString(2, tipoEquipo.getDescripcion());
-            statement.setString(3, tipoEquipo.getEstado().name());
-            statement.setInt(4, tipoEquipo.getIdTipoEquipo());
+            statement.setString(1, tipoEquipo.getCodigo());
+            statement.setString(2, tipoEquipo.getNombre());
+            statement.setString(3, tipoEquipo.getDescripcion());
+            statement.setString(4, tipoEquipo.getEstado().name());
+            statement.setInt(5, tipoEquipo.getIdTipoEquipo());
 
             return statement.executeUpdate() > 0;
         }

@@ -55,7 +55,8 @@ public class ProductoService {
         producto.setDescripcion(limpiar(descripcion));
         producto.setEstado(estado);
 
-        // El repositorio genera el codigo automaticamente.
+        // Código vacío = el repositorio lo genera; escrito = se usa el del usuario.
+        producto.setCodigoProducto(validarCodigoOpcional(codigoProducto, null));
         return repository.guardar(producto);
     }
 
@@ -82,9 +83,14 @@ public class ProductoService {
 
         if (producto.getIdTipoEquipo() != idTipoEquipo) {
             throw new IllegalArgumentException(
-                    "No se puede cambiar el tipo de equipo " +
-                            "porque el codigo del producto es permanente."
+                    "No se puede cambiar la categoría de un producto ya creado."
             );
+        }
+
+        // El código ahora es editable (si queda vacío se conserva el actual).
+        String codigoNuevo = validarCodigoOpcional(codigoProducto, idProducto);
+        if (codigoNuevo != null) {
+            producto.setCodigoProducto(codigoNuevo);
         }
 
         producto.setNombre(nombre.trim());
@@ -122,6 +128,32 @@ public class ProductoService {
         }
 
         return repository.activar(idProducto);
+    }
+
+    /** Valida el código escrito por el usuario; devuelve null si viene vacío (se generará solo). */
+    private String validarCodigoOpcional(String codigo, Integer idActual) throws SQLException {
+
+        if (codigo == null || codigo.isBlank()) {
+            return null;
+        }
+
+        String limpio = codigo.trim().toUpperCase(java.util.Locale.ROOT);
+
+        if (limpio.length() > 30) {
+            throw new IllegalArgumentException("El código no puede superar los 30 caracteres.");
+        }
+
+        if (!limpio.matches("[A-Z0-9_-]+")) {
+            throw new IllegalArgumentException(
+                    "El código solo puede tener letras, números, guion y guion bajo.");
+        }
+
+        Optional<Producto> otro = repository.buscarPorCodigo(limpio);
+        if (otro.isPresent() && (idActual == null || otro.get().getIdProducto() != idActual)) {
+            throw new IllegalArgumentException("Ya existe un producto con el código " + limpio + ".");
+        }
+
+        return limpio;
     }
 
     private void validarId(int idProducto) {

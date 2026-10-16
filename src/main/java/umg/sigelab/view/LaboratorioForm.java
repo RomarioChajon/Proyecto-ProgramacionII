@@ -201,11 +201,12 @@ public class LaboratorioForm {
         txtId.setEditable(false);
         txtId.setFocusable(false);
 
-        txtCodigo.setEditable(false);
-        txtCodigo.setFocusable(false);
+        // El código es editable: si se deja vacío al crear, se genera automáticamente.
+        txtCodigo.setEditable(true);
+        txtCodigo.setFocusable(true);
 
         txtCodigo.setToolTipText(
-                "Se genera automáticamente al guardar el laboratorio."
+                "Puede escribirlo o dejarlo vacío para que se genere automáticamente al guardar."
         );
 
         txtFechaCreacion.setEditable(false);
@@ -367,7 +368,7 @@ public class LaboratorioForm {
             );
 
             Laboratorio laboratorio = controller.guardar(
-                    null,
+                    txtCodigo.getText().trim(),
                     txtNombre.getText().trim(),
                     txtUbicacion.getText().trim(),
                     capacidad,
@@ -381,7 +382,7 @@ public class LaboratorioForm {
             JOptionPane.showMessageDialog(
                     panelPrincipal,
                     "Laboratorio guardado correctamente.\n"
-                            + "Código generado: "
+                            + "Código: "
                             + laboratorio.getCodigo()
                             + "\nID generado: "
                             + laboratorio.getIdLaboratorio()
@@ -440,7 +441,7 @@ public class LaboratorioForm {
 
             boolean actualizado = controller.actualizar(
                     id,
-                    null,
+                    txtCodigo.getText().trim(),
                     txtNombre.getText().trim(),
                     txtUbicacion.getText().trim(),
                     capacidad,
@@ -865,7 +866,7 @@ public class LaboratorioForm {
     private void limpiarCamposSinTabla() {
 
         txtId.setText("");
-        txtCodigo.setText("Automático al guardar");
+        txtCodigo.setText("");
         txtNombre.setText("");
         txtUbicacion.setText("");
         txtCapacidad.setText("");

@@ -139,22 +139,33 @@ public class ProductoRepository {
                 connection.setAutoCommit(false);
                 transaccionIniciada = true;
 
-                String prefijo = obtenerPrefijo(
-                        connection,
-                        producto.getIdTipoEquipo()
-                );
+                String codigo;
+                String codigoManual = producto.getCodigoProducto();
 
-                int siguiente = obtenerSiguienteNumero(
-                        connection,
-                        prefijo
-                );
+                if (codigoManual != null && !codigoManual.isBlank()) {
 
-                String codigo = String.format(
-                        Locale.ROOT,
-                        "%s-%04d",
-                        prefijo,
-                        siguiente
-                );
+                    // El usuario escribió el código: se respeta (el Service ya lo validó).
+                    codigo = codigoManual.trim();
+
+                } else {
+
+                    String prefijo = obtenerPrefijo(
+                            connection,
+                            producto.getIdTipoEquipo()
+                    );
+
+                    int siguiente = obtenerSiguienteNumero(
+                            connection,
+                            prefijo
+                    );
+
+                    codigo = String.format(
+                            Locale.ROOT,
+                            "%s-%04d",
+                            prefijo,
+                            siguiente
+                    );
+                }
 
                 try (PreparedStatement statement =
                              connection.prepareStatement(
@@ -406,6 +417,7 @@ public class ProductoRepository {
 
         String sql =
                 "UPDATE dbo.Producto SET " +
+                        "codigo_producto = ?, " +
                         "nombre = ?, " +
                         "id_tipo_equipo = ?, " +
                         "marca = ?, " +
@@ -418,14 +430,15 @@ public class ProductoRepository {
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
-            statement.setString(1, producto.getNombre());
-            statement.setInt(2, producto.getIdTipoEquipo());
-            statement.setString(3, producto.getMarca());
-            statement.setString(4, producto.getModelo());
-            statement.setString(5, producto.getDescripcion());
-            statement.setString(6, producto.getEstado().name());
-            statement.setInt(7, producto.getIdProducto());
-            statement.setInt(8, producto.getIdTipoEquipo());
+            statement.setString(1, producto.getCodigoProducto());
+            statement.setString(2, producto.getNombre());
+            statement.setInt(3, producto.getIdTipoEquipo());
+            statement.setString(4, producto.getMarca());
+            statement.setString(5, producto.getModelo());
+            statement.setString(6, producto.getDescripcion());
+            statement.setString(7, producto.getEstado().name());
+            statement.setInt(8, producto.getIdProducto());
+            statement.setInt(9, producto.getIdTipoEquipo());
 
             return statement.executeUpdate() > 0;
         }

@@ -176,13 +176,14 @@ public class ProductoForm {
 
     private void configurarFormulario() {
         txtId.setEditable(false);
-        txtCodigo.setEditable(false);
+        // Código editable: vacío al crear = se genera automáticamente.
+        txtCodigo.setEditable(true);
 
         txtId.setFocusable(false);
-        txtCodigo.setFocusable(false);
+        txtCodigo.setFocusable(true);
 
         txtCodigo.setToolTipText(
-                "El código se genera automáticamente al guardar."
+                "Puede escribirlo o dejarlo vacío para que se genere automáticamente."
         );
 
         cmbEstado.removeAllItems();
@@ -344,7 +345,7 @@ public class ProductoForm {
 
         try {
             Producto producto = productoController.guardar(
-                    "",
+                    txtCodigo.getText().trim(),
                     txtNombre.getText().trim(),
                     tipo.getIdTipoEquipo(),
                     txtMarca.getText().trim(),

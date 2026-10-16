@@ -156,13 +156,25 @@ public class LaboratorioAdminRepository {
             connection.setAutoCommit(false);
 
             try {
-                int siguiente = obtenerSiguienteCorrelativo(
-                        connection, prefijo, true
-                );
+                String codigo;
+                String codigoManual = laboratorio.getCodigo();
 
-                String codigo = prefijo + String.format(
-                        Locale.ROOT, "%04d", siguiente
-                );
+                if (codigoManual != null && !codigoManual.isBlank()) {
+
+                    // El usuario escribió el código: se respeta tal cual.
+                    codigo = codigoManual.trim();
+
+                } else {
+
+                    // Sin código manual: se genera automáticamente.
+                    int siguiente = obtenerSiguienteCorrelativo(
+                            connection, prefijo, true
+                    );
+
+                    codigo = prefijo + String.format(
+                            Locale.ROOT, "%04d", siguiente
+                    );
+                }
 
                 if (codigo.length() > 20) {
                     throw new SQLException(
@@ -458,7 +470,8 @@ public class LaboratorioAdminRepository {
 
         String sql =
                 "UPDATE dbo.Laboratorio " +
-                        "SET nombre = ?, " +
+                        "SET codigo = ?, " +
+                        "nombre = ?, " +
                         "ubicacion = ?, " +
                         "capacidad = ?, " +
                         "estado = ? " +
@@ -468,11 +481,12 @@ public class LaboratorioAdminRepository {
              PreparedStatement statement =
                      connection.prepareStatement(sql)) {
 
-            statement.setString(1, laboratorio.getNombre());
-            statement.setString(2, laboratorio.getUbicacion());
-            statement.setInt(3, laboratorio.getCapacidad());
-            statement.setString(4, laboratorio.getEstado().name());
-            statement.setInt(5, laboratorio.getIdLaboratorio());
+            statement.setString(1, laboratorio.getCodigo());
+            statement.setString(2, laboratorio.getNombre());
+            statement.setString(3, laboratorio.getUbicacion());
+            statement.setInt(4, laboratorio.getCapacidad());
+            statement.setString(5, laboratorio.getEstado().name());
+            statement.setInt(6, laboratorio.getIdLaboratorio());
 
             return statement.executeUpdate() > 0;
         }

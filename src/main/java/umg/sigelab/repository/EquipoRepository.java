@@ -244,8 +244,12 @@ public class EquipoRepository {
 
                 // GENERAR CÓDIGO ÚNICO
 
+                // Código escrito por el usuario o, si no hay, generado.
                 String codigo =
-                        generarCodigoInventario(cn);
+                        (equipo.getCodigoInventario() != null
+                                && !equipo.getCodigoInventario().isBlank())
+                                ? equipo.getCodigoInventario().trim()
+                                : generarCodigoInventario(cn);
 
                 try (PreparedStatement ps =
                              cn.prepareStatement(sql)) {
@@ -336,7 +340,8 @@ public class EquipoRepository {
 
         String sql = """
                 UPDATE dbo.Equipo
-                SET id_producto = ?,
+                SET codigo_inventario = ?,
+                    id_producto = ?,
                     numero_serie = ?,
                     id_laboratorio = ?,
                     observaciones = ?
@@ -346,30 +351,12 @@ public class EquipoRepository {
         try (Connection cn = DatabaseConnection.getConnection();
              PreparedStatement ps = cn.prepareStatement(sql)) {
 
-            ps.setInt(
-                    1,
-                    equipo.getIdProducto()
-            );
-
-            ps.setString(
-                    2,
-                    equipo.getNumeroSerie()
-            );
-
-            ps.setInt(
-                    3,
-                    equipo.getIdLaboratorio()
-            );
-
-            ps.setString(
-                    4,
-                    equipo.getObservaciones()
-            );
-
-            ps.setInt(
-                    5,
-                    equipo.getIdEquipo()
-            );
+            ps.setString(1, equipo.getCodigoInventario());
+            ps.setInt(2, equipo.getIdProducto());
+            ps.setString(3, equipo.getNumeroSerie());
+            ps.setInt(4, equipo.getIdLaboratorio());
+            ps.setString(5, equipo.getObservaciones());
+            ps.setInt(6, equipo.getIdEquipo());
 
             return ps.executeUpdate() > 0;
         }
