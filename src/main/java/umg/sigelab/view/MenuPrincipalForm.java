@@ -16,10 +16,8 @@ import java.util.function.Supplier;
 /**
  * Panel principal del ADMINISTRADOR: un botón por cada módulo del sistema.
  *
- * <p>Por ahora están terminados "Usuarios", "Servicio facial", "Laboratorios", "Categorías", "Productos" y
- * "Equipos". El resto muestra el aviso
- * "Opción aún en desarrollo"; cada vez que se termine un módulo basta con cambiar la línea de su botón
- * en {@link #configurarEventos()} para abrir la pantalla nueva.</p>
+ * <p>Todos los módulos están conectados: usuarios, servicio facial, laboratorios, categorías, productos,
+ * equipos, préstamos y despacho, devoluciones, mantenimiento, bloqueos, reportes y auditoría.</p>
  */
 public class MenuPrincipalForm {
 
@@ -80,17 +78,34 @@ public class MenuPrincipalForm {
         btnProductos.addActionListener(e -> abrirModulo("Productos", () -> new ProductoForm().getPanelPrincipal()));
         btnEquipos.addActionListener(e -> abrirModulo("Equipos (unidades)", () -> new EquipoForm().getPanelPrincipal()));
 
-        // Módulos pendientes: cuando existan, reemplazar enDesarrollo(...) por la apertura de su pantalla.
-        btnPrestamos.addActionListener(e -> enDesarrollo("Préstamos y despacho"));
-        btnDevoluciones.addActionListener(e -> enDesarrollo("Devoluciones"));
-        btnMantenimiento.addActionListener(e -> enDesarrollo("Mantenimiento"));
-        btnBloqueos.addActionListener(e -> enDesarrollo("Bloqueos de usuarios"));
-        btnReportes.addActionListener(e -> enDesarrollo("Reportes y consultas"));
-        btnAuditoria.addActionListener(e -> enDesarrollo("Auditoría"));
+        // Préstamos, devoluciones, mantenimiento, bloqueos, reportes y auditoría.
+        btnPrestamos.addActionListener(e -> abrirOperaciones("Préstamos y despacho", PanelOperacionesForm.ORDENES));
+        btnDevoluciones.addActionListener(e -> abrirOperaciones("Devoluciones", PanelOperacionesForm.DEVOLUCIONES));
+        btnMantenimiento.addActionListener(e -> abrirOperaciones("Mantenimiento", PanelOperacionesForm.MANTENIMIENTO));
+        btnBloqueos.addActionListener(e -> ReportesForm.abrir(panelPrincipal, usuario, null, ReportesForm.BLOQUEOS));
+        btnReportes.addActionListener(e -> ReportesForm.abrir(panelPrincipal, usuario, null, ReportesForm.DASHBOARD));
+        btnAuditoria.addActionListener(e -> ReportesForm.abrir(panelPrincipal, usuario, null, ReportesForm.AUDITORIA));
     }
 
-    private void enDesarrollo(String opcion) {
-        Mensajes.informar(panelPrincipal, opcion, "Opción aún en desarrollo.");
+    /**
+     * Abre el panel de operaciones (órdenes, inventario, mantenimiento, préstamo por QR, devoluciones)
+     * en la sección indicada. El administrador elige la sede en la barra lateral.
+     */
+    private void abrirOperaciones(String titulo, String seccion) {
+        abrirModulo(titulo, () -> {
+            JPanel[] referencia = new JPanel[1];
+            PanelOperacionesForm formulario = new PanelOperacionesForm(
+                    Sesion.getUsuario() != null ? Sesion.getUsuario() : usuario,
+                    () -> {
+                        java.awt.Window ventana = javax.swing.SwingUtilities.getWindowAncestor(referencia[0]);
+                        if (ventana != null) {
+                            ventana.dispose();
+                        }
+                    },
+                    "Cerrar ventana", seccion);
+            referencia[0] = formulario.getPanelPrincipal();
+            return referencia[0];
+        });
     }
 
     /** Abre el CRUD de usuarios en su propia ventana (o la trae al frente si ya está abierta). */

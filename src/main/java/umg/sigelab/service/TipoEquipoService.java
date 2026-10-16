@@ -38,6 +38,7 @@ public class TipoEquipoService {
     }
 
     public TipoEquipo guardar(
+            String codigo,
             String nombre,
             String descripcion,
             EstadoTipoEquipo estado)
@@ -55,6 +56,8 @@ public class TipoEquipoService {
 
         TipoEquipo tipoEquipo = new TipoEquipo();
 
+        // Código vacío = se genera automáticamente; escrito = se usa el del usuario.
+        tipoEquipo.setCodigo(validarCodigoOpcional(codigo, null));
         tipoEquipo.setNombre(nombreLimpio);
 
         tipoEquipo.setDescripcion(
@@ -70,6 +73,7 @@ public class TipoEquipoService {
 
     public boolean actualizar(
             int idTipoEquipo,
+            String codigo,
             String nombre,
             String descripcion,
             EstadoTipoEquipo estado)
@@ -103,6 +107,11 @@ public class TipoEquipoService {
 
         TipoEquipo tipoEquipo = existente.get();
 
+        // El código ahora es editable (si queda vacío se conserva el actual).
+        String codigoNuevo = validarCodigoOpcional(codigo, idTipoEquipo);
+        if (codigoNuevo != null) {
+            tipoEquipo.setCodigo(codigoNuevo);
+        }
         tipoEquipo.setNombre(nombreLimpio);
 
         tipoEquipo.setDescripcion(
@@ -142,6 +151,34 @@ public class TipoEquipoService {
         }
 
         return repository.activar(idTipoEquipo);
+    }
+
+    /**
+     * Valida el código escrito por el usuario (formato CAT-XXXX-NNNN y que no esté repetido).
+     * Devuelve null si viene vacío.
+     */
+    private String validarCodigoOpcional(String codigo, Integer idActual) throws SQLException {
+
+        if (codigo == null || codigo.isBlank()) {
+            return null;
+        }
+
+        String limpio = codigo.trim().toUpperCase(java.util.Locale.ROOT);
+
+        if (!limpio.matches("CAT-[A-Z]{4}-[0-9]{3,4}")) {
+            throw new IllegalArgumentException(
+                    "El código debe tener el formato CAT-XXXX-NNNN (por ejemplo CAT-LAPT-0001).");
+        }
+
+        for (TipoEquipo otro : repository.listar()) {
+            if (limpio.equalsIgnoreCase(otro.getCodigo())
+                    && (idActual == null || otro.getIdTipoEquipo() != idActual)) {
+                throw new IllegalArgumentException(
+                        "Ya existe una categoría con el código " + limpio + ".");
+            }
+        }
+
+        return limpio;
     }
 
     private void validarId(int idTipoEquipo) {

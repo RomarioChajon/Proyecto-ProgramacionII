@@ -149,7 +149,9 @@ public class TipoEquipoForm {
 
     private void configurarFormulario() {
         txtId.setEditable(false);
-        txtCodigo.setEditable(false);
+        // Código editable: vacío al crear = se genera automáticamente.
+        txtCodigo.setEditable(true);
+        txtCodigo.setToolTipText("Formato CAT-XXXX-NNNN. Déjelo vacío para generarlo automáticamente.");
 
         cmbEstado.removeAllItems();
         cmbEstado.addItem("ACTIVO");
@@ -257,6 +259,7 @@ public class TipoEquipoForm {
 
         try {
             TipoEquipo tipo = controller.guardar(
+                    txtCodigo.getText().trim(),
                     txtNombre.getText().trim(),
                     txtDescripcion.getText().trim(),
                     String.valueOf(cmbEstado.getSelectedItem())
@@ -303,6 +306,7 @@ public class TipoEquipoForm {
 
             boolean actualizado = controller.actualizar(
                     id,
+                    txtCodigo.getText().trim(),
                     txtNombre.getText().trim(),
                     txtDescripcion.getText().trim(),
                     String.valueOf(cmbEstado.getSelectedItem())

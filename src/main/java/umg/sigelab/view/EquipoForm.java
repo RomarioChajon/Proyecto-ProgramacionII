@@ -197,11 +197,15 @@ public class EquipoForm {
 
     private void configurarFormulario() {
         txtId.setEditable(false);
-        txtCodigoInventario.setEditable(false);
+        // Código editable: vacío al crear = se genera automáticamente (INV-0001...).
+        txtCodigoInventario.setEditable(true);
+        txtCodigoInventario.setToolTipText(
+                "Puede escribirlo o dejarlo vacío para generarlo automáticamente. "
+                        + "Si lo cambia, vuelva a generar el QR.");
         txtEstado.setEditable(false);
         txtFechadeRegistro.setEditable(false);
 
-        txtCodigoInventario.setText("Automático al guardar");
+        txtCodigoInventario.setText("");
         txtEstado.setText(EstadoEquipo.DISPONIBLE.name());
         txtFechadeRegistro.setText(
                 formatearFecha(LocalDateTime.now(ZONA_GUATEMALA))
@@ -374,7 +378,7 @@ public class EquipoForm {
 
     private void limpiarCampos() {
         txtId.setText("");
-        txtCodigoInventario.setText("Automático al guardar");
+        txtCodigoInventario.setText("");
         txtNumeroSerie.setText("");
         txtEstado.setText(EstadoEquipo.DISPONIBLE.name());
         txtFechadeRegistro.setText(
@@ -490,9 +494,10 @@ public class EquipoForm {
             Equipo equipo = obtenerDatosFormulario();
 
             equipo.setIdEquipo(idEquipo);
-            equipo.setCodigoInventario(
-                    existente.getCodigoInventario()
-            );
+            // El código sale del formulario (editable); si está vacío se conserva el actual.
+            if (equipo.getCodigoInventario() == null) {
+                equipo.setCodigoInventario(existente.getCodigoInventario());
+            }
             equipo.setIdLaboratorio(
                     existente.getIdLaboratorio()
             );
@@ -553,7 +558,7 @@ public class EquipoForm {
         Laboratorio laboratorio =
                 (Laboratorio) cmbLaboratorio.getSelectedItem();
 
-        String codigo = txtId.getText().trim().isEmpty()
+        String codigo = txtCodigoInventario.getText().trim().isEmpty()
                 ? null
                 : txtCodigoInventario.getText().trim();
 
