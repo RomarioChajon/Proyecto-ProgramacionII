@@ -74,7 +74,7 @@ public class LoginForm {
     private JButton btnGuardarNueva;
     // Pie
     private JLabel lblEstadoServicio;
-    private JButton btnServicioFacial;
+    //private JButton btnServicioFacial;
     private JButton btnSalir;
 
     private final AuthController authController;
@@ -129,7 +129,7 @@ public class LoginForm {
         btnRegistrar.addActionListener(e -> registrar());
         btnVerificarRostro.addActionListener(e -> verificarRostroParaReinicio());
         btnGuardarNueva.addActionListener(e -> guardarNuevaPassword());
-        btnServicioFacial.addActionListener(e -> alAbrirServicioFacial.run());
+        //btnServicioFacial.addActionListener(e -> alAbrirServicioFacial.run());
         btnSalir.addActionListener(e -> System.exit(0));
         // Salir de la pestaña de reinicio cancela el proceso: nunca queda "desbloqueado" en segundo plano.
         tabs.addChangeListener(e -> {
@@ -347,7 +347,7 @@ public class LoginForm {
         boolean libre = !ocupado;
         btnIngresar.setEnabled(libre);
         btnRegistrar.setEnabled(libre);
-        btnServicioFacial.setEnabled(libre);
+       // btnServicioFacial.setEnabled(libre);
 
         boolean paso1 = libre && reinicioVerificadoId == 0;
         txtResUsuario.setEnabled(paso1);
