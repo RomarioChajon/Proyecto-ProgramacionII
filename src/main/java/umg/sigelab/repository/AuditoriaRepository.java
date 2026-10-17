@@ -33,6 +33,25 @@ public class AuditoriaRepository {
         }
     }
 
+    /**
+     * Registra un intento de acceso (LOGIN_EXITOSO / LOGIN_FALLIDO). Si el usuario no existe, idUsuario es null y
+     * se guarda el texto digitado en usuario_intento.
+     */
+    public void registrarAcceso(Connection cn, Integer idUsuario, String usuarioIntento, AccionAuditoria accion,
+                                String descripcion) throws SQLException {
+        String sql = "INSERT INTO dbo.Auditoria (id_usuario, usuario_intento, accion, entidad, id_registro, descripcion) "
+                + "VALUES (?, ?, ?, 'Usuario', ?, ?)";
+        try (PreparedStatement ps = cn.prepareStatement(sql)) {
+            JdbcSupport.setIntegerNullable(ps, 1, idUsuario);
+            ps.setString(2, usuarioIntento == null ? null
+                    : (usuarioIntento.length() > 60 ? usuarioIntento.substring(0, 60) : usuarioIntento));
+            ps.setString(3, accion.name());
+            JdbcSupport.setIntegerNullable(ps, 4, idUsuario);
+            ps.setString(5, descripcion.length() > 500 ? descripcion.substring(0, 497) + "..." : descripcion);
+            ps.executeUpdate();
+        }
+    }
+
     /** Últimos registros de auditoría (más recientes primero). idLaboratorio null = todas las sedes. */
     public List<FilaAuditoria> listar(Connection cn, Integer idLaboratorio, int limite) throws SQLException {
         String sql = "SELECT TOP (" + limite + ") a.id_auditoria, a.fecha_hora, "

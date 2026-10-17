@@ -43,11 +43,17 @@ public class QrCamaraClient {
                 }
                 throw new IOException("El lector no devolvió ningún texto.");
             }
+            if (respuesta.statusCode() == 404) {
+                // El servicio facial que está corriendo es una versión anterior: no conoce /qr/scan.
+                throw new IOException("El servicio facial que está en ejecución no incluye el lector de QR (versión "
+                        + "anterior). Deténgalo y vuelva a iniciarlo con start-facial desde la carpeta actualizada "
+                        + "del proyecto. Mientras tanto use \"Imagen QR...\" o escriba el código.");
+            }
             Matcher d = DETALLE.matcher(cuerpo);
             throw new IOException(d.find() ? desescapar(d.group(1)) : "El lector de QR respondió con un error.");
         } catch (java.net.ConnectException | java.net.http.HttpConnectTimeoutException e) {
             throw new IOException("No se pudo conectar con el servicio de la cámara. Inicie el servicio facial "
-                    + "(start-facial) o use \"Cargar imagen QR\" / escriba el código.");
+                    + "(start-facial) o use \"Imagen QR...\" o escriba el código.");
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new IOException("Lectura de QR interrumpida.");

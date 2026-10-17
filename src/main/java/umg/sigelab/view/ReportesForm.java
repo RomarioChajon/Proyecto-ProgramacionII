@@ -2,12 +2,15 @@ package umg.sigelab.view;
 
 import umg.sigelab.controller.ConsultaController;
 import umg.sigelab.controller.InventarioController;
+import umg.sigelab.enums.EstadoEquipo;
 import umg.sigelab.enums.RolUsuario;
 import umg.sigelab.model.FilaAuditoria;
 import umg.sigelab.model.FilaBloqueo;
 import umg.sigelab.model.Laboratorio;
 import umg.sigelab.model.PrestamoResumen;
 import umg.sigelab.model.Usuario;
+
+import com.toedter.calendar.JDateChooser;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -25,20 +28,28 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Dashboard, préstamos vencidos, bloqueos y auditoría (PDF 6.10 y 6.11), con los totales leídos de la
- * base de datos. El administrador ve todas las sedes (o filtra por una); el encargado, solo la suya.
+ * Dashboard y consultas del PDF (6.11) y auditoría (6.10), con todos los datos leídos de la base:
+ * totales, equipos por estado, préstamos entre fechas (activos, finalizados, vencidos...), historial de un
+ * equipo, historial de mantenimiento, bloqueos y auditoría. El administrador ve todas las sedes (o filtra
+ * por una); el encargado, solo la suya.
  */
 public class ReportesForm {
 
+    // Posición de cada pestaña (se usa desde el menú del administrador para abrir la pestaña correcta).
     public static final int DASHBOARD = 0;
-    public static final int VENCIDOS = 1;
-    public static final int BLOQUEOS = 2;
-    public static final int AUDITORIA = 3;
+    public static final int EQUIPOS = 1;
+    public static final int PRESTAMOS = 2;
+    public static final int VENCIDOS = 3;
+    public static final int HISTORIAL_EQUIPO = 4;
+    public static final int MANTENIMIENTO = 5;
+    public static final int BLOQUEOS = 6;
+    public static final int AUDITORIA = 7;
 
     private static final String TODAS = "Todas las sedes";
 
@@ -55,6 +66,19 @@ public class ReportesForm {
             "Liberado");
     private final JTable tblAuditoria = Tablas.crear("Fecha y hora", "Usuario", "Sede", "Acción", "Entidad", "Registro",
             "Descripción");
+    // Consultas nuevas: cada una muestra una TablaReporte (las columnas las define la consulta).
+    private final JTable tblEquipos = Tablas.crear("Código");
+    private final JComboBox<Object> cmbEstadoEquipo = new JComboBox<>();
+    private final JTable tblPrestamos = Tablas.crear("N.º");
+    private final JComboBox<String> cmbGrupo = new JComboBox<>(new String[]{"Todos", "Pendientes de despacho",
+            "Activos (entregados)", "Vencidos", "Finalizados", "Rechazados / cancelados"});
+    private static final String[] GRUPOS = {"TODOS", "PENDIENTES", "ACTIVOS", "VENCIDOS", "FINALIZADOS", "NO_ATENDIDOS"};
+    private final JDateChooser dcDesde = PanelSede.calendario(LocalDate.now().minusDays(30), null);
+    private final JDateChooser dcHasta = PanelSede.calendario(LocalDate.now(), null);
+    private final JTable tblHistorialEquipo = Tablas.crear("Préstamo");
+    private final javax.swing.JTextField txtCodigoHistorial = new javax.swing.JTextField(14);
+    private final JTable tblMantenimiento = Tablas.crear("Código");
+    private final javax.swing.JTextField txtCodigoMantenimiento = new javax.swing.JTextField(14);
     private List<FilaBloqueo> bloqueos = new ArrayList<>();
     private boolean cargando;
 
@@ -73,7 +97,11 @@ public class ReportesForm {
         panelPrincipal.add(norte, BorderLayout.NORTH);
 
         pestanas.addTab("Dashboard", panelTotales);
+        pestanas.addTab("Equipos por estado", panelEquipos());
+        pestanas.addTab("Préstamos entre fechas", panelPrestamos());
         pestanas.addTab("Préstamos vencidos", Tablas.conScroll(tblVencidos));
+        pestanas.addTab("Historial de equipo", panelHistorialEquipo());
+        pestanas.addTab("Historial de mantenimiento", panelMantenimiento());
         JPanel panelBloqueos = new JPanel(new BorderLayout(4, 4));
         panelBloqueos.add(Tablas.conScroll(tblBloqueos), BorderLayout.CENTER);
         JButton btnLiberar = new JButton("Liberar bloqueo seleccionado");
@@ -95,6 +123,64 @@ public class ReportesForm {
         pestanas.addChangeListener(e -> cargar());
         btnLiberar.addActionListener(e -> liberar());
         btnLiberar.setEnabled(usuario.getRol() == RolUsuario.ADMIN);
+    }
+
+    private JPanel panelEquipos() {
+        cmbEstadoEquipo.addItem("Todos los estados");
+        for (EstadoEquipo e : EstadoEquipo.values()) {
+            cmbEstadoEquipo.addItem(e);
+        }
+        JButton btnConsultar = new JButton("Consultar");
+        btnConsultar.addActionListener(e -> cargar());
+        JPanel filtros = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        filtros.add(new JLabel("Estado del equipo:"));
+        filtros.add(cmbEstadoEquipo);
+        filtros.add(btnConsultar);
+        JPanel panel = new JPanel(new BorderLayout(4, 4));
+        panel.add(filtros, BorderLayout.NORTH);
+        panel.add(Tablas.conScroll(tblEquipos), BorderLayout.CENTER);
+        return panel;
+    }
+
+    private JPanel panelPrestamos() {
+        JButton btnConsultar = new JButton("Consultar");
+        btnConsultar.addActionListener(e -> cargar());
+        JPanel filtros = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        filtros.add(new JLabel("Préstamos:"));
+        filtros.add(cmbGrupo);
+        filtros.add(new JLabel("Solicitados desde:"));
+        filtros.add(dcDesde);
+        filtros.add(new JLabel("hasta:"));
+        filtros.add(dcHasta);
+        filtros.add(btnConsultar);
+        JPanel panel = new JPanel(new BorderLayout(4, 4));
+        panel.add(filtros, BorderLayout.NORTH);
+        panel.add(Tablas.conScroll(tblPrestamos), BorderLayout.CENTER);
+        return panel;
+    }
+
+    private JPanel panelHistorialEquipo() {
+        QrCampo qr = new QrCampo("Código del equipo (QR / texto):", codigo -> {
+            txtCodigoHistorial.setText(codigo);
+            cargar();
+        });
+        JPanel panel = new JPanel(new BorderLayout(4, 4));
+        panel.add(qr, BorderLayout.NORTH);
+        panel.add(Tablas.conScroll(tblHistorialEquipo), BorderLayout.CENTER);
+        return panel;
+    }
+
+    private JPanel panelMantenimiento() {
+        JButton btnConsultar = new JButton("Consultar");
+        btnConsultar.addActionListener(e -> cargar());
+        JPanel filtros = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        filtros.add(new JLabel("Código del equipo (vacío = todos los de la sede):"));
+        filtros.add(txtCodigoMantenimiento);
+        filtros.add(btnConsultar);
+        JPanel panel = new JPanel(new BorderLayout(4, 4));
+        panel.add(filtros, BorderLayout.NORTH);
+        panel.add(Tablas.conScroll(tblMantenimiento), BorderLayout.CENTER);
+        return panel;
     }
 
     /** Abre los reportes en una ventana propia. */
@@ -146,7 +232,11 @@ public class ReportesForm {
         try {
             switch (pestanas.getSelectedIndex()) {
                 case DASHBOARD -> cargarDashboard();
+                case EQUIPOS -> cargarEquipos();
+                case PRESTAMOS -> cargarPrestamos();
                 case VENCIDOS -> cargarVencidos();
+                case HISTORIAL_EQUIPO -> cargarHistorialEquipo();
+                case MANTENIMIENTO -> cargarMantenimiento();
                 case BLOQUEOS -> cargarBloqueos();
                 default -> cargarAuditoria();
             }
@@ -169,6 +259,29 @@ public class ReportesForm {
         }
         panelTotales.revalidate();
         panelTotales.repaint();
+    }
+
+    private void cargarEquipos() {
+        EstadoEquipo estado = cmbEstadoEquipo.getSelectedItem() instanceof EstadoEquipo e ? e : null;
+        Tablas.cargar(tblEquipos, controller.equiposPorEstado(usuario, idSede(), estado, null));
+    }
+
+    private void cargarPrestamos() {
+        Tablas.cargar(tblPrestamos, controller.prestamosEntreFechas(usuario, idSede(),
+                GRUPOS[cmbGrupo.getSelectedIndex()], PanelSede.aLocalDate(dcDesde.getDate()),
+                PanelSede.aLocalDate(dcHasta.getDate())));
+    }
+
+    private void cargarHistorialEquipo() {
+        if (txtCodigoHistorial.getText().isBlank()) {
+            return; // aún no se ha indicado el equipo
+        }
+        Tablas.cargar(tblHistorialEquipo, controller.historialDeEquipo(usuario, txtCodigoHistorial.getText()));
+    }
+
+    private void cargarMantenimiento() {
+        Tablas.cargar(tblMantenimiento, controller.historialMantenimiento(usuario, idSede(),
+                txtCodigoMantenimiento.getText()));
     }
 
     private void cargarVencidos() {

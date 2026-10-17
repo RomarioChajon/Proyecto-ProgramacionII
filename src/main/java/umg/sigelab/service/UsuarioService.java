@@ -1,13 +1,16 @@
 package umg.sigelab.service;
 
 import org.mindrot.jbcrypt.BCrypt;
+import umg.sigelab.enums.AccionAuditoria;
 import umg.sigelab.enums.EstadoRegistro;
 import umg.sigelab.enums.RolUsuario;
 import umg.sigelab.model.Laboratorio;
 import umg.sigelab.model.Usuario;
+import umg.sigelab.repository.AuditoriaRepository;
 import umg.sigelab.repository.LaboratorioRepository;
 import umg.sigelab.repository.UsuarioRepository;
 import umg.sigelab.util.BusinessException;
+import umg.sigelab.util.Transaccion;
 import umg.sigelab.util.Validaciones;
 
 import java.nio.charset.StandardCharsets;
@@ -17,8 +20,8 @@ import java.util.regex.Pattern;
 
 /**
  * Reglas de negocio de los usuarios.
-
- * Regla de la capa Service: aquí viven las DECISIONES (validar, comparar, rechazar).
+ *
+ * <p>Regla de la capa Service: aquí viven las DECISIONES (validar, comparar, rechazar).
  * No hay SQL (eso es del Repository) ni componentes Swing (eso es de la View).
  * La base de datos queda como segunda línea de defensa con sus restricciones UNIQUE/CHECK.</p>
  */
@@ -30,7 +33,7 @@ public class UsuarioService {
     private static final int MIN_USUARIO = 3;
     private static final int MAX_CORREO = 120;
 
-    // Contraseña: BCrypt solo usa los primeros 72 bytes, por eso ese es el máximo
+    // Contraseña: BCrypt solo usa los primeros 72 bytes, por eso ese es el máximo.
     private static final int MIN_PASSWORD = 8;
     private static final int MAX_PASSWORD_BYTES = 72;
 
@@ -168,7 +171,15 @@ public class UsuarioService {
         }
 
         repository.cambiarEstado(idUsuario, nuevoEstado);
-        // Aquí se registrará USUARIO_DESACTIVADO en Auditoría cuando exista AuditoriaService (RN-18).
+        if (nuevoEstado == EstadoRegistro.INACTIVO) {
+            // RN-18: desactivar un usuario deja rastro en Auditoría (quién lo hizo y a quién).
+            Transaccion.ejecutar("registrar la auditoría", cn -> {
+                new AuditoriaRepository().registrar(cn, idUsuarioActual > 0 ? idUsuarioActual : null, null,
+                        AccionAuditoria.USUARIO_DESACTIVADO, "Usuario", idUsuario,
+                        "Usuario " + usuario.getNombreUsuario() + " desactivado.");
+                return null;
+            });
+        }
     }
 
     // ------------------------------------------------------------------
