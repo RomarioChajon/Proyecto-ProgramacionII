@@ -17,8 +17,8 @@ import java.util.regex.Pattern;
 
 /**
  * Reglas de negocio de los usuarios.
- *
- * <p>Regla de la capa Service: aquí viven las DECISIONES (validar, comparar, rechazar).
+
+ * Regla de la capa Service: aquí viven las DECISIONES (validar, comparar, rechazar).
  * No hay SQL (eso es del Repository) ni componentes Swing (eso es de la View).
  * La base de datos queda como segunda línea de defensa con sus restricciones UNIQUE/CHECK.</p>
  */
@@ -30,7 +30,7 @@ public class UsuarioService {
     private static final int MIN_USUARIO = 3;
     private static final int MAX_CORREO = 120;
 
-    // Contraseña: BCrypt solo usa los primeros 72 bytes, por eso ese es el máximo.
+    // Contraseña: BCrypt solo usa los primeros 72 bytes, por eso ese es el máximo
     private static final int MIN_PASSWORD = 8;
     private static final int MAX_PASSWORD_BYTES = 72;
 
