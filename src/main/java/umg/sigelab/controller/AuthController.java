@@ -20,6 +20,14 @@ public class AuthController {
         return service.autenticar(usuario, password);
     }
 
+    public void registrarIngresoExitoso(Usuario usuario) {
+        service.registrarIngresoExitoso(usuario);
+    }
+
+    public void registrarIngresoFallidoFacial(Usuario usuario, String motivo) {
+        service.registrarIngresoFallidoFacial(usuario, motivo);
+    }
+
     public Usuario registrarEstudiante(Usuario datos, String password) {
         return service.registrarEstudiante(datos, password);
     }

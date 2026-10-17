@@ -1,10 +1,13 @@
 package umg.sigelab.service;
 
 import org.mindrot.jbcrypt.BCrypt;
+import umg.sigelab.enums.AccionAuditoria;
 import umg.sigelab.enums.RolUsuario;
 import umg.sigelab.model.Usuario;
+import umg.sigelab.repository.AuditoriaRepository;
 import umg.sigelab.repository.UsuarioRepository;
 import umg.sigelab.util.BusinessException;
+import umg.sigelab.util.Transaccion;
 import umg.sigelab.util.Validaciones;
 
 import java.util.Optional;
@@ -26,6 +29,7 @@ public class AuthService {
 
     private final UsuarioRepository repository;
     private final UsuarioService usuarioService;
+    private final AuditoriaRepository auditoria = new AuditoriaRepository();
 
     public AuthService() {
         this(new UsuarioRepository(), new UsuarioService());
@@ -59,15 +63,47 @@ public class AuthService {
         boolean coincide = BCrypt.checkpw(password, hash);
 
         if (encontrado.isEmpty() || !coincide) {
+            auditarAcceso(encontrado.map(Usuario::getIdUsuario).orElse(null), usuario, AccionAuditoria.LOGIN_FALLIDO,
+                    "Usuario o contraseña incorrectos.");
             throw new BusinessException(CREDENCIALES_INVALIDAS);
         }
         Usuario autenticado = encontrado.get();
         if (!autenticado.isActivo()) {
-            // Aquí ya demostró conocer la contraseña, por eso sí se le dice el motivo.
+            // RN-01: un usuario INACTIVO no inicia sesión. Aquí ya demostró conocer la contraseña,
+            // por eso sí se le dice el motivo.
+            auditarAcceso(autenticado.getIdUsuario(), usuario, AccionAuditoria.LOGIN_FALLIDO,
+                    "Intento de ingreso con un usuario INACTIVO.");
             throw new BusinessException("Su usuario está inactivo. Contacte al administrador.");
         }
         autenticado.setPasswordHash(null); // el hash no debe salir de esta capa
         return autenticado;
+    }
+
+    /** Segundo paso terminado: el rostro coincidió, el ingreso se completó (RN-02 y RN-18). */
+    public void registrarIngresoExitoso(Usuario usuario) {
+        auditarAcceso(usuario.getIdUsuario(), usuario.getNombreUsuario(), AccionAuditoria.LOGIN_EXITOSO,
+                "Ingreso con contraseña y reconocimiento facial.");
+    }
+
+    /** La contraseña era correcta pero el rostro no coincidió (o no pudo verificarse). */
+    public void registrarIngresoFallidoFacial(Usuario usuario, String motivo) {
+        auditarAcceso(usuario.getIdUsuario(), usuario.getNombreUsuario(), AccionAuditoria.LOGIN_FALLIDO,
+                "Verificación facial no aprobada: " + motivo);
+    }
+
+    /**
+     * Guarda el rastro en Auditoría. Si la propia auditoría fallara, el ingreso no se bloquea:
+     * el usuario no debe quedarse fuera por un problema de registro.
+     */
+    private void auditarAcceso(Integer idUsuario, String usuarioIntento, AccionAuditoria accion, String descripcion) {
+        try {
+            Transaccion.ejecutar("registrar la auditoría", cn -> {
+                auditoria.registrarAcceso(cn, idUsuario, usuarioIntento, accion, descripcion);
+                return null;
+            });
+        } catch (RuntimeException ignorado) {
+            // Sin auditoría no se detiene el flujo de acceso.
+        }
     }
 
     // ------------------------------------------------------------------

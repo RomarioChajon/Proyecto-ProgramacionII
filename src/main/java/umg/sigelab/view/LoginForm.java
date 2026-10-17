@@ -160,8 +160,11 @@ public class LoginForm {
             FacialVerificationResult resultado = facialClient.verify(autenticado.getIdUsuario());
             if (!resultado.matched()
                     || (resultado.userId() != 0 && resultado.userId() != autenticado.getIdUsuario())) {
-                throw new BusinessException(mensajeNoCoincide(resultado));
+                String motivo = mensajeNoCoincide(resultado);
+                authController.registrarIngresoFallidoFacial(autenticado, motivo);   // RN-18
+                throw new BusinessException(motivo);
             }
+            authController.registrarIngresoExitoso(autenticado);                      // RN-18
             return autenticado;
         }, this::entrar);
     }

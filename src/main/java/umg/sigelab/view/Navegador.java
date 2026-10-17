@@ -38,7 +38,7 @@ public final class Navegador {
         Sesion.iniciar(usuario);
         switch (usuario.getRol()) {
             case ADMIN -> mostrar("SIGELAB - Panel principal",
-                    new MenuPrincipalForm(usuario, Navegador::mostrarLogin).getPanelPrincipal(), new Dimension(860, 520));
+                    new MenuPrincipalForm(usuario, Navegador::mostrarLogin).getPanelPrincipal(), new Dimension(900, 700));
             case ENCARGADO -> mostrar("SIGELAB - Encargado de laboratorio",
                     new PanelOperacionesForm(usuario, Navegador::mostrarLogin, "Cerrar sesión",
                             PanelOperacionesForm.ORDENES).getPanelPrincipal(), new Dimension(1100, 680));

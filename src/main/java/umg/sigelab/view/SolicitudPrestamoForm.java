@@ -55,7 +55,7 @@ public class SolicitudPrestamoForm {
     // --- Nuevo préstamo ---
     private final JComboBox<Laboratorio> cmbSede = new JComboBox<>();
     private final JComboBox<CategoriaStock> cmbCategoria = new JComboBox<>();
-    private final JSpinner spnDias = new JSpinner(new SpinnerNumberModel(1, 1, PrestamoService.DIAS_MAXIMOS, 1)); //por defecto los dias de prestamo
+    private final JSpinner spnDias = new JSpinner(new SpinnerNumberModel(7, 1, PrestamoService.DIAS_MAXIMOS, 1)); //se pone por defecto 7 pero se puede editar 
     private final JLabel lblAviso = new JLabel(" ");
     private final JTable tblCatalogo = Tablas.crear("Equipo (modelo)", "Marca", "Modelo", "Disponibles");
     private final JTable tblCarrito = Tablas.crear("Categoría", "Equipo (modelo)", "Marca", "Modelo");

@@ -1,15 +1,25 @@
 package umg.sigelab.view;
 
+import umg.sigelab.controller.ConsultaController;
 import umg.sigelab.model.Usuario;
 import umg.sigelab.util.Sesion;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingWorker;
+import javax.swing.Timer;
 import javax.swing.WindowConstants;
+import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridLayout;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -18,6 +28,9 @@ import java.util.function.Supplier;
  *
  * <p>Todos los módulos están conectados: usuarios, servicio facial, laboratorios, categorías, productos,
  * equipos, préstamos y despacho, devoluciones, mantenimiento, bloqueos, reportes y auditoría.</p>
+ *
+ * <p>Debajo de los botones se muestra el DASHBOARD (PDF 6.11): total de equipos, disponibles, prestados,
+ * dañados, en mantenimiento, de baja, préstamos activos y préstamos vencidos, leídos de la base de datos.</p>
  */
 public class MenuPrincipalForm {
 
@@ -40,6 +53,11 @@ public class MenuPrincipalForm {
     private JButton btnServicioFacial;
     private JButton btnCerrarSesion;
 
+    /** Contenedor que se entrega a la ventana: el panel del formulario (.form) + el dashboard debajo. */
+    private final JPanel raiz = new JPanel(new BorderLayout());
+    /** Etiquetas de los totales del dashboard, en el orden en que se muestran. */
+    private final Map<String, JLabel> valoresDashboard = new LinkedHashMap<>();
+    private final ConsultaController consultas = new ConsultaController();
     private final Usuario usuario;
     private final Runnable alCerrarSesion;
     /** Ventana de usuarios: se reutiliza para no abrir varias copias. */
@@ -57,10 +75,75 @@ public class MenuPrincipalForm {
         lblUsuarioActual.setText("Sesión: " + usuario.getNombreCompleto() + "  (" + usuario.getNombreUsuario()
                 + ", ID " + usuario.getIdUsuario() + ")");
         configurarEventos();
+        lblAyuda.setText("Elija un módulo. Los totales de abajo se leen de la base de datos.");
+        raiz.add(panelPrincipal, BorderLayout.CENTER);
+        raiz.add(crearDashboard(), BorderLayout.SOUTH);
+        actualizarDashboard();
+        // Se refresca solo cada 30 segundos mientras la pantalla siga abierta.
+        Timer reloj = new Timer(30_000, e -> {
+            if (!raiz.isDisplayable()) {
+                ((Timer) e.getSource()).stop();
+            } else {
+                actualizarDashboard();
+            }
+        });
+        reloj.start();
     }
 
     public JPanel getPanelPrincipal() {
-        return panelPrincipal;
+        return raiz;
+    }
+
+    /** Franja de tarjetas con los totales (se llenan en {@link #actualizarDashboard()}). */
+    private JPanel crearDashboard() {
+        String[] nombres = {"Total de equipos", "Disponibles", "Prestados", "Dañados", "En mantenimiento",
+                "De baja", "Préstamos activos", "Préstamos vencidos"};
+        JPanel tarjetas = new JPanel(new GridLayout(2, 4, 8, 8));
+        for (String nombre : nombres) {
+            JLabel valor = new JLabel("-", JLabel.CENTER);
+            valor.setFont(valor.getFont().deriveFont(Font.BOLD, 24f));
+            JLabel etiqueta = new JLabel(nombre, JLabel.CENTER);
+            JPanel tarjeta = new JPanel(new GridLayout(2, 1));
+            tarjeta.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+            tarjeta.add(valor);
+            tarjeta.add(etiqueta);
+            tarjetas.add(tarjeta);
+            valoresDashboard.put(nombre, valor);
+        }
+        JButton btnActualizar = new JButton("Actualizar totales");
+        btnActualizar.addActionListener(e -> actualizarDashboard());
+        JLabel titulo = new JLabel("Resumen general");
+        titulo.setFont(titulo.getFont().deriveFont(Font.BOLD, 15f));
+        JPanel encabezado = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        encabezado.add(titulo);
+        encabezado.add(btnActualizar);
+        JPanel panel = new JPanel(new BorderLayout(0, 6));
+        panel.setBorder(BorderFactory.createEmptyBorder(0, 14, 14, 14));
+        panel.add(encabezado, BorderLayout.NORTH);
+        panel.add(tarjetas, BorderLayout.CENTER);
+        return panel;
+    }
+
+    /** Lee los totales en segundo plano (para no congelar la ventana) y los muestra. */
+    private void actualizarDashboard() {
+        new SwingWorker<Map<String, Integer>, Void>() {
+            @Override
+            protected Map<String, Integer> doInBackground() {
+                return consultas.dashboard(usuario, null);
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    Map<String, Integer> datos = get();
+                    valoresDashboard.forEach((nombre, etiqueta) ->
+                            etiqueta.setText(String.valueOf(datos.getOrDefault(nombre, 0))));
+                } catch (Exception ex) {
+                    // Sin conexión o error de consulta: se deja el guion y no se interrumpe al administrador.
+                    valoresDashboard.values().forEach(etiqueta -> etiqueta.setText("-"));
+                }
+            }
+        }.execute();
     }
 
     private void configurarEventos() {

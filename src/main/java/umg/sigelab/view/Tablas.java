@@ -1,5 +1,7 @@
 package umg.sigelab.view;
 
+import umg.sigelab.model.TablaReporte;
+
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
@@ -31,6 +33,16 @@ final class Tablas {
         tabla.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tabla.getTableHeader().setReorderingAllowed(false);
         return tabla;
+    }
+
+    /** Muestra un resultado de reporte: cambia las columnas de la tabla y carga todas sus filas. */
+    static void cargar(JTable tabla, TablaReporte datos) {
+        DefaultTableModel modelo = modelo(tabla);
+        modelo.setColumnIdentifiers(datos.columnas());
+        modelo.setRowCount(0);
+        for (Object[] fila : datos.filas()) {
+            modelo.addRow(fila);
+        }
     }
 
     static DefaultTableModel modelo(JTable tabla) {

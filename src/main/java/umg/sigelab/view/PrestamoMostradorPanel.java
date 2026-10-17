@@ -4,14 +4,17 @@ import com.toedter.calendar.JDateChooser;
 import umg.sigelab.controller.InventarioController;
 import umg.sigelab.controller.PrestamoController;
 import umg.sigelab.enums.EstadoEquipo;
+import umg.sigelab.model.CategoriaStock;
 import umg.sigelab.model.FilaInventario;
 import umg.sigelab.model.Laboratorio;
 import umg.sigelab.model.Usuario;
 import umg.sigelab.service.PrestamoService;
 
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
@@ -28,14 +31,21 @@ import java.util.function.Supplier;
 
 /**
  * "Préstamo": el encargado crea un préstamo para un usuario (ID o nombre de usuario) y simula la entrega
- * física: cada equipo se escanea con su código QR y se agrega a la lista. Al registrar, los equipos quedan
- * PRESTADOS y el préstamo nace DESPACHADO con el encargado como quien lo entregó.
+ * física. Los equipos se agregan de dos maneras: escaneando su código QR, o filtrando por categoría y
+ * eligiendo una unidad DISPONIBLE de la lista. Al registrar, los equipos quedan PRESTADOS y el préstamo
+ * nace DESPACHADO con el encargado como quien lo entregó.
  */
 class PrestamoMostradorPanel extends PanelSede {
 
     private final PrestamoController controller = new PrestamoController();
     private final InventarioController inventario = new InventarioController();
     private final JTextField txtUsuario = new JTextField(16);
+    private static final String TODAS = "Todas las categorías";
+
+    private final JComboBox<Object> cmbCategoria = new JComboBox<>();
+    private final JTable tablaDisponibles = Tablas.crear("Código", "Equipo", "Categoría", "Marca", "Modelo", "Serie");
+    private List<FilaInventario> disponibles = new ArrayList<>();
+    private boolean cargando;
     private final JTable tabla = Tablas.crear("Código", "Equipo", "Categoría", "Marca", "Modelo");
     private final JDateChooser dcInicio = calendario(LocalDate.now(), LocalDate.now());
     private final JDateChooser dcFin = calendario(LocalDate.now().plusDays(6), LocalDate.now());
@@ -52,12 +62,27 @@ class PrestamoMostradorPanel extends PanelSede {
         JPanel filaUsuario = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 2));
         filaUsuario.add(new JLabel("ID o usuario del docente/estudiante:"));
         filaUsuario.add(txtUsuario);
-        JPanel norte = new JPanel(new GridLayout(3, 1));
+        JPanel filaFiltro = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 2));
+        filaFiltro.add(new JLabel("Filtrar por categoría:"));
+        filaFiltro.add(cmbCategoria);
+        JButton btnAgregar = new JButton("Agregar el equipo seleccionado");
+        filaFiltro.add(btnAgregar);
+        JPanel norte = new JPanel(new GridLayout(4, 1));
         norte.add(titulo);
         norte.add(filaUsuario);
         norte.add(qr);
+        norte.add(filaFiltro);
         add(norte, BorderLayout.NORTH);
-        add(Tablas.conScroll(tabla), BorderLayout.CENTER);
+
+        JPanel panelDisponibles = new JPanel(new BorderLayout());
+        panelDisponibles.add(new JLabel("Equipos disponibles en la sede (de la categoría elegida):"), BorderLayout.NORTH);
+        panelDisponibles.add(Tablas.conScroll(tablaDisponibles), BorderLayout.CENTER);
+        JPanel panelPrestamo = new JPanel(new BorderLayout());
+        panelPrestamo.add(new JLabel("Equipos del préstamo:"), BorderLayout.NORTH);
+        panelPrestamo.add(Tablas.conScroll(tabla), BorderLayout.CENTER);
+        JSplitPane division = new JSplitPane(JSplitPane.VERTICAL_SPLIT, panelDisponibles, panelPrestamo);
+        division.setResizeWeight(0.5);
+        add(division, BorderLayout.CENTER);
 
         JPanel acciones = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         JButton btnQuitar = new JButton("Quitar seleccionado");
@@ -73,6 +98,12 @@ class PrestamoMostradorPanel extends PanelSede {
         acciones.add(btnRegistrar);
         add(acciones, BorderLayout.SOUTH);
 
+        btnAgregar.addActionListener(e -> agregarSeleccionado());
+        cmbCategoria.addActionListener(e -> {
+            if (!cargando) {
+                cargarDisponibles();
+            }
+        });
         btnQuitar.addActionListener(e -> quitar());
         btnRegistrar.addActionListener(e -> registrar());
         java.beans.PropertyChangeListener alCambiar = e -> {
@@ -92,6 +123,62 @@ class PrestamoMostradorPanel extends PanelSede {
             equipos.clear();
             pintar();
         }
+        cargarCategorias();
+    }
+
+    /** Llena el combo con las categorías que tienen equipos en la sede actual. */
+    private void cargarCategorias() {
+        Laboratorio sede = sede();
+        cargando = true;
+        try {
+            Object previa = cmbCategoria.getSelectedItem();
+            cmbCategoria.removeAllItems();
+            cmbCategoria.addItem(TODAS);
+            if (sede != null) {
+                for (CategoriaStock c : inventario.categorias(operador, sede.getIdLaboratorio())) {
+                    cmbCategoria.addItem(c);
+                }
+            }
+            cmbCategoria.setSelectedItem(previa != null ? previa : TODAS);
+            if (cmbCategoria.getSelectedItem() == null) {
+                cmbCategoria.setSelectedIndex(0);
+            }
+        } catch (RuntimeException ex) {
+            Mensajes.mostrarExcepcion(this, "Préstamo", ex);
+        } finally {
+            cargando = false;
+        }
+        cargarDisponibles();
+    }
+
+    /** Muestra solo los equipos DISPONIBLES de la sede, filtrados por la categoría elegida. */
+    private void cargarDisponibles() {
+        DefaultTableModel modelo = Tablas.modelo(tablaDisponibles);
+        modelo.setRowCount(0);
+        disponibles = new ArrayList<>();
+        Laboratorio sede = sede();
+        if (sede == null) {
+            return;
+        }
+        Integer tipo = cmbCategoria.getSelectedItem() instanceof CategoriaStock c ? c.idTipoEquipo() : null;
+        try {
+            disponibles = inventario.listar(operador, sede.getIdLaboratorio(), tipo, EstadoEquipo.DISPONIBLE);
+            for (FilaInventario f : disponibles) {
+                modelo.addRow(new Object[]{f.codigoInventario(), f.producto(), f.categoria(), Tablas.texto(f.marca()),
+                        Tablas.texto(f.modelo()), f.numeroSerie()});
+            }
+        } catch (RuntimeException ex) {
+            Mensajes.mostrarExcepcion(this, "Préstamo", ex);
+        }
+    }
+
+    private void agregarSeleccionado() {
+        int fila = Tablas.filaModelo(tablaDisponibles);
+        if (fila < 0 || fila >= disponibles.size()) {
+            Mensajes.advertir(this, "Préstamo", "Seleccione en la lista el equipo que desea agregar.");
+            return;
+        }
+        agregarEquipo(disponibles.get(fila).codigoInventario());
     }
 
     private void agregarEquipo(String codigo) {
@@ -180,6 +267,7 @@ class PrestamoMostradorPanel extends PanelSede {
             equipos.clear();
             pintar();
             txtUsuario.setText("");
+            cargarDisponibles();
         } catch (RuntimeException ex) {
             Mensajes.mostrarExcepcion(this, "Registrar préstamo", ex);
         }
