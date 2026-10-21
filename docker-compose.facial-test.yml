@@ -1,0 +1,28 @@
+
+services:
+  facial-service:
+    image: sigelab-facial:prueba
+    profiles:
+      - facial-test
+    environment:
+      DB_HOST: sqlserver
+      DB_PORT: "1433"
+      DB_NAME: SIGELAB
+      DB_USER: sa
+      DB_PASSWORD: ${SIGELAB_DB_PASSWORD:?Configurar SIGELAB_DB_PASSWORD}
+      DB_DRIVER: "ODBC Driver 18 for SQL Server"
+      DB_ENCRYPT: "true"
+      DB_TRUST_SERVER_CERTIFICATE: "true"
+      FACIAL_HOST: "127.0.0.1"
+      FACIAL_PORT: "8765"
+      FACIAL_ENCRYPTION_KEY: ${FACIAL_ENCRYPTION_KEY:?Configurar clave facial}
+      SHOW_PREVIEW: "false"
+    volumes:
+      - sigelab_insightface_models:/root/.insightface
+    depends_on:
+      - sqlserver
+    restart: "no"
+
+volumes:
+  sigelab_insightface_models:
+    external: true

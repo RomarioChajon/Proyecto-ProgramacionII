@@ -1,0 +1,23 @@
+name: sigelab
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sigelab-sqlserver
+
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Developer"
+      MSSQL_SA_PASSWORD: ${SIGELAB_DB_PASSWORD:?Configurar SIGELAB_DB_PASSWORD}
+
+    ports:
+      - "1434:1433"
+
+    volumes:
+      - sigelab_sqlserver_data:/var/opt/mssql
+
+    restart: unless-stopped
+
+volumes:
+  sigelab_sqlserver_data:
+    external: true

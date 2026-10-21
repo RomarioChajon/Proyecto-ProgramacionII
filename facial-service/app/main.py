@@ -23,6 +23,7 @@ from .schemas import (
     VerifyResponse,
 )
 from .service import FaceService
+from .qr_scanner import QRScanError, scan_qr
 
 
 logging.basicConfig(
@@ -90,3 +91,29 @@ def face_verify(request: UserRequest):
 @app.delete("/face/profile/{user_id}")
 def face_delete(user_id: int, request: DeleteProfileRequest):
     return service().delete_profile(user_id, request.admin_user_id)
+
+
+@app.post("/qr/scan")
+def qr_scan(timeout: int = 30):
+    if timeout < 5 or timeout > 120:
+        return JSONResponse(
+            status_code=400,
+            content={"detail": "El tiempo debe estar entre 5 y 120 segundos."}
+        )
+
+    try:
+        texto = scan_qr(timeout)
+        return {"text": texto}
+
+    except QRScanError as exc:
+        return JSONResponse(
+            status_code=400,
+            content={"detail": str(exc)}
+        )
+
+    except Exception:
+        logger.exception("Error al escanear codigo QR")
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "No se pudo completar la lectura QR."}
+        )

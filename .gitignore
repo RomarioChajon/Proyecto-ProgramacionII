@@ -48,3 +48,14 @@ facial-service/tmp/*.log
 
 # QR generados por el modulo de equipos
 qr-equipos/
+
+# Archivos locales y respaldos de SIGELAB
+*.bak
+*.tar
+classpath.txt
+docker-compose.respaldo.yml
+facial-service/.env.respaldo
+facial-service/*.log
+qr-equipos-respaldo/
+
+/lib/

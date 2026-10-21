@@ -10,13 +10,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Cliente HTTP pequeño para el servicio facial local (Python + OpenCV/InsightFace).
- *
- * <p>Seguridad: Java NUNCA envía contraseñas ni imágenes; solo el id del usuario.
- * La cámara la abre el servicio Python, que responde con el resultado.</p>
- *
- * <p>Dirección del servicio (por defecto http://127.0.0.1:8765), en orden de prioridad:
- * propiedad {@code -Dsigelab.facial.url}, variable {@code FACIAL_API_URL}.</p>
+ * Cliente HTTP para el servicio facial local (Python + OpenCV/InsightFace).
+ * Java envía solamente el identificador del usuario; la cámara la abre Python.
  */
 public class FacialAuthClient {
 
@@ -41,14 +36,13 @@ public class FacialAuthClient {
         this.httpClient = httpClient;
     }
 
-    /**
-     * ¿Responde el servicio facial? Consulta {@code GET /health} con un tiempo de espera corto.
-     * Nunca lanza excepción: si no hay respuesta devuelve false.
-     */
+    /** Consulta GET /health; devuelve false si no hay respuesta. */
     public boolean disponible() {
         try {
             HttpRequest solicitud = HttpRequest.newBuilder(URI.create(baseUrl + "/health"))
-                    .timeout(Duration.ofSeconds(2)).GET().build();
+                    .timeout(Duration.ofSeconds(2))
+                    .GET()
+                    .build();
             return httpClient.send(solicitud, HttpResponse.BodyHandlers.discarding()).statusCode() / 100 == 2;
         } catch (IOException | IllegalArgumentException e) {
             return false;
@@ -59,7 +53,9 @@ public class FacialAuthClient {
     }
 
     public FacialVerificationResult verify(int userId) {
-        String body = send("/face/verify", "POST", "{\"userId\":" + userId + "}", Duration.ofSeconds(30));
+        // Se espera hasta 120 s: Python puede tardar al inicializar InsightFace
+        // y tiene 60 s configurados para la captura facial.
+        String body = send("/face/verify", "POST", "{\"userId\":" + userId + "}", Duration.ofSeconds(120));
         return new FacialVerificationResult(
                 booleanField(body, "success"),
                 booleanField(body, "matched"),
@@ -102,7 +98,8 @@ public class FacialAuthClient {
     }
 
     public void deleteProfile(int userId, int adminUserId) {
-        send("/face/profile/" + userId, "DELETE", "{\"adminUserId\":" + adminUserId + "}", Duration.ofSeconds(8));
+        send("/face/profile/" + userId, "DELETE",
+                "{\"adminUserId\":" + adminUserId + "}", Duration.ofSeconds(8));
     }
 
     private String send(String path, String method, String body, Duration timeout) {
@@ -116,7 +113,8 @@ public class FacialAuthClient {
                 builder.header("Content-Type", "application/json")
                         .method(method, HttpRequest.BodyPublishers.ofString(body));
             }
-            HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = httpClient.send(
+                    builder.build(), HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 throw new FacialClientException(extraerMensaje(response.body()), response.statusCode());
             }
@@ -141,7 +139,7 @@ public class FacialAuthClient {
     private static String rawField(String json, String field) {
         String key = Pattern.quote(field);
         Pattern pattern = Pattern.compile("\\\"" + key
-                + "\\\"\\s*:\\s*(null|true|false|-?\\d+(?:\\.\\d+)?|\"(?:\\\\.|[^\"\\\\])*\")");
+                + "\\\"\\s*:\\s*(null|true|false|-?\\d+(?:\\.\\d+)?|\\\"(?:\\\\.|[^\\\"\\\\])*\\\")");
         Matcher matcher = pattern.matcher(json == null ? "" : json);
         return matcher.find() ? matcher.group(1) : null;
     }
