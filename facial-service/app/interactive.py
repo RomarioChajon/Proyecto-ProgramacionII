@@ -103,3 +103,37 @@ def _status_for_code(code: str) -> int:
     if code in {"PERFIL_NO_REGISTRADO", "USUARIO_NO_EXISTE"}:
         return 404
     return 500
+
+
+def run_qr_scan(timeout_seconds: int = 30) -> dict[str, Any]:
+    """Lee un QR con la cámara en un proceso hijo (la ventana necesita el hilo principal)."""
+    command = [sys.executable, "-m", "scripts.qr_scan", "--timeout", str(timeout_seconds)]
+    environment = os.environ.copy()
+    environment["PYTHONUNBUFFERED"] = "1"
+    try:
+        completed = subprocess.run(
+            command,
+            cwd=Path(SERVICE_ROOT),
+            env=environment,
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            text=True,
+            timeout=timeout_seconds + 30,
+            check=False,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise FacialServiceError("La lectura de QR excedió el tiempo permitido.", 408, "QR_TIMEOUT") from exc
+    except OSError as exc:
+        raise FacialServiceError("No fue posible iniciar el lector de QR.", 503, "INTERACTIVE_UNAVAILABLE") from exc
+    if completed.stderr:
+        logger.info("QR process stderr:\n%s", completed.stderr.rstrip())
+    try:
+        payload = json.loads(completed.stdout)
+    except (TypeError, json.JSONDecodeError) as exc:
+        raise FacialServiceError("El lector de QR no devolvió un resultado válido.", 500, "INTERACTIVE_PROTOCOL_ERROR") from exc
+    if isinstance(payload, dict) and payload.get("success") is True:
+        return payload
+    code = str(payload.get("code") or "QR_ERROR") if isinstance(payload, dict) else "QR_ERROR"
+    message = str(payload.get("detail") or "No se leyó ningún QR.") if isinstance(payload, dict) else "No se leyó ningún QR."
+    status = int(payload.get("statusCode") or _status_for_code(code)) if isinstance(payload, dict) else 500
+    raise FacialServiceError(message, status, code)

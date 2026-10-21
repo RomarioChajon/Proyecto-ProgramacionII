@@ -11,7 +11,7 @@ from .config import settings
 from .db import Database
 from .engine import FaceEngine
 from .errors import FacialServiceError
-from .interactive import run_interactive_session
+from .interactive import run_interactive_session, run_qr_scan
 from .repository import FacialRepository
 from .schemas import (
     DeleteProfileRequest,
@@ -90,3 +90,10 @@ def face_verify(request: UserRequest):
 @app.delete("/face/profile/{user_id}")
 def face_delete(user_id: int, request: DeleteProfileRequest):
     return service().delete_profile(user_id, request.admin_user_id)
+
+
+@app.post("/qr/scan")
+def qr_scan(timeout: int = 30):
+    """Abre la cámara, espera un código QR y devuelve su texto: {"success": true, "text": "..."}."""
+    logger.info("POST /qr/scan thread=%s timeout=%s", threading.current_thread().name, timeout)
+    return run_qr_scan(timeout)
