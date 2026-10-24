@@ -1,0 +1,10 @@
+﻿services:
+  sigelab-java:
+    image: sigelab-java:prueba
+    profiles:
+      - java-test
+    depends_on:
+      - sqlserver
+    command:
+      - java
+      - -version

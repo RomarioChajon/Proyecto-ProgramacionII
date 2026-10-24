@@ -1,7 +1,6 @@
-
 services:
   facial-service:
-    image: sigelab-facial:prueba
+    image: sigelab-facial:actualizada
     profiles:
       - facial-test
     environment:
