@@ -17,7 +17,7 @@ public final class DatabaseConnection {
 
     private static final String ARCHIVO = "/db.properties";
     private static final String URL_POR_DEFECTO =
-            "jdbc:sqlserver://localhost:1433;databaseName=SIGELAB;encrypt=true;trustServerCertificate=true;";
+            "jdbc:sqlserver://13.58.232.54:1433;databaseName=SIGELAB;encrypt=true;trustServerCertificate=true;";
     private static final String USUARIO_POR_DEFECTO = "sa";
 
     /** Contenido de db.properties, leído una sola vez. */

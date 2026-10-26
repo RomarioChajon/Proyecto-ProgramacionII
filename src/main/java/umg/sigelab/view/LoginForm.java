@@ -22,6 +22,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+
 
 /**
  * Pantalla de acceso con tres pestañas:
@@ -77,6 +81,7 @@ public class LoginForm {
     //private JButton btnServicioFacial;
     private JButton btnSalir;
 
+
     private final AuthController authController;
     private final FacialAuthClient facialClient;
     private final Consumer<Usuario> alIngresar;
@@ -116,6 +121,10 @@ public class LoginForm {
         if (temporizadorServicio != null) {
             temporizadorServicio.stop();
         }
+
+
+
+
     }
 
     // ------------------------------------------------------------------
@@ -131,6 +140,9 @@ public class LoginForm {
         btnGuardarNueva.addActionListener(e -> guardarNuevaPassword());
         //btnServicioFacial.addActionListener(e -> alAbrirServicioFacial.run());
         btnSalir.addActionListener(e -> System.exit(0));
+
+
+
         // Salir de la pestaña de reinicio cancela el proceso: nunca queda "desbloqueado" en segundo plano.
         tabs.addChangeListener(e -> {
             if (tabs.getSelectedIndex() != PESTANA_REINICIO) {
