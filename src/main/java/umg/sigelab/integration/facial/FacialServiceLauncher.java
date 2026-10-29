@@ -1,6 +1,7 @@
 package umg.sigelab.integration.facial;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -9,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Deque;
 import java.util.List;
 import java.util.Locale;
@@ -16,6 +18,7 @@ import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 import java.util.prefs.Preferences;
+import java.util.stream.Collectors;
 
 /**
  * Instala, inicia y detiene el servicio facial (Python) desde Java, para no tener que usar
@@ -35,6 +38,8 @@ public final class FacialServiceLauncher {
 
     /** Archivo que se crea cuando la instalación termina bien. */
     private static final String MARCADOR_INSTALACION = ".setup-ok";
+    /** Ejecutable que genera build-sigelab.ps1 (PyInstaller) en la versión empaquetada. */
+    private static final String EJECUTABLE_EMPAQUETADO = "facial-service.exe";
     private static final int PUERTO_POR_DEFECTO = 8765;
     private static final int MAX_LINEAS_LOG = 2000;
 
@@ -68,6 +73,11 @@ public final class FacialServiceLauncher {
 
     /** Carpeta {@code facial-service} configurada o, si no hay, la que se encuentre junto al proyecto. */
     public Path getCarpeta() {
+        // En la versión empaquetada (SIGELAB.exe) siempre se usa el servicio que viene incluido.
+        Path empaquetada = carpetaEmpaquetada();
+        if (empaquetada != null) {
+            return empaquetada;
+        }
         String guardada = preferencias.get("carpeta", "");
         if (!guardada.isBlank() && validarCarpeta(Paths.get(guardada)) == null) {
             return Paths.get(guardada);
@@ -77,6 +87,24 @@ public final class FacialServiceLauncher {
 
     public void setCarpeta(Path carpeta) {
         preferencias.put("carpeta", carpeta.toAbsolutePath().normalize().toString());
+    }
+
+    /**
+     * Carpeta {@code facial-service} junto a sigelab.jar con {@code facial-service.exe} dentro
+     * (versión empaquetada con jpackage), o null si se está ejecutando desde el proyecto.
+     */
+    public static Path carpetaEmpaquetada() {
+        try {
+            Path origen = Paths.get(FacialServiceLauncher.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+            Path carpeta = origen.getParent() == null ? null : origen.getParent().resolve("facial-service");
+            return carpeta != null && esEmpaquetada(carpeta) ? carpeta : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static boolean esEmpaquetada(Path carpeta) {
+        return Files.isRegularFile(carpeta.resolve(EJECUTABLE_EMPAQUETADO));
     }
 
     /** Busca {@code facial-service} en la carpeta de trabajo (IntelliJ usa la raíz del proyecto) y alrededor. */
@@ -99,6 +127,9 @@ public final class FacialServiceLauncher {
     public static String validarCarpeta(Path carpeta) {
         if (carpeta == null || !Files.isDirectory(carpeta)) {
             return "La carpeta no existe.";
+        }
+        if (esEmpaquetada(carpeta)) {
+            return null;
         }
         if (!Files.isRegularFile(carpeta.resolve("requirements.txt")) || !Files.isRegularFile(carpeta.resolve("app").resolve("main.py"))) {
             return "Esa carpeta no es facial-service (no se encontró requirements.txt ni app/main.py).";
@@ -138,7 +169,8 @@ public final class FacialServiceLauncher {
      */
     public boolean instalado() {
         Path carpeta = getCarpeta();
-        return Files.isRegularFile(carpeta.resolve(MARCADOR_INSTALACION))
+        return esEmpaquetada(carpeta)
+                || Files.isRegularFile(carpeta.resolve(MARCADOR_INSTALACION))
                 || (entornoPresente(carpeta) && Files.isRegularFile(carpeta.resolve(".env")));
     }
 
@@ -183,6 +215,10 @@ public final class FacialServiceLauncher {
      */
     public void instalar() {
         Path carpeta = carpetaValida();
+        if (esEmpaquetada(carpeta)) {
+            registrar("Esta versión de SIGELAB ya trae el servicio facial instalado; no hace falta instalar nada.");
+            return;
+        }
         if (instalando) {
             registrar("Ya hay una instalación en curso.");
             return;
@@ -235,11 +271,18 @@ public final class FacialServiceLauncher {
         }
 
         long limite = System.currentTimeMillis() + 180_000L; // el primer arranque carga el modelo: puede tardar
-        if (isUsarTerminal()) {
+        if (isUsarTerminal() && !esEmpaquetada(carpeta)) {
             abrirEnTerminal(carpeta, "bash start-facial.sh");
             registrar("Se abrió la Terminal con el servicio. Déjela abierta mientras use SIGELAB.");
         } else {
-            List<String> comando = esWindows() ? List.of("cmd", "/c", "start-facial.bat") : List.of("bash", "start-facial.sh");
+            List<String> comando;
+            if (esEmpaquetada(carpeta)) {
+                comando = List.of(carpeta.resolve(EJECUTABLE_EMPAQUETADO).toString());
+            } else if (esWindows()) {
+                comando = List.of("cmd", "/c", "start-facial.bat");
+            } else {
+                comando = List.of("bash", "start-facial.sh");
+            }
             try {
                 procesoServicio = lanzar(comando, carpeta, true);
             } catch (IOException e) {
@@ -294,7 +337,8 @@ public final class FacialServiceLauncher {
     }
 
     private static boolean entornoPresente(Path carpeta) {
-        return Files.isRegularFile(carpeta.resolve(".venv").resolve("bin").resolve("python"))
+        return esEmpaquetada(carpeta)
+                || Files.isRegularFile(carpeta.resolve(".venv").resolve("bin").resolve("python"))
                 || Files.isRegularFile(carpeta.resolve(".venv").resolve("Scripts").resolve("python.exe"));
     }
 
@@ -342,6 +386,9 @@ public final class FacialServiceLauncher {
             String actual = entorno.getOrDefault("PATH", "/usr/bin:/bin");
             entorno.put("PATH", "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:" + actual);
         }
+        if (esWindows()) {
+            quitarJavaDelPath(entorno);
+        }
         entorno.put("PYTHONUNBUFFERED", "1");
         entorno.put("PYTHONIOENCODING", "utf-8");
 
@@ -365,6 +412,34 @@ public final class FacialServiceLauncher {
         lector.setDaemon(true);
         lector.start();
         return proceso;
+    }
+
+    /**
+     * Quita del PATH las carpetas del Java con el que corre SIGELAB. El lanzador de SIGELAB.exe
+     * pone su Java incluido (runtime\bin) en el PATH, y sus DLL de Visual C++ chocan con el
+     * driver ODBC de SQL Server que usa el servicio Python ("The driver did not supply an error!").
+     */
+    private static void quitarJavaDelPath(Map<String, String> entorno) {
+        String clave = entorno.keySet().stream()
+                .filter(k -> k.equalsIgnoreCase("PATH"))
+                .findFirst()
+                .orElse(null);
+        if (clave == null) {
+            return;
+        }
+        Path javaHome = Paths.get(System.getProperty("java.home")).toAbsolutePath().normalize();
+        String limpio = Arrays.stream(entorno.get(clave).split(File.pathSeparator))
+                .filter(ruta -> !ruta.isBlank() && !estaDentro(ruta, javaHome))
+                .collect(Collectors.joining(File.pathSeparator));
+        entorno.put(clave, limpio);
+    }
+
+    private static boolean estaDentro(String ruta, Path carpeta) {
+        try {
+            return Paths.get(ruta.replace("\"", "")).toAbsolutePath().normalize().startsWith(carpeta);
+        } catch (RuntimeException e) {
+            return false;
+        }
     }
 
     /** Abre la app Terminal de macOS y ejecuta ahí un comando dentro de la carpeta del servicio. */

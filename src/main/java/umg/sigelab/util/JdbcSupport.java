@@ -22,6 +22,14 @@ public final class JdbcSupport {
     private static final int ERROR_CLAVE_DUPLICADA_INDICE = 2601;     // índice único
     private static final int ERROR_RESTRICCION = 547;                 // FOREIGN KEY o CHECK
 
+    /**
+     * Fecha y hora actuales de Guatemala calculadas en SQL Server.
+     * Azure SQL siempre trabaja en UTC (6 horas adelante), así que se usa esto en lugar de
+     * {@code SYSDATETIME()} para que coincida con las fechas que calcula Java.
+     */
+    public static final String AHORA_SQL =
+            "CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'Central America Standard Time' AS DATETIME2(0))";
+
     private JdbcSupport() {
         // Clase de utilidades: no se instancia.
     }

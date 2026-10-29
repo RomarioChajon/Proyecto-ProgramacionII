@@ -102,17 +102,23 @@ def _candidate_indices(configuration: Settings, names: list[str]) -> list[tuple[
 
 
 def _open(index: int, backend: int, configuration: Settings) -> tuple[cv2.VideoCapture, bool] | None:
-    capture = cv2.VideoCapture(index, backend)
-    capture.set(cv2.CAP_PROP_FRAME_WIDTH, configuration.camera_width)
-    capture.set(cv2.CAP_PROP_FRAME_HEIGHT, configuration.camera_height)
-    if not capture.isOpened():
+    # Primero en MJPG: muchas webcams en Windows solo dan ~5-10 fps a 1280x720 sin compresión
+    # (de ahí el video "robotizado") y 30 fps en MJPG. Si la cámara no lo acepta, se abre como antes.
+    for mjpg in (True, False):
+        capture = cv2.VideoCapture(index, backend)
+        if mjpg:
+            capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
+        capture.set(cv2.CAP_PROP_FRAME_WIDTH, configuration.camera_width)
+        capture.set(cv2.CAP_PROP_FRAME_HEIGHT, configuration.camera_height)
+        capture.set(cv2.CAP_PROP_BUFFERSIZE, 1)  # cuadro más reciente, sin retraso acumulado
+        if not capture.isOpened():
+            capture.release()
+            continue
+        ok, frame = capture.read()
+        if ok and frame is not None:
+            return capture, ok
         capture.release()
-        return None
-    ok, frame = capture.read()
-    if not ok or frame is None:
-        capture.release()
-        return None
-    return capture, ok
+    return None
 
 
 def list_cameras(configuration: Settings = settings, max_indices: int = 8) -> list[CameraInfo]:
