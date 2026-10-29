@@ -48,7 +48,7 @@ public class FacialAuthClient {
     public boolean disponible() {
         try {
             HttpRequest solicitud = HttpRequest.newBuilder(URI.create(baseUrl + "/health"))
-                    .timeout(Duration.ofSeconds(2)).GET().build();
+                    .timeout(Duration.ofSeconds(5)).GET().build();
             return httpClient.send(solicitud, HttpResponse.BodyHandlers.discarding()).statusCode() / 100 == 2;
         } catch (IOException | IllegalArgumentException e) {
             return false;
