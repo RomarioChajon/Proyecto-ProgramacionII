@@ -35,6 +35,7 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     database = Database(settings)
+    threading.Thread(target=database.ping, daemon=True, name="db-ping-warmup").start()
     repository = FacialRepository(database)
     try:
         engine = FaceEngine(settings)
