@@ -74,7 +74,7 @@ class FacialRepository:
         update = """
             UPDATE PerfilFacial
             SET embedding = ?, modelo = ?, dimension = ?,
-                fecha_actualizacion = SYSDATETIME(), activo = 1,
+                fecha_actualizacion = CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'Central America Standard Time' AS DATETIME2(0)), activo = 1,
                 cantidad_muestras = ?, quality_score = ?, version_algoritmo = ?
             WHERE id_usuario = ?
         """
@@ -83,7 +83,7 @@ class FacialRepository:
                 (id_usuario, embedding, modelo, dimension, fecha_registro,
                  fecha_actualizacion, activo, cantidad_muestras, quality_score,
                  version_algoritmo)
-            VALUES (?, ?, ?, ?, SYSDATETIME(), SYSDATETIME(), 1, ?, ?, ?)
+            VALUES (?, ?, ?, ?, CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'Central America Standard Time' AS DATETIME2(0)), CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'Central America Standard Time' AS DATETIME2(0)), 1, ?, ?, ?)
         """
         with self.database.cursor() as cursor:
             updated = cursor.execute(
@@ -128,7 +128,7 @@ class FacialRepository:
             INSERT INTO AuditoriaFacial
                 (id_usuario, fecha_hora, accion, resultado, score,
                  threshold, detalle, dispositivo)
-            VALUES (?, SYSDATETIME(), ?, ?, ?, ?, ?, ?)
+            VALUES (?, CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'Central America Standard Time' AS DATETIME2(0)), ?, ?, ?, ?, ?, ?)
         """
         try:
             with self.database.cursor() as cursor:
