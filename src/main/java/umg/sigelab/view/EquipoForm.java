@@ -14,8 +14,13 @@ import umg.sigelab.qr.QrGenerator;
 import com.google.zxing.WriterException;
 
 import javax.swing.*;
+import javax.swing.plaf.basic.BasicButtonUI;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -31,6 +36,13 @@ import java.util.Locale;
 import java.util.Map;
 
 public class EquipoForm {
+
+    private static final Color CELESTE_PRINCIPAL = new Color(0x2B8FD6);
+    private static final Color CELESTE_MEDIO = new Color(0x63B3ED);
+    private static final Color CELESTE_SUAVE = new Color(0xBEE3F8);
+    private static final Color BLANCO_HIELO = new Color(0xF0F8FF);
+    private static final Color BLANCO_PURO = new Color(0xFFFFFF);
+    private static final Color TEXTO_OSCURO = new Color(0x1A202C);
 
     private JPanel panelPrincipal;
     private JTextField txtId;
@@ -84,6 +96,7 @@ public class EquipoForm {
         configurarTabla();
         configurarEventos();
         configurarQR();
+        aplicarTemaCeleste();
 
         cargarProductos();
         cargarLaboratorios();
@@ -110,12 +123,18 @@ public class EquipoForm {
     }
 
     private void crearInterfaz() {
-        panelPrincipal = new JPanel(new BorderLayout(10, 10));
+        panelPrincipal = new JPanel(new BorderLayout(12, 12));
+        panelPrincipal.setBackground(BLANCO_HIELO);
         panelPrincipal.setBorder(
-                BorderFactory.createEmptyBorder(12, 12, 12, 12)
+                BorderFactory.createEmptyBorder(16, 16, 16, 16)
         );
 
         JPanel campos = new JPanel(new GridLayout(0, 4, 8, 8));
+        campos.setBackground(BLANCO_PURO);
+        campos.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(CELESTE_SUAVE, 1, true),
+                BorderFactory.createEmptyBorder(12, 14, 12, 14)
+        ));
 
         txtId = new JTextField();
         txtCodigoInventario = new JTextField();
@@ -151,8 +170,9 @@ public class EquipoForm {
         btnSalir = new JButton("Salir");
 
         JPanel botones = new JPanel(
-                new FlowLayout(FlowLayout.CENTER, 8, 5)
+                new FlowLayout(FlowLayout.CENTER, 10, 6)
         );
+        botones.setBackground(BLANCO_HIELO);
 
         botones.add(btnNuevo);
         botones.add(btnGuardar);
@@ -161,24 +181,26 @@ public class EquipoForm {
         botones.add(btnMostrarQR);
         botones.add(btnSalir);
 
-        JPanel superior = new JPanel(new BorderLayout(5, 8));
+        JPanel superior = new JPanel(new BorderLayout(8, 10));
+        superior.setBackground(BLANCO_HIELO);
 
-        superior.add(
-                new JLabel("Gestión de Equipos", SwingConstants.CENTER),
-                BorderLayout.NORTH
-        );
+        JLabel titulo = new JLabel("Inventario de Equipos y Códigos QR", SwingConstants.CENTER);
+        titulo.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        titulo.setForeground(CELESTE_PRINCIPAL);
+
+        superior.add(titulo, BorderLayout.NORTH);
         superior.add(campos, BorderLayout.CENTER);
         superior.add(botones, BorderLayout.SOUTH);
 
         tblEquipo = new JTable();
+        JScrollPane scroll = new JScrollPane(tblEquipo);
+        scroll.getViewport().setBackground(BLANCO_PURO);
+        scroll.setBorder(BorderFactory.createLineBorder(CELESTE_MEDIO, 1));
 
         panelPrincipal.add(superior, BorderLayout.NORTH);
-        panelPrincipal.add(
-                new JScrollPane(tblEquipo),
-                BorderLayout.CENTER
-        );
+        panelPrincipal.add(scroll, BorderLayout.CENTER);
 
-        panelPrincipal.setPreferredSize(new Dimension(1100, 620));
+        panelPrincipal.setPreferredSize(new Dimension(1100, 640));
     }
 
     private void agregarBotonQRAlternativo() {
@@ -187,12 +209,164 @@ public class EquipoForm {
         JPanel barra = new JPanel(
                 new FlowLayout(FlowLayout.RIGHT)
         );
+        barra.setBackground(BLANCO_HIELO);
         barra.add(btnMostrarQR);
 
         JPanel original = panelPrincipal;
         panelPrincipal = new JPanel(new BorderLayout());
+        panelPrincipal.setBackground(BLANCO_HIELO);
         panelPrincipal.add(original, BorderLayout.CENTER);
         panelPrincipal.add(barra, BorderLayout.SOUTH);
+    }
+
+    private void aplicarTemaCeleste() {
+        panelPrincipal.setBackground(BLANCO_HIELO);
+        panelPrincipal.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(4, 0, 0, 0, CELESTE_PRINCIPAL),
+                BorderFactory.createEmptyBorder(14, 16, 14, 16)
+        ));
+        estilizarContenedor(panelPrincipal);
+
+        estilizarCampoTexto(txtId, false);
+        estilizarCampoTexto(txtCodigoInventario, true);
+        estilizarCampoTexto(txtNumeroSerie, true);
+        estilizarCampoTexto(txtEstado, false);
+        estilizarCampoTexto(txtFechadeRegistro, false);
+
+        estilizarCombo(cmbProducto);
+        estilizarCombo(cmbLaboratorio);
+
+        if (observacionesTextArea != null) {
+            observacionesTextArea.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+            observacionesTextArea.setForeground(TEXTO_OSCURO);
+            observacionesTextArea.setBackground(BLANCO_PURO);
+            observacionesTextArea.setCaretColor(CELESTE_PRINCIPAL);
+            observacionesTextArea.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(CELESTE_MEDIO, 1),
+                    BorderFactory.createEmptyBorder(4, 8, 4, 8)
+            ));
+        }
+
+        estilizarBoton(btnGuardar, CELESTE_PRINCIPAL, BLANCO_PURO);
+        estilizarBoton(btnActualizar, CELESTE_PRINCIPAL, BLANCO_PURO);
+        estilizarBoton(btnBuscar, CELESTE_PRINCIPAL, BLANCO_PURO);
+        estilizarBoton(btnMostrarQR, CELESTE_PRINCIPAL, BLANCO_PURO);
+        estilizarBoton(btnNuevo, CELESTE_MEDIO, TEXTO_OSCURO);
+        estilizarBoton(btnSalir, BLANCO_PURO, TEXTO_OSCURO);
+
+        estilizarTabla(tblEquipo);
+    }
+
+    private void estilizarContenedor(Component comp) {
+        if (comp instanceof JLabel label) {
+            String texto = label.getText() != null ? label.getText().trim() : "";
+            if (texto.toLowerCase(Locale.ROOT).contains("gesti") || texto.toLowerCase(Locale.ROOT).contains("inventario")) {
+                label.setFont(new Font("Segoe UI", Font.BOLD, 20));
+                label.setForeground(CELESTE_PRINCIPAL);
+            } else {
+                label.setFont(new Font("Segoe UI", Font.BOLD, 12));
+                label.setForeground(TEXTO_OSCURO);
+            }
+        } else if (comp instanceof JScrollPane scroll) {
+            scroll.getViewport().setBackground(BLANCO_PURO);
+            scroll.setBorder(BorderFactory.createLineBorder(CELESTE_MEDIO, 1));
+        }
+        if (comp instanceof Container container) {
+            for (Component hijo : container.getComponents()) {
+                estilizarContenedor(hijo);
+            }
+        }
+    }
+
+    private void estilizarCampoTexto(JTextField campo, boolean editable) {
+        if (campo == null) {
+            return;
+        }
+        campo.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        campo.setForeground(TEXTO_OSCURO);
+        campo.setBackground(editable ? BLANCO_PURO : BLANCO_HIELO);
+        campo.setCaretColor(CELESTE_PRINCIPAL);
+        campo.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(CELESTE_MEDIO, 1),
+                BorderFactory.createEmptyBorder(4, 8, 4, 8)
+        ));
+    }
+
+    private void estilizarCombo(JComboBox<?> combo) {
+        if (combo == null) {
+            return;
+        }
+        combo.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        combo.setForeground(TEXTO_OSCURO);
+        combo.setBackground(BLANCO_PURO);
+        combo.setBorder(BorderFactory.createLineBorder(CELESTE_MEDIO, 1));
+    }
+
+    private void estilizarBoton(JButton boton, Color fondo, Color texto) {
+        if (boton == null) {
+            return;
+        }
+        boton.setUI(new BasicButtonUI());
+        boton.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        boton.setBackground(fondo);
+        boton.setForeground(texto);
+        boton.setOpaque(true);
+        boton.setFocusPainted(false);
+        boton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        boton.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(CELESTE_PRINCIPAL, 1),
+                BorderFactory.createEmptyBorder(6, 14, 6, 14)
+        ));
+        Color hoverFondo = fondo.equals(CELESTE_PRINCIPAL) ? CELESTE_MEDIO : CELESTE_SUAVE;
+        Color hoverTexto = fondo.equals(CELESTE_PRINCIPAL) ? BLANCO_PURO : TEXTO_OSCURO;
+        boton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                if (boton.isEnabled()) {
+                    boton.setBackground(hoverFondo);
+                    boton.setForeground(hoverTexto);
+                }
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                boton.setBackground(fondo);
+                boton.setForeground(texto);
+            }
+        });
+    }
+
+    private void estilizarTabla(JTable tabla) {
+        if (tabla == null) {
+            return;
+        }
+        tabla.setBackground(BLANCO_PURO);
+        tabla.setForeground(TEXTO_OSCURO);
+        tabla.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        tabla.setGridColor(CELESTE_SUAVE);
+        tabla.setSelectionBackground(CELESTE_SUAVE);
+        tabla.setSelectionForeground(TEXTO_OSCURO);
+        tabla.setRowHeight(26);
+        tabla.setFillsViewportHeight(true);
+
+        JTableHeader header = tabla.getTableHeader();
+        header.setDefaultRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                                                           boolean isSelected, boolean hasFocus, int row, int column) {
+                JLabel lbl = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                lbl.setBackground(CELESTE_PRINCIPAL);
+                lbl.setForeground(BLANCO_PURO);
+                lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
+                lbl.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createMatteBorder(0, 0, 2, 1, CELESTE_MEDIO),
+                        BorderFactory.createEmptyBorder(6, 8, 6, 8)
+                ));
+                lbl.setOpaque(true);
+                return lbl;
+            }
+        });
+        header.setPreferredSize(new Dimension(header.getPreferredSize().width, 32));
     }
 
     private void configurarFormulario() {
@@ -241,7 +415,7 @@ public class EquipoForm {
 
         tblEquipo.setModel(modeloTabla);
         tblEquipo.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tblEquipo.setRowHeight(25);
+        tblEquipo.setRowHeight(26);
         tblEquipo.setAutoCreateRowSorter(true);
         tblEquipo.setFillsViewportHeight(true);
         tblEquipo.getTableHeader().setReorderingAllowed(false);
@@ -890,8 +1064,8 @@ public class EquipoForm {
 
             BufferedImage imagen = QrGenerator.generarQR(
                     contenidoQR,
-                    600,
-                    600
+                    480,
+                    480
             );
 
             JLabel imagenQR = new JLabel(
@@ -903,13 +1077,22 @@ public class EquipoForm {
                     "Código de inventario: " + codigo,
                     SwingConstants.CENTER
             );
+            etiquetaCodigo.setFont(new Font("Segoe UI", Font.BOLD, 14));
+            etiquetaCodigo.setForeground(CELESTE_PRINCIPAL);
 
-            JPanel contenido = new JPanel(
-                    new BorderLayout(8, 8)
-            );
+            JPanel tarjetaQr = new JPanel(new BorderLayout(8, 8));
+            tarjetaQr.setBackground(BLANCO_PURO);
+            tarjetaQr.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(CELESTE_MEDIO, 1, true),
+                    BorderFactory.createEmptyBorder(12, 12, 12, 12)
+            ));
+            tarjetaQr.add(imagenQR, BorderLayout.CENTER);
+            tarjetaQr.add(etiquetaCodigo, BorderLayout.SOUTH);
 
-            contenido.add(imagenQR, BorderLayout.CENTER);
-            contenido.add(etiquetaCodigo, BorderLayout.SOUTH);
+            JPanel contenido = new JPanel(new BorderLayout(8, 8));
+            contenido.setBackground(BLANCO_HIELO);
+            contenido.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+            contenido.add(tarjetaQr, BorderLayout.CENTER);
 
             Object[] opciones = {
                     "Guardar PNG...",
@@ -1041,5 +1224,3 @@ public class EquipoForm {
         return panelPrincipal;
     }
 }
-
-

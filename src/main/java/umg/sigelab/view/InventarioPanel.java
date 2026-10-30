@@ -18,7 +18,6 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 import java.awt.BorderLayout;
-import java.awt.Font;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.util.ArrayList;
@@ -45,18 +44,22 @@ class InventarioPanel extends PanelSede {
     InventarioPanel(Usuario operador, Supplier<Laboratorio> sede) {
         super(operador, sede);
         qr = new QrCampo("Equipo por QR / código:", this::mostrarFicha);
+        Tablas.estilizarCombo(cmbCategoria);
+        Tablas.estilizarCombo(cmbEstado);
 
-        JLabel titulo = new JLabel("Inventario de equipo");
-        titulo.setFont(titulo.getFont().deriveFont(Font.BOLD, 20f));
+        JLabel titulo = Tablas.titulo("Inventario de equipo");
         JPanel filtros = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 2));
-        filtros.add(new JLabel("Categoría:"));
+        filtros.setBackground(Tablas.BLANCO_PURO);
+        filtros.add(Tablas.etiqueta("Categoría:"));
         filtros.add(cmbCategoria);
-        filtros.add(new JLabel("Estado:"));
+        filtros.add(Tablas.etiqueta("Estado:"));
         filtros.add(cmbEstado);
         JButton btnActualizar = new JButton("Actualizar");
+        Tablas.estilizarBotonPrimario(btnActualizar);
         filtros.add(btnActualizar);
 
-        JPanel norte = new JPanel(new GridLayout(3, 1));
+        JPanel norte = new JPanel(new GridLayout(3, 1, 0, 2));
+        Tablas.estilizarTarjeta(norte);
         norte.add(titulo);
         norte.add(filtros);
         norte.add(qr);
@@ -64,10 +67,14 @@ class InventarioPanel extends PanelSede {
         add(Tablas.conScroll(tabla), BorderLayout.CENTER);
 
         JPanel acciones = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
-        acciones.add(new JLabel("Cambiar estado del equipo seleccionado a:"));
+        Tablas.estilizarTarjeta(acciones);
+        acciones.add(Tablas.etiqueta("Cambiar estado del equipo seleccionado a:"));
         JButton btnMant = new JButton("Mantenimiento");
         JButton btnDanado = new JButton("Dañado");
         JButton btnBaja = new JButton("De baja");
+        Tablas.estilizarBotonPrimario(btnMant);
+        Tablas.estilizarBotonSecundario(btnDanado);
+        Tablas.estilizarBotonSuave(btnBaja);
         acciones.add(btnMant);
         acciones.add(btnDanado);
         acciones.add(btnBaja);
@@ -159,6 +166,8 @@ class InventarioPanel extends PanelSede {
             texto.setEditable(false);
             texto.setLineWrap(true);
             texto.setWrapStyleWord(true);
+            texto.setBackground(Tablas.BLANCO_PURO);
+            texto.setForeground(Tablas.TEXTO_OSCURO);
             JOptionPane.showMessageDialog(this, texto, "Ficha del equipo " + codigo, JOptionPane.INFORMATION_MESSAGE);
         } catch (RuntimeException ex) {
             Mensajes.mostrarExcepcion(this, "Ficha del equipo", ex);
@@ -191,12 +200,15 @@ class InventarioPanel extends PanelSede {
                     ? TipoMantenimiento.CORRECTIVO : TipoMantenimiento.PREVENTIVO);
             JTextField txtDescripcion = new JTextField(28);
             JTextField txtResponsable = new JTextField(operador.getNombreCompleto(), 28);
+            Tablas.estilizarCombo(cmbTipo);
+            Tablas.estilizarCampo(txtDescripcion);
+            Tablas.estilizarCampo(txtResponsable);
             JPanel formulario = new JPanel(new GridLayout(0, 1, 4, 4));
-            formulario.add(new JLabel("Tipo de mantenimiento:"));
+            formulario.add(Tablas.etiqueta("Tipo de mantenimiento:"));
             formulario.add(cmbTipo);
-            formulario.add(new JLabel("Motivo / descripción:"));
+            formulario.add(Tablas.etiqueta("Motivo / descripción:"));
             formulario.add(txtDescripcion);
-            formulario.add(new JLabel("Responsable (técnico):"));
+            formulario.add(Tablas.etiqueta("Responsable (técnico):"));
             formulario.add(txtResponsable);
             if (JOptionPane.showConfirmDialog(this, formulario, "Enviar " + equipo.codigoInventario()
                             + " a mantenimiento", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {

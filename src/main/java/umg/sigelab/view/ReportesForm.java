@@ -38,6 +38,7 @@ import java.util.Map;
  * totales, equipos por estado, préstamos entre fechas (activos, finalizados, vencidos...), historial de un
  * equipo, historial de mantenimiento, bloqueos y auditoría. El administrador ve todas las sedes (o filtra
  * por una); el encargado, solo la suya.
+ * Paleta Celeste y Blanco (SIGELAB).
  */
 public class ReportesForm {
 
@@ -53,13 +54,13 @@ public class ReportesForm {
 
     private static final String TODAS = "Todas las sedes";
 
-    private final JPanel panelPrincipal = new JPanel(new BorderLayout(8, 8));
+    private final JPanel panelPrincipal = new JPanel(new BorderLayout(10, 10));
     private final Usuario usuario;
     private final ConsultaController controller = new ConsultaController();
     private final JComboBox<Object> cmbSede = new JComboBox<>();
     private final JTabbedPane pestanas = new JTabbedPane();
 
-    private final JPanel panelTotales = new JPanel(new GridLayout(0, 5, 10, 10));
+    private final JPanel panelTotales = new JPanel(new GridLayout(0, 5, 12, 12));
     private final JTable tblVencidos = Tablas.crear("N.º", "Solicitante", "Usuario", "Sede", "Entrega",
             "Devolución esperada", "Pendientes");
     private final JTable tblBloqueos = Tablas.crear("N.º", "Usuario", "Préstamo", "Motivo", "Estado", "Bloqueado",
@@ -84,17 +85,35 @@ public class ReportesForm {
 
     private ReportesForm(Usuario usuario, Laboratorio sedeInicial) {
         this.usuario = usuario;
-        panelPrincipal.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
+        panelPrincipal.setBackground(Tablas.BLANCO_HIELO);
+        panelPrincipal.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(4, 0, 0, 0, Tablas.CELESTE_PRINCIPAL),
+                BorderFactory.createEmptyBorder(14, 16, 14, 16)
+        ));
 
-        JLabel titulo = new JLabel("Reportes, bloqueos y auditoría");
-        titulo.setFont(titulo.getFont().deriveFont(Font.BOLD, 20f));
-        JPanel norte = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 2));
+        Tablas.estilizarCombo(cmbSede);
+        Tablas.estilizarCombo(cmbEstadoEquipo);
+        Tablas.estilizarCombo(cmbGrupo);
+        Tablas.estilizarCampo(txtCodigoHistorial);
+        Tablas.estilizarCampo(txtCodigoMantenimiento);
+
+        JLabel titulo = Tablas.titulo("Reportes, bloqueos y auditoría");
+        JPanel norte = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 4));
+        Tablas.estilizarTarjeta(norte);
         norte.add(titulo);
-        norte.add(new JLabel("Sede:"));
+        norte.add(Tablas.etiqueta("Sede:"));
         norte.add(cmbSede);
         JButton btnActualizar = new JButton("Actualizar");
+        Tablas.estilizarBotonPrimario(btnActualizar);
         norte.add(btnActualizar);
         panelPrincipal.add(norte, BorderLayout.NORTH);
+
+        panelTotales.setBackground(Tablas.BLANCO_HIELO);
+        panelTotales.setBorder(BorderFactory.createEmptyBorder(12, 8, 12, 8));
+
+        pestanas.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        pestanas.setBackground(Tablas.CELESTE_SUAVE);
+        pestanas.setForeground(Tablas.TEXTO_OSCURO);
 
         pestanas.addTab("Dashboard", panelTotales);
         pestanas.addTab("Equipos por estado", panelEquipos());
@@ -102,16 +121,19 @@ public class ReportesForm {
         pestanas.addTab("Préstamos vencidos", Tablas.conScroll(tblVencidos));
         pestanas.addTab("Historial de equipo", panelHistorialEquipo());
         pestanas.addTab("Historial de mantenimiento", panelMantenimiento());
-        JPanel panelBloqueos = new JPanel(new BorderLayout(4, 4));
+        JPanel panelBloqueos = new JPanel(new BorderLayout(6, 6));
+        panelBloqueos.setBackground(Tablas.BLANCO_HIELO);
         panelBloqueos.add(Tablas.conScroll(tblBloqueos), BorderLayout.CENTER);
         JButton btnLiberar = new JButton("Liberar bloqueo seleccionado");
+        Tablas.estilizarBotonPrimario(btnLiberar);
         JPanel pieBloqueos = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        Tablas.estilizarTarjeta(pieBloqueos);
         pieBloqueos.add(btnLiberar);
         panelBloqueos.add(pieBloqueos, BorderLayout.SOUTH);
         pestanas.addTab("Bloqueos de usuarios", panelBloqueos);
         pestanas.addTab("Auditoría", Tablas.conScroll(tblAuditoria));
         panelPrincipal.add(pestanas, BorderLayout.CENTER);
-        panelPrincipal.setPreferredSize(new Dimension(1050, 620));
+        panelPrincipal.setPreferredSize(new Dimension(1080, 640));
 
         configurarSedes(sedeInicial);
         btnActualizar.addActionListener(e -> cargar());
@@ -131,12 +153,15 @@ public class ReportesForm {
             cmbEstadoEquipo.addItem(e);
         }
         JButton btnConsultar = new JButton("Consultar");
+        Tablas.estilizarBotonPrimario(btnConsultar);
         btnConsultar.addActionListener(e -> cargar());
         JPanel filtros = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
-        filtros.add(new JLabel("Estado del equipo:"));
+        Tablas.estilizarTarjeta(filtros);
+        filtros.add(Tablas.etiqueta("Estado del equipo:"));
         filtros.add(cmbEstadoEquipo);
         filtros.add(btnConsultar);
-        JPanel panel = new JPanel(new BorderLayout(4, 4));
+        JPanel panel = new JPanel(new BorderLayout(6, 6));
+        panel.setBackground(Tablas.BLANCO_HIELO);
         panel.add(filtros, BorderLayout.NORTH);
         panel.add(Tablas.conScroll(tblEquipos), BorderLayout.CENTER);
         return panel;
@@ -144,16 +169,19 @@ public class ReportesForm {
 
     private JPanel panelPrestamos() {
         JButton btnConsultar = new JButton("Consultar");
+        Tablas.estilizarBotonPrimario(btnConsultar);
         btnConsultar.addActionListener(e -> cargar());
         JPanel filtros = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
-        filtros.add(new JLabel("Préstamos:"));
+        Tablas.estilizarTarjeta(filtros);
+        filtros.add(Tablas.etiqueta("Préstamos:"));
         filtros.add(cmbGrupo);
-        filtros.add(new JLabel("Solicitados desde:"));
+        filtros.add(Tablas.etiqueta("Solicitados desde:"));
         filtros.add(dcDesde);
-        filtros.add(new JLabel("hasta:"));
+        filtros.add(Tablas.etiqueta("hasta:"));
         filtros.add(dcHasta);
         filtros.add(btnConsultar);
-        JPanel panel = new JPanel(new BorderLayout(4, 4));
+        JPanel panel = new JPanel(new BorderLayout(6, 6));
+        panel.setBackground(Tablas.BLANCO_HIELO);
         panel.add(filtros, BorderLayout.NORTH);
         panel.add(Tablas.conScroll(tblPrestamos), BorderLayout.CENTER);
         return panel;
@@ -164,7 +192,9 @@ public class ReportesForm {
             txtCodigoHistorial.setText(codigo);
             cargar();
         });
-        JPanel panel = new JPanel(new BorderLayout(4, 4));
+        Tablas.estilizarTarjeta(qr);
+        JPanel panel = new JPanel(new BorderLayout(6, 6));
+        panel.setBackground(Tablas.BLANCO_HIELO);
         panel.add(qr, BorderLayout.NORTH);
         panel.add(Tablas.conScroll(tblHistorialEquipo), BorderLayout.CENTER);
         return panel;
@@ -172,12 +202,15 @@ public class ReportesForm {
 
     private JPanel panelMantenimiento() {
         JButton btnConsultar = new JButton("Consultar");
+        Tablas.estilizarBotonPrimario(btnConsultar);
         btnConsultar.addActionListener(e -> cargar());
         JPanel filtros = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
-        filtros.add(new JLabel("Código del equipo (vacío = todos los de la sede):"));
+        Tablas.estilizarTarjeta(filtros);
+        filtros.add(Tablas.etiqueta("Código del equipo (vacío = todos los de la sede):"));
         filtros.add(txtCodigoMantenimiento);
         filtros.add(btnConsultar);
-        JPanel panel = new JPanel(new BorderLayout(4, 4));
+        JPanel panel = new JPanel(new BorderLayout(6, 6));
+        panel.setBackground(Tablas.BLANCO_HIELO);
         panel.add(filtros, BorderLayout.NORTH);
         panel.add(Tablas.conScroll(tblMantenimiento), BorderLayout.CENTER);
         return panel;
@@ -248,13 +281,23 @@ public class ReportesForm {
     private void cargarDashboard() {
         panelTotales.removeAll();
         for (Map.Entry<String, Integer> e : controller.dashboard(usuario, idSede()).entrySet()) {
-            JPanel tarjeta = new JPanel(new GridLayout(2, 1));
-            tarjeta.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(java.awt.Color.LIGHT_GRAY),
-                    BorderFactory.createEmptyBorder(10, 12, 10, 12)));
+            JPanel tarjeta = new JPanel(new GridLayout(2, 1, 0, 4));
+            tarjeta.setBackground(Tablas.BLANCO_PURO);
+            tarjeta.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createCompoundBorder(
+                            BorderFactory.createLineBorder(Tablas.CELESTE_SUAVE, 1),
+                            BorderFactory.createMatteBorder(0, 4, 0, 0, Tablas.CELESTE_PRINCIPAL)
+                    ),
+                    BorderFactory.createEmptyBorder(12, 14, 12, 14)
+            ));
             JLabel valor = new JLabel(String.valueOf(e.getValue()));
-            valor.setFont(valor.getFont().deriveFont(Font.BOLD, 28f));
+            valor.setFont(new Font("Segoe UI", Font.BOLD, 28));
+            valor.setForeground(Tablas.CELESTE_PRINCIPAL);
+            JLabel nombre = new JLabel(e.getKey());
+            nombre.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            nombre.setForeground(Tablas.TEXTO_OSCURO);
             tarjeta.add(valor);
-            tarjeta.add(new JLabel(e.getKey()));
+            tarjeta.add(nombre);
             panelTotales.add(tarjeta);
         }
         panelTotales.revalidate();

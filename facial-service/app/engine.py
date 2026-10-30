@@ -20,7 +20,7 @@ from .errors import (
     PreviewUnavailableError,
 )
 from .liveness import LivenessSession
-from .preview import FaceOverlay, PreviewWindow
+from .preview import CELESTE_MEDIO, CELESTE_PRINCIPAL, FaceOverlay, PreviewWindow
 from .quality import QualityResult, evaluate_face
 
 
@@ -136,7 +136,7 @@ class FaceEngine:
         return self._capture(
             sample_count=self.settings.enroll_sample_count,
             timeout_seconds=self.settings.enroll_timeout_seconds,
-            title="Universidad Asistencia - Registro Facial",
+            title="SIGELAB - Registro Facial",
             user_label=user_label,
             phases=phases,
         )
@@ -147,7 +147,7 @@ class FaceEngine:
         return self._capture(
             sample_count=self.settings.verify_sample_count,
             timeout_seconds=self.settings.verify_timeout_seconds,
-            title="Universidad Asistencia - Verificación Facial",
+            title="SIGELAB - Verificación Facial",
             user_label=user_label,
             phases=phases,
         )
@@ -376,7 +376,7 @@ class FaceEngine:
             return [FaceOverlay(item, (0, 0, 255)) for item in faces]
         if face is None:
             return []
-        color = (0, 220, 0) if quality is not None and quality.accepted and phase_ok else (0, 220, 255)
+        color = CELESTE_PRINCIPAL if quality is not None and quality.accepted and phase_ok else CELESTE_MEDIO
         return [FaceOverlay(face, color)]
 
     def _lines(
