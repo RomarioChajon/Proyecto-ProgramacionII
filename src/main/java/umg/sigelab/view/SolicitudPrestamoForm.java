@@ -80,6 +80,8 @@ public class SolicitudPrestamoForm {
 
     public SolicitudPrestamoForm(Usuario usuario, Runnable alCerrarSesion) {
         this.usuario = usuario;
+        panelPrincipal.setBackground(Tablas.BLANCO_HIELO);
+        contenido.setBackground(Tablas.BLANCO_HIELO);
 
         JButton btnNuevo = new JButton("Nuevo préstamo");
         JButton btnHistorial = new JButton("Mi historial de préstamos");
@@ -107,85 +109,110 @@ public class SolicitudPrestamoForm {
     // ------------------------------------------------------------------
 
     private JPanel crearPanelNuevo() {
-        JPanel panel = new JPanel(new BorderLayout(8, 8));
-        panel.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBackground(Tablas.BLANCO_HIELO);
+        panel.setBorder(BorderFactory.createEmptyBorder(14, 16, 14, 16));
+
+        Tablas.estilizarCombo(cmbSede);
+        Tablas.estilizarCombo(cmbCategoria);
+        spnDias.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        spnDias.setBorder(BorderFactory.createLineBorder(Tablas.CELESTE_MEDIO, 1));
+
+        Tablas.estilizarBotonPrimario(btnAgregar);
+        Tablas.estilizarBotonPrimario(btnConfirmar);
+        Tablas.estilizarBotonSecundario(btnQuitar);
+        Tablas.estilizarBotonSuave(btnVaciar);
 
         JPanel filtros = new JPanel(new GridBagLayout());
+        Tablas.estilizarTarjeta(filtros);
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(3, 4, 3, 8);
+        gbc.insets = new Insets(4, 6, 4, 10);
         gbc.anchor = GridBagConstraints.WEST;
         gbc.gridy = 0;
         gbc.gridx = 0;
-        JLabel titulo = new JLabel("Nuevo préstamo");
-        titulo.setFont(titulo.getFont().deriveFont(Font.BOLD, 20f));
+        JLabel titulo = Tablas.titulo("Nuevo préstamo");
         gbc.gridwidth = 6;
         filtros.add(titulo, gbc);
         gbc.gridwidth = 1;
         gbc.gridy = 1;
         gbc.gridx = 0;
-        filtros.add(new JLabel("1. Laboratorio / sede:"), gbc);
+        filtros.add(Tablas.etiqueta("1. Laboratorio / sede:"), gbc);
         gbc.gridx = 1;
         cmbSede.setPrototypeDisplayValue(null);
         filtros.add(cmbSede, gbc);
         gbc.gridx = 2;
-        filtros.add(new JLabel("2. Categoría de equipo:"), gbc);
+        filtros.add(Tablas.etiqueta("2. Categoría de equipo:"), gbc);
         gbc.gridx = 3;
         filtros.add(cmbCategoria, gbc);
         gbc.gridx = 4;
-        filtros.add(new JLabel("Días de préstamo (máx. " + PrestamoService.DIAS_MAXIMOS + "):"), gbc);
+        filtros.add(Tablas.etiqueta("Días de préstamo (máx. " + PrestamoService.DIAS_MAXIMOS + "):"), gbc);
         gbc.gridx = 5;
         filtros.add(spnDias, gbc);
         gbc.gridy = 2;
         gbc.gridx = 0;
         gbc.gridwidth = 6;
         lblAviso.setForeground(new Color(0xB00020));
+        lblAviso.setFont(new Font("Segoe UI", Font.BOLD, 12));
         filtros.add(lblAviso, gbc);
         panel.add(filtros, BorderLayout.NORTH);
 
         JPanel arriba = new JPanel(new BorderLayout(4, 4));
-        arriba.add(new JLabel("3. Equipos disponibles en la sede (una sola unidad por modelo)"), BorderLayout.NORTH);
+        arriba.setBackground(Tablas.BLANCO_HIELO);
+        arriba.add(Tablas.etiqueta("3. Equipos disponibles en la sede (una sola unidad por modelo)"), BorderLayout.NORTH);
         arriba.add(Tablas.conScroll(tblCatalogo), BorderLayout.CENTER);
         JPanel botonesArriba = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        botonesArriba.setBackground(Tablas.BLANCO_HIELO);
         botonesArriba.add(btnAgregar);
         arriba.add(botonesArriba, BorderLayout.SOUTH);
 
         JPanel abajo = new JPanel(new BorderLayout(4, 4));
-        abajo.add(new JLabel("Mi carrito"), BorderLayout.NORTH);
+        abajo.setBackground(Tablas.BLANCO_HIELO);
+        abajo.add(Tablas.etiqueta("Mi carrito"), BorderLayout.NORTH);
         abajo.add(Tablas.conScroll(tblCarrito), BorderLayout.CENTER);
         JPanel botonesAbajo = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        botonesAbajo.setOpaque(false);
         botonesAbajo.add(btnQuitar);
         botonesAbajo.add(btnVaciar);
         botonesAbajo.add(Box.createHorizontalStrut(20));
+        lblResumen.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lblResumen.setForeground(Tablas.CELESTE_PRINCIPAL);
         botonesAbajo.add(lblResumen);
-        btnConfirmar.setFont(btnConfirmar.getFont().deriveFont(Font.BOLD, 14f));
         JPanel pie = new JPanel(new BorderLayout());
+        Tablas.estilizarTarjeta(pie);
         pie.add(botonesAbajo, BorderLayout.WEST);
         pie.add(btnConfirmar, BorderLayout.EAST);
         abajo.add(pie, BorderLayout.SOUTH);
 
         JSplitPane division = new JSplitPane(JSplitPane.VERTICAL_SPLIT, arriba, abajo);
         division.setResizeWeight(0.5);
+        division.setBorder(BorderFactory.createEmptyBorder());
+        division.setBackground(Tablas.BLANCO_HIELO);
         panel.add(division, BorderLayout.CENTER);
         return panel;
     }
 
     private JPanel crearPanelHistorial() {
-        JPanel panel = new JPanel(new BorderLayout(8, 8));
-        panel.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
-        JLabel titulo = new JLabel("Mi historial de préstamos (todas las sedes)");
-        titulo.setFont(titulo.getFont().deriveFont(Font.BOLD, 20f));
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBackground(Tablas.BLANCO_HIELO);
+        panel.setBorder(BorderFactory.createEmptyBorder(14, 16, 14, 16));
+        JLabel titulo = Tablas.titulo("Mi historial de préstamos (todas las sedes)");
         JButton btnActualizar = new JButton("Actualizar");
+        Tablas.estilizarBotonPrimario(btnActualizar);
         btnActualizar.addActionListener(e -> cargarHistorial());
         JPanel norte = new JPanel(new BorderLayout());
+        Tablas.estilizarTarjeta(norte);
         norte.add(titulo, BorderLayout.WEST);
         norte.add(btnActualizar, BorderLayout.EAST);
         panel.add(norte, BorderLayout.NORTH);
 
         JPanel abajo = new JPanel(new BorderLayout(4, 4));
-        abajo.add(new JLabel("Equipos del préstamo seleccionado"), BorderLayout.NORTH);
+        abajo.setBackground(Tablas.BLANCO_HIELO);
+        abajo.add(Tablas.etiqueta("Equipos del préstamo seleccionado"), BorderLayout.NORTH);
         abajo.add(Tablas.conScroll(tblLineas), BorderLayout.CENTER);
         JSplitPane division = new JSplitPane(JSplitPane.VERTICAL_SPLIT, Tablas.conScroll(tblHistorial), abajo);
         division.setResizeWeight(0.55);
+        division.setBorder(BorderFactory.createEmptyBorder());
+        division.setBackground(Tablas.BLANCO_HIELO);
         panel.add(division, BorderLayout.CENTER);
 
         tblHistorial.getSelectionModel().addListSelectionListener(e -> {
