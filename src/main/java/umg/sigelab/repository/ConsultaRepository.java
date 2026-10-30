@@ -61,7 +61,7 @@ public class ConsultaRepository {
     /** Cantidad de préstamos vencidos (fecha esperada pasada y equipos pendientes). */
     public int contarVencidos(Connection cn, Integer idLaboratorio) throws SQLException {
         String sql = "SELECT COUNT(*) FROM dbo.Prestamo pr WHERE pr.estado = 'DESPACHADO' "
-                + "AND pr.fecha_esperada_devolucion < SYSDATETIME() AND EXISTS (SELECT 1 FROM dbo.DetallePrestamo d "
+                + "AND pr.fecha_esperada_devolucion < " + JdbcSupport.AHORA_SQL + " AND EXISTS (SELECT 1 FROM dbo.DetallePrestamo d "
                 + "LEFT JOIN dbo.Devolucion dv ON dv.id_detalle = d.id_detalle WHERE d.id_prestamo = pr.id_prestamo "
                 + "AND dv.id_devolucion IS NULL)" + (idLaboratorio == null ? "" : " AND pr.id_laboratorio = ?");
         try (PreparedStatement ps = cn.prepareStatement(sql)) {
@@ -94,7 +94,7 @@ public class ConsultaRepository {
 
     /** Libera manualmente un bloqueo (solo ADMIN). */
     public boolean liberarManual(Connection cn, int idBloqueo, int idAdmin) throws SQLException {
-        String sql = "UPDATE dbo.BloqueoUsuario SET estado = 'LIBERADO', fecha_liberacion = SYSDATETIME(), "
+        String sql = "UPDATE dbo.BloqueoUsuario SET estado = 'LIBERADO', fecha_liberacion = " + JdbcSupport.AHORA_SQL + ", "
                 + "tipo_liberacion = 'MANUAL', id_usuario_libera = ?, "
                 + "observacion_liberacion = 'Liberado manualmente por el administrador' "
                 + "WHERE id_bloqueo = ? AND estado = 'ACTIVO'";

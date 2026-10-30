@@ -48,7 +48,7 @@ public class FacialAuthClient {
     public boolean disponible() {
         try {
             HttpRequest solicitud = HttpRequest.newBuilder(URI.create(baseUrl + "/health"))
-                    .timeout(Duration.ofSeconds(2)).GET().build();
+                    .timeout(Duration.ofSeconds(5)).GET().build();
             return httpClient.send(solicitud, HttpResponse.BodyHandlers.discarding()).statusCode() / 100 == 2;
         } catch (IOException | IllegalArgumentException e) {
             return false;
@@ -59,7 +59,9 @@ public class FacialAuthClient {
     }
 
     public FacialVerificationResult verify(int userId) {
-        String body = send("/face/verify", "POST", "{\"userId\":" + userId + "}", Duration.ofSeconds(30));
+        // El servicio permite hasta VERIFY_TIMEOUT_SECONDS + 150 s (abrir la cámara y cargar el modelo
+        // en el .exe empaquetado tarda más): Java no debe cortar antes que Python.
+        String body = send("/face/verify", "POST", "{\"userId\":" + userId + "}", Duration.ofSeconds(180));
         return new FacialVerificationResult(
                 booleanField(body, "success"),
                 booleanField(body, "matched"),
@@ -75,7 +77,7 @@ public class FacialAuthClient {
     public FacialEnrollmentResult enroll(int userId, boolean replace) {
         String body = send("/face/enroll", "POST",
                 "{\"userId\":" + userId + ",\"replace\":" + replace + "}",
-                Duration.ofSeconds(90));
+                Duration.ofSeconds(240)); // el servicio permite ENROLL_TIMEOUT_SECONDS + 150 s
         return new FacialEnrollmentResult(
                 booleanField(body, "success"),
                 intField(body, "userId"),
