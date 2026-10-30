@@ -525,4 +525,32 @@ public class PrestamoRepository {
             }
         }
     }
+
+    public String[] datosSmsPrestamo(Connection cn, int idPrestamo)
+            throws SQLException {
+
+        String sql = """
+        SELECT u.telefono,
+               CONVERT(VARCHAR(10), p.fecha_esperada_devolucion, 23)
+        FROM dbo.Prestamo p
+        INNER JOIN dbo.Usuario u
+            ON u.id_usuario = p.id_solicitante
+        WHERE p.id_prestamo = ?
+        """;
+
+        try (PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setInt(1, idPrestamo);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new String[]{
+                            rs.getString("telefono"),
+                            rs.getString(2)
+                    };
+                }
+            }
+        }
+
+        return null;
+    }
 }

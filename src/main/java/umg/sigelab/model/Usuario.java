@@ -28,6 +28,7 @@ public class Usuario {
     private String nombreUsuario;
     private String passwordHash;
     private String correo;
+    private String telefono;
     private RolUsuario rol;
     private Laboratorio laboratorio;
     private EstadoRegistro estado = EstadoRegistro.ACTIVO;
@@ -54,6 +55,9 @@ public class Usuario {
 
     public String getCorreo() { return correo; }
     public void setCorreo(String correo) { this.correo = correo; }
+
+    public String getTelefono(){ return telefono; }
+    public void setTelefono(String telefono) { this.telefono = telefono; }
 
     public RolUsuario getRol() { return rol; }
     public void setRol(RolUsuario rol) { this.rol = rol; }

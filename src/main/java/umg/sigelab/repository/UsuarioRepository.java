@@ -33,7 +33,7 @@ public class UsuarioRepository {
 
     /** Columnas comunes. NO incluye password_hash ni foto (se piden aparte cuando hacen falta). */
     private static final String COLUMNAS = """
-            u.id_usuario, u.nombre, u.apellido, u.nombre_usuario, u.correo, u.id_rol, u.estado,
+            u.id_usuario, u.nombre, u.apellido, u.nombre_usuario, u.correo, u.telefono, u.id_rol, u.estado,
             u.fecha_creacion, l.id_laboratorio, l.codigo AS lab_codigo, l.nombre AS lab_nombre
             """;
 
@@ -50,12 +50,12 @@ public class UsuarioRepository {
      * Busca un usuario por id e INCLUYE su foto (es un solo registro, no pesa).
      */
     public Optional<Usuario> buscarPorId(int idUsuario) {
-        String sql = "SELECT " + COLUMNAS + ", u.foto " + DESDE + " WHERE u.id_usuario = ?";
+        String sql = "SELECT " + COLUMNAS + " " + DESDE + " WHERE u.id_usuario = ?";
         try (Connection conexion = DatabaseConnection.getConnection();
              PreparedStatement sentencia = conexion.prepareStatement(sql)) {
             sentencia.setInt(1, idUsuario);
             try (ResultSet rs = sentencia.executeQuery()) {
-                return rs.next() ? Optional.of(mapear(rs, true)) : Optional.empty();
+                return rs.next() ? Optional.of(mapear(rs, false)) : Optional.empty();
             }
         } catch (SQLException e) {
             throw JdbcSupport.error("consultar el usuario", e);
@@ -217,7 +217,7 @@ public class UsuarioRepository {
     public int guardar(Usuario usuario) {
         String sql = """
                 INSERT INTO dbo.Usuario
-                    (nombre, apellido, nombre_usuario, password_hash, correo, id_rol, id_laboratorio, estado, foto)
+                    (nombre, apellido, nombre_usuario, password_hash, correo, telefono, id_rol, id_laboratorio, estado)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
         try (Connection conexion = DatabaseConnection.getConnection();
@@ -227,11 +227,11 @@ public class UsuarioRepository {
             sentencia.setString(3, usuario.getNombreUsuario());
             sentencia.setString(4, usuario.getPasswordHash());
             sentencia.setString(5, usuario.getCorreo());
-            sentencia.setInt(6, usuario.getRol().getId());
-            JdbcSupport.setIntegerNullable(sentencia, 7,
+            sentencia.setString(6, usuario.getTelefono());
+            sentencia.setInt(7, usuario.getRol().getId());
+            JdbcSupport.setIntegerNullable(sentencia, 8,
                     usuario.getLaboratorio() == null ? null : usuario.getLaboratorio().getIdLaboratorio());
-            sentencia.setString(8, usuario.getEstado().name());
-            JdbcSupport.setBytesNullable(sentencia, 9, usuario.getFoto());
+            sentencia.setString(9, usuario.getEstado().name());
 
             sentencia.executeUpdate();
             try (ResultSet claves = sentencia.getGeneratedKeys()) {
@@ -258,13 +258,13 @@ public class UsuarioRepository {
     public boolean actualizar(Usuario usuario, String nuevoHash, boolean actualizarFoto) {
         // El SQL se arma solo con fragmentos fijos de este método (nunca con texto del usuario).
         StringBuilder sql = new StringBuilder(
-                "UPDATE dbo.Usuario SET nombre = ?, apellido = ?, nombre_usuario = ?, correo = ?, id_rol = ?, id_laboratorio = ?");
+                "UPDATE dbo.Usuario SET nombre = ?, apellido = ?, nombre_usuario = ?, correo = ?, telefono = ?, id_rol = ?, id_laboratorio = ?");
         if (nuevoHash != null) {
             sql.append(", password_hash = ?");
         }
-        if (actualizarFoto) {
+        /*if (actualizarFoto) {
             sql.append(", foto = ?");
-        }
+        }*/
         sql.append(" WHERE id_usuario = ?");
 
         try (Connection conexion = DatabaseConnection.getConnection();
@@ -274,15 +274,16 @@ public class UsuarioRepository {
             sentencia.setString(i++, usuario.getApellido());
             sentencia.setString(i++, usuario.getNombreUsuario());
             sentencia.setString(i++, usuario.getCorreo());
+            sentencia.setString(i++, usuario.getTelefono());
             sentencia.setInt(i++, usuario.getRol().getId());
             JdbcSupport.setIntegerNullable(sentencia, i++,
                     usuario.getLaboratorio() == null ? null : usuario.getLaboratorio().getIdLaboratorio());
             if (nuevoHash != null) {
                 sentencia.setString(i++, nuevoHash);
             }
-            if (actualizarFoto) {
+           /* if (actualizarFoto) {
                 JdbcSupport.setBytesNullable(sentencia, i++, usuario.getFoto());
-            }
+            }*/
             sentencia.setInt(i, usuario.getIdUsuario());
             return sentencia.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -330,6 +331,7 @@ public class UsuarioRepository {
         usuario.setApellido(rs.getString("apellido"));
         usuario.setNombreUsuario(rs.getString("nombre_usuario"));
         usuario.setCorreo(rs.getString("correo"));
+        usuario.setTelefono(rs.getString("telefono"));
         usuario.setRol(RolUsuario.deId(rs.getInt("id_rol")));
         usuario.setEstado(EstadoRegistro.valueOf(rs.getString("estado")));
         usuario.setFechaCreacion(JdbcSupport.localDateTime(rs, "fecha_creacion"));

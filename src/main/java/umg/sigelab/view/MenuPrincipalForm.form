@@ -1,4 +1,162 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="umg.sigelab.view.MenuPrincipalForm">
-<grid id="mnRoot" binding="panelPrincipal" layout-manager="GridLayoutManager" row-count="4" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1"><margin top="14" left="14" bottom="14" right="14"/><constraints><xy x="20" y="20" width="820" height="460"/></constraints><properties/><border type="none"/><children><component id="mnTitle" class="javax.swing.JLabel" binding="lblTitulo"><constraints><grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false"></grid></constraints><properties><text value="PANEL PRINCIPAL - ADMINISTRADOR"/><font size="22" style="1"/></properties></component><component id="mnUser" class="javax.swing.JLabel" binding="lblUsuarioActual"><constraints><grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false"></grid></constraints><properties><text value="Sesión: -"/></properties></component><grid id="mnOps" layout-manager="GridLayoutManager" row-count="4" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1"><margin top="0" left="0" bottom="0" right="0"/><constraints><grid row="2" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"></grid></constraints><properties/><border type="none"/><children><component id="mn1" class="javax.swing.JButton" binding="btnUsuarios"><constraints><grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"></grid></constraints><properties><text value="Crear usuario"/></properties></component><component id="mn2" class="javax.swing.JButton" binding="btnLaboratorios"><constraints><grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"></grid></constraints><properties><text value="Laboratorios / sedes"/></properties></component><component id="mn3" class="javax.swing.JButton" binding="btnCategorias"><constraints><grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"></grid></constraints><properties><text value="Crear categoría de equipo"/></properties></component><component id="mn4" class="javax.swing.JButton" binding="btnProductos"><constraints><grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"></grid></constraints><properties><text value="Productos"/></properties></component><component id="mn5" class="javax.swing.JButton" binding="btnEquipos"><constraints><grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"></grid></constraints><properties><text value="Equipos (unidades)"/></properties></component><component id="mn6" class="javax.swing.JButton" binding="btnPrestamos"><constraints><grid row="1" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"></grid></constraints><properties><text value="Préstamos y despacho"/></properties></component><component id="mn7" class="javax.swing.JButton" binding="btnDevoluciones"><constraints><grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"></grid></constraints><properties><text value="Devoluciones"/></properties></component><component id="mn8" class="javax.swing.JButton" binding="btnMantenimiento"><constraints><grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"></grid></constraints><properties><text value="Mantenimiento"/></properties></component><component id="mn9" class="javax.swing.JButton" binding="btnBloqueos"><constraints><grid row="2" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"></grid></constraints><properties><text value="Bloqueos de usuarios"/></properties></component><component id="mn10" class="javax.swing.JButton" binding="btnReportes"><constraints><grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"></grid></constraints><properties><text value="Reportes y consultas"/></properties></component><component id="mn11" class="javax.swing.JButton" binding="btnAuditoria"><constraints><grid row="3" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"></grid></constraints><properties><text value="Auditoría"/></properties></component><component id="mn12" class="javax.swing.JButton" binding="btnServicioFacial"><constraints><grid row="3" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"></grid></constraints><properties><text value="Servicio facial"/></properties></component></children></grid><grid id="mnFoot" layout-manager="GridLayoutManager" row-count="1" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1"><margin top="0" left="0" bottom="0" right="0"/><constraints><grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"></grid></constraints><properties/><border type="none"/><children><component id="mnHint" class="javax.swing.JLabel" binding="lblAyuda"><constraints><grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false"></grid></constraints><properties><text value='Las opciones sin terminar mostrarán el aviso "Opción aún en desarrollo".'/></properties></component><component id="mnOut" class="javax.swing.JButton" binding="btnCerrarSesion"><constraints><grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"></grid></constraints><properties><text value="CERRAR SESIÓN"/></properties></component></children></grid></children></grid>
+  <grid id="mnRoot" binding="panelPrincipal" layout-manager="GridLayoutManager" row-count="4" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+    <margin top="14" left="14" bottom="14" right="14"/>
+    <constraints>
+      <xy x="20" y="20" width="820" height="460"/>
+    </constraints>
+    <properties/>
+    <border type="none"/>
+    <children>
+      <component id="mnTitle" class="javax.swing.JLabel" binding="lblTitulo">
+        <constraints>
+          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <font size="22" style="1"/>
+          <text value="PANEL PRINCIPAL - ADMINISTRADOR"/>
+        </properties>
+      </component>
+      <grid id="mnOps" layout-manager="GridLayoutManager" row-count="4" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+        <margin top="0" left="0" bottom="0" right="0"/>
+        <constraints>
+          <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties/>
+        <border type="none"/>
+        <children>
+          <component id="mn1" class="javax.swing.JButton" binding="btnUsuarios">
+            <constraints>
+              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value="Crear usuario"/>
+            </properties>
+          </component>
+          <component id="mn2" class="javax.swing.JButton" binding="btnLaboratorios">
+            <constraints>
+              <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value="Laboratorios / sedes"/>
+            </properties>
+          </component>
+          <component id="mn3" class="javax.swing.JButton" binding="btnCategorias">
+            <constraints>
+              <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value="Crear categoría de equipo"/>
+            </properties>
+          </component>
+          <component id="mn4" class="javax.swing.JButton" binding="btnProductos">
+            <constraints>
+              <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value="Productos"/>
+            </properties>
+          </component>
+          <component id="mn5" class="javax.swing.JButton" binding="btnEquipos">
+            <constraints>
+              <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value="Equipos (unidades)"/>
+            </properties>
+          </component>
+          <component id="mn6" class="javax.swing.JButton" binding="btnPrestamos">
+            <constraints>
+              <grid row="1" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value="Préstamos y despacho"/>
+            </properties>
+          </component>
+          <component id="mn7" class="javax.swing.JButton" binding="btnDevoluciones">
+            <constraints>
+              <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value="Devoluciones"/>
+            </properties>
+          </component>
+          <component id="mn8" class="javax.swing.JButton" binding="btnMantenimiento">
+            <constraints>
+              <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value="Mantenimiento"/>
+            </properties>
+          </component>
+          <component id="mn9" class="javax.swing.JButton" binding="btnBloqueos">
+            <constraints>
+              <grid row="2" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value="Bloqueos de usuarios"/>
+            </properties>
+          </component>
+          <component id="mn10" class="javax.swing.JButton" binding="btnReportes">
+            <constraints>
+              <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value="Reportes y consultas"/>
+            </properties>
+          </component>
+          <component id="mn11" class="javax.swing.JButton" binding="btnAuditoria">
+            <constraints>
+              <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value="Auditoría"/>
+            </properties>
+          </component>
+          <component id="mn12" class="javax.swing.JButton" binding="btnServicioFacial">
+            <constraints>
+              <grid row="3" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value="Servicio facial"/>
+            </properties>
+          </component>
+        </children>
+      </grid>
+      <grid id="mnFoot" layout-manager="GridLayoutManager" row-count="1" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+        <margin top="0" left="0" bottom="0" right="0"/>
+        <constraints>
+          <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties/>
+        <border type="none"/>
+        <children>
+          <component id="mnHint" class="javax.swing.JLabel" binding="lblAyuda">
+            <constraints>
+              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value="Las opciones sin terminar mostrarán el aviso &quot;Opción aún en desarrollo&quot;."/>
+            </properties>
+          </component>
+          <component id="mnOut" class="javax.swing.JButton" binding="btnCerrarSesion">
+            <constraints>
+              <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value="CERRAR SESIÓN"/>
+            </properties>
+          </component>
+        </children>
+      </grid>
+      <component id="mnUser" class="javax.swing.JLabel" binding="lblUsuarioActual">
+        <constraints>
+          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="Sesión: -"/>
+        </properties>
+      </component>
+    </children>
+  </grid>
 </form>

@@ -3,7 +3,7 @@
   <grid id="usrRoot" binding="panelPrincipal" layout-manager="GridLayoutManager" row-count="5" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
     <margin top="10" left="10" bottom="10" right="10"/>
     <constraints>
-      <xy x="20" y="20" width="1000" height="650"/>
+      <xy x="20" y="20" width="1000" height="851"/>
     </constraints>
     <properties/>
     <border type="none"/>
@@ -42,7 +42,7 @@
         <properties/>
         <border type="none"/>
         <children>
-          <grid id="usrFields" layout-manager="GridLayoutManager" row-count="6" column-count="4" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+          <grid id="usrFields" layout-manager="GridLayoutManager" row-count="7" column-count="4" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
             <margin top="0" left="0" bottom="0" right="0"/>
             <constraints>
               <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
@@ -52,7 +52,9 @@
             <children>
               <component id="usrIdL" class="javax.swing.JLabel">
                 <constraints>
-                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false">
+                    <preferred-size width="68" height="17"/>
+                  </grid>
                 </constraints>
                 <properties>
                   <text value="ID"/>
@@ -84,7 +86,9 @@
               </component>
               <component id="usrNomL" class="javax.swing.JLabel">
                 <constraints>
-                  <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false">
+                    <preferred-size width="68" height="17"/>
+                  </grid>
                 </constraints>
                 <properties>
                   <text value="Nombre *"/>
@@ -116,7 +120,9 @@
               </component>
               <component id="usrUsrL" class="javax.swing.JLabel">
                 <constraints>
-                  <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false">
+                    <preferred-size width="68" height="17"/>
+                  </grid>
                 </constraints>
                 <properties>
                   <text value="Usuario *"/>
@@ -148,7 +154,9 @@
               </component>
               <component id="usrMailL" class="javax.swing.JLabel">
                 <constraints>
-                  <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false">
+                    <preferred-size width="68" height="17"/>
+                  </grid>
                 </constraints>
                 <properties>
                   <text value="Correo *"/>
@@ -164,7 +172,9 @@
               </component>
               <component id="usrRolL" class="javax.swing.JLabel">
                 <constraints>
-                  <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="5" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false">
+                    <preferred-size width="68" height="17"/>
+                  </grid>
                 </constraints>
                 <properties>
                   <text value="Rol *"/>
@@ -172,13 +182,13 @@
               </component>
               <component id="usrRol" class="javax.swing.JComboBox" binding="cmbRol">
                 <constraints>
-                  <grid row="4" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+                  <grid row="5" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties/>
               </component>
               <component id="usrLabL" class="javax.swing.JLabel">
                 <constraints>
-                  <grid row="4" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="5" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="Laboratorio"/>
@@ -186,13 +196,15 @@
               </component>
               <component id="usrLab" class="javax.swing.JComboBox" binding="cmbLaboratorio">
                 <constraints>
-                  <grid row="4" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+                  <grid row="5" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties/>
               </component>
               <component id="usrFaceL" class="javax.swing.JLabel">
                 <constraints>
-                  <grid row="5" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="6" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false">
+                    <preferred-size width="68" height="17"/>
+                  </grid>
                 </constraints>
                 <properties>
                   <text value="Rostro"/>
@@ -200,10 +212,30 @@
               </component>
               <component id="usrFace" class="javax.swing.JLabel" binding="lblEstadoRostro">
                 <constraints>
-                  <grid row="5" column="1" row-span="1" col-span="3" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+                  <grid row="6" column="1" row-span="1" col-span="3" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="Seleccione un usuario."/>
+                </properties>
+              </component>
+              <component id="d5cfd" class="javax.swing.JLabel" binding="lblTelefono">
+                <constraints>
+                  <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false">
+                    <preferred-size width="68" height="17"/>
+                  </grid>
+                </constraints>
+                <properties>
+                  <text value="Teléfono *"/>
+                </properties>
+              </component>
+              <component id="6060b" class="javax.swing.JTextField" binding="txtTelefono">
+                <constraints>
+                  <grid row="4" column="1" row-span="1" col-span="3" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+                    <preferred-size width="150" height="-1"/>
+                  </grid>
+                </constraints>
+                <properties>
+                  <text value=""/>
                 </properties>
               </component>
             </children>
@@ -224,8 +256,8 @@
                   </grid>
                 </constraints>
                 <properties>
-                  <text value="Sin foto"/>
                   <horizontalAlignment value="0"/>
+                  <text value="Sin foto"/>
                 </properties>
               </component>
               <component id="usrPicSel" class="javax.swing.JButton" binding="btnSeleccionarFoto">

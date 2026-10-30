@@ -32,6 +32,10 @@ public class UsuarioService {
     private static final int MAX_USUARIO = 30;
     private static final int MIN_USUARIO = 3;
     private static final int MAX_CORREO = 120;
+    private static final int MAX_TELEFONO = 16;
+
+    private static final Pattern PATRON_TELEFONO =
+            Pattern.compile("^\\+[1-9]\\d{7,14}$");
 
     // Contraseña: BCrypt solo usa los primeros 72 bytes, por eso ese es el máximo.
     private static final int MIN_PASSWORD = 8;
@@ -225,6 +229,27 @@ public class UsuarioService {
         u.setCorreo(Validaciones.requerido(u.getCorreo(), "El correo es obligatorio."));
         Validaciones.longitudMaxima(u.getCorreo(), MAX_CORREO, "El correo no puede superar " + MAX_CORREO + " caracteres.");
         Validaciones.correo(u.getCorreo(), "Ingrese un correo válido, por ejemplo nombre@dominio.com.");
+
+        String telefono = Validaciones.requerido(
+                u.getTelefono(),
+                "El teléfono es obligatorio para enviar notificaciones SMS."
+        );
+
+        telefono = telefono.trim();
+
+        if (telefono.length() > MAX_TELEFONO) {
+            throw new BusinessException(
+                    "El teléfono no puede superar " + MAX_TELEFONO + " caracteres."
+            );
+        }
+
+        if (!PATRON_TELEFONO.matcher(telefono).matches()) {
+            throw new BusinessException(
+                    "Ingrese el teléfono en formato internacional, por ejemplo +50212345678."
+            );
+        }
+
+        u.setTelefono(telefono);
 
         Validaciones.seleccion(u.getRol(), "Seleccione el rol del usuario.");
         validarLaboratorioSegunRol(u);
