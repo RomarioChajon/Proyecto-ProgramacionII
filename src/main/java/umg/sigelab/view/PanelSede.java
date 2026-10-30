@@ -4,8 +4,11 @@ import com.toedter.calendar.JDateChooser;
 import umg.sigelab.model.Laboratorio;
 import umg.sigelab.model.Usuario;
 
+import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Font;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
@@ -14,6 +17,7 @@ import java.util.function.Supplier;
 /**
  * Base de las secciones del encargado (órdenes, inventario, mantenimiento, préstamo, devoluciones).
  * Cada sección trabaja SIEMPRE sobre una sede: la del encargado, o la que elija el administrador.
+ * Paleta Celeste y Blanco (SIGELAB).
  */
 abstract class PanelSede extends JPanel {
 
@@ -21,10 +25,11 @@ abstract class PanelSede extends JPanel {
     private final Supplier<Laboratorio> proveedorSede;
 
     PanelSede(Usuario operador, Supplier<Laboratorio> proveedorSede) {
-        super(new BorderLayout(8, 8));
+        super(new BorderLayout(10, 10));
         this.operador = operador;
         this.proveedorSede = proveedorSede;
-        setBorder(javax.swing.BorderFactory.createEmptyBorder(12, 12, 12, 12));
+        setBackground(Tablas.BLANCO_HIELO);
+        setBorder(BorderFactory.createEmptyBorder(14, 16, 14, 16));
     }
 
     /** Sede con la que se trabaja ahora (puede ser null si el administrador aún no elige una). */
@@ -50,6 +55,10 @@ abstract class PanelSede extends JPanel {
         JDateChooser c = new JDateChooser();
         c.setDateFormatString("dd/MM/yyyy");
         c.setDate(aDate(inicial));
+        c.setBackground(Tablas.BLANCO_PURO);
+        c.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        c.setPreferredSize(new Dimension(130, 28));
+        c.setBorder(BorderFactory.createLineBorder(Tablas.CELESTE_MEDIO, 1));
         if (minima != null) {
             c.setMinSelectableDate(aDate(minima));
         }
