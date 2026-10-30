@@ -7,7 +7,6 @@ import umg.sigelab.qr.QrLector;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingWorker;
@@ -34,10 +33,15 @@ class QrCampo extends JPanel {
     private final Consumer<String> alLeer;
 
     QrCampo(String etiqueta, Consumer<String> alLeer) {
-        super(new FlowLayout(FlowLayout.LEFT, 6, 2));
+        super(new FlowLayout(FlowLayout.LEFT, 8, 4));
         this.alLeer = alLeer;
-        setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
-        add(new JLabel(etiqueta));
+        setBackground(Tablas.BLANCO_PURO);
+        setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
+        add(Tablas.etiqueta(etiqueta));
+        Tablas.estilizarCampo(txtCodigo);
+        Tablas.estilizarBotonPrimario(btnBuscar);
+        Tablas.estilizarBotonPrimario(btnCamara);
+        Tablas.estilizarBotonSuave(btnImagen);
         add(txtCodigo);
         add(btnBuscar);
         add(btnCamara);

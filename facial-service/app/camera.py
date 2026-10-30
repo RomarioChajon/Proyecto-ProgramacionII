@@ -147,6 +147,30 @@ def list_cameras(configuration: Settings = settings, max_indices: int = 8) -> li
 
 
 def select_camera(configuration: Settings = settings) -> CameraInfo:
+    names = mac_camera_names()
+    if not names and configuration.camera_index is None:
+        for index, name in _candidate_indices(configuration, names):
+            for backend in camera_backends():
+                opened = _open(index, backend, configuration)
+                if opened is None:
+                    continue
+                capture, can_read = opened
+                try:
+                    actual_backend = capture.getBackendName() if hasattr(capture, "getBackendName") else backend_name(backend)
+                except cv2.error:
+                    actual_backend = backend_name(backend)
+                capture.release()
+                if can_read:
+                    _, reason = _name_score(name, configuration)
+                    selected = CameraInfo(index, name, backend, actual_backend, can_read, reason)
+                    logger.info(
+                        "Selected camera index=%s name=%s backend=%s reason=%s",
+                        selected.index,
+                        selected.name,
+                        selected.backend_name,
+                        selected.reason,
+                    )
+                    return selected
     cameras = list_cameras(configuration)
     usable = [camera for camera in cameras if camera.can_read_frame]
     if usable:

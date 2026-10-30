@@ -16,6 +16,8 @@ from pathlib import Path
 from urllib.error import URLError
 from urllib.request import urlopen
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 from scripts import ensure_macos_odbc_runtime
 
 ensure_macos_odbc_runtime("scripts.doctor")
@@ -111,37 +113,55 @@ def _java_environment() -> dict[str, str]:
 
 
 def _check_java() -> CheckResult:
-    env = _java_environment()
-    java_bin = shutil.which("java", path=env.get("PATH"))
+    is_mac = platform.system() == "Darwin"
+    java_bin = shutil.which("java", path=_java_environment().get("PATH"))
+    if platform.system() == "Windows" and java_bin and "javapath" in java_bin.lower():
+        # Prefer explicit JDK installations over Oracle javapath shim
+        adoptium = Path("C:/Program Files/Eclipse Adoptium")
+        if adoptium.is_dir():
+            candidates = sorted(adoptium.glob("jdk-*/bin/java.exe"), reverse=True)
+            if candidates:
+                java_bin = str(candidates[0])
     if java_bin is None:
-        return _result("Java 21", False, "instale/configure JDK 21 y JAVA_HOME")
+        return _result("Java 21+", not is_mac, "Java gestionado por el IDE" if not is_mac else "instale/configure JDK 21 y JAVA_HOME", required=is_mac)
     try:
         completed = subprocess.run(
-            [java_bin, "-version"], capture_output=True, text=True, timeout=5, env=env
+            [java_bin, "-version"],
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            text=True,
+            timeout=5,
+            env=_java_environment(),
         )
         version_text = completed.stderr or completed.stdout
         major = re.search(r'version "(\d+)', version_text)
-        ok = completed.returncode == 0 and major is not None and major.group(1) == "21"
-        return _result("Java 21", ok, version_text.splitlines()[0] if version_text else "sin versión")
+        major_num = int(major.group(1)) if major else 0
+        ok = completed.returncode == 0 and major_num >= 21
+        return _result("Java 21+", ok, version_text.splitlines()[0] if version_text else "sin versión", required=is_mac)
     except (OSError, subprocess.SubprocessError) as exc:
-        return _result("Java 21", False, str(exc))
+        return _result("Java 21+", False, str(exc), required=is_mac)
 
 
 def _check_maven() -> CheckResult:
+    is_mac = platform.system() == "Darwin"
     if shutil.which("mvn") is None:
-        return _result("Maven", False, "instale Maven o ejecute desde IntelliJ", required=False)
-
+        return _result("Maven", not is_mac, "Maven gestionado por IntelliJ" if not is_mac else "instale Maven y asegure que mvn esté en PATH", required=is_mac)
     try:
         completed = subprocess.run(
-            ["mvn", "-version"], capture_output=True, text=True, timeout=10, env=_java_environment()
+            ["mvn", "-version"],
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            env=_java_environment(),
         )
         lines = (completed.stdout or completed.stderr).splitlines()
         java_line = next((line for line in lines if "Java version:" in line), "")
-        ok = completed.returncode == 0 and "Java version: 21" in java_line
+        ok = completed.returncode == 0
         detail = java_line or (lines[0] if lines else "sin versión")
-        return _result("Maven", ok, detail if ok else f"{detail}; configure Maven con JDK 21")
+        return _result("Maven", ok, detail, required=is_mac)
     except (OSError, subprocess.SubprocessError) as exc:
-        return _result("Maven", False, str(exc))
+        return _result("Maven", False, str(exc), required=is_mac)
 
 
 def _check_env() -> CheckResult:
