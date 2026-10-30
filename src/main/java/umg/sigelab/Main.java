@@ -44,7 +44,11 @@ public class Main {
     private static void iniciarServicioFacial() {
         Thread hilo = new Thread(() -> {
             try {
-                FacialServiceLauncher.getInstance().iniciar();
+                FacialServiceLauncher launcher = FacialServiceLauncher.getInstance();
+                if (!launcher.instalado()) {
+                    launcher.instalar();
+                }
+                launcher.iniciar();
             } catch (RuntimeException e) {
                 System.err.println("No se pudo iniciar el servicio facial: " + e.getMessage());
             }

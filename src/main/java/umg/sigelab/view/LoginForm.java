@@ -17,6 +17,9 @@ import javax.swing.JTextField;
 import javax.swing.SwingWorker;
 import javax.swing.Timer;
 import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
@@ -121,10 +124,6 @@ public class LoginForm {
         if (temporizadorServicio != null) {
             temporizadorServicio.stop();
         }
-
-
-
-
     }
 
     // ------------------------------------------------------------------
@@ -139,6 +138,18 @@ public class LoginForm {
         btnVerificarRostro.addActionListener(e -> verificarRostroParaReinicio());
         btnGuardarNueva.addActionListener(e -> guardarNuevaPassword());
         //btnServicioFacial.addActionListener(e -> alAbrirServicioFacial.run());
+        if (lblEstadoServicio != null && alAbrirServicioFacial != null) {
+            lblEstadoServicio.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            lblEstadoServicio.setToolTipText("Clic para abrir el panel del Servicio facial (Instalar / Iniciar / Detener)");
+            lblEstadoServicio.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    if (!ocupado) {
+                        alAbrirServicioFacial.run();
+                    }
+                }
+            });
+        }
         btnSalir.addActionListener(e -> System.exit(0));
 
 
@@ -342,7 +353,7 @@ public class LoginForm {
         if (causa instanceof FacialClientException facial) {
             String mensaje = facial.getMessage() == null ? "No se pudo completar la verificación facial." : facial.getMessage();
             if (facial.esSinConexion()) {
-                mensaje += "\n\nInicie el servicio con el botón \"Servicio facial...\" de esta pantalla.";
+                mensaje += "\n\nHaga clic en \"Servicio facial: ...\" en la parte inferior de esta pantalla para iniciarlo.";
             }
             Mensajes.error(panelPrincipal, TITULO, mensaje);
         } else {
@@ -415,12 +426,12 @@ public class LoginForm {
                 comprobandoServicio = false;
                 try {
                     boolean activo = get();
-                    lblEstadoServicio.setText(activo ? "Servicio facial: ACTIVO" : "Servicio facial: no disponible");
+                    lblEstadoServicio.setText(activo ? "Servicio facial: ACTIVO" : "Servicio facial: no disponible (clic para abrir)");
                     lblEstadoServicio.setForeground(activo ? new Color(0x15803D) : new Color(0xB91C1C));
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 } catch (ExecutionException e) {
-                    lblEstadoServicio.setText("Servicio facial: no disponible");
+                    lblEstadoServicio.setText("Servicio facial: no disponible (clic para abrir)");
                 }
             }
         }.execute();
