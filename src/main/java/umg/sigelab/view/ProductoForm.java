@@ -113,7 +113,7 @@ public class ProductoForm {
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         agregarCampo(campos, gbc, 0, "ID", txtId);
-        agregarCampo(campos, gbc, 1, "Código", txtCodigo);
+        agregarCampo(campos, gbc, 1, "Código ", txtCodigo);
         agregarCampo(campos, gbc, 2, "Nombre", txtNombre);
         agregarCampo(campos, gbc, 3, "Tipo Equipo", cmbTipoEquipo);
         agregarCampo(campos, gbc, 4, "Marca", txtMarca);

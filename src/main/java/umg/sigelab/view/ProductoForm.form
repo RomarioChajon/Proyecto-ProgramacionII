@@ -39,7 +39,7 @@
           <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <text value="Codigo"/>
+          <text value="Codigo/Modelo"/>
         </properties>
       </component>
       <component id="bb354" class="javax.swing.JTextField" binding="txtCodigo">
@@ -107,7 +107,7 @@
           <grid row="6" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <text value="Mddelo"/>
+          <text value="Modelo"/>
         </properties>
       </component>
       <component id="2c80d" class="javax.swing.JTextField" binding="txtModelo">
