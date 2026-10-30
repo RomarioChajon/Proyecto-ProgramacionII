@@ -6,6 +6,7 @@ import umg.sigelab.util.Sesion;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -17,20 +18,21 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.GridLayout;
+import java.awt.Insets;
+import java.awt.geom.RoundRectangle2D;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
 /**
- * Panel principal del ADMINISTRADOR: un botón por cada módulo del sistema.
- *
- * <p>Todos los módulos están conectados: usuarios, servicio facial, laboratorios, categorías, productos,
- * equipos, préstamos y despacho, devoluciones, mantenimiento, bloqueos, reportes y auditoría.</p>
- *
- * <p>Debajo de los botones se muestra el DASHBOARD (PDF 6.11): total de equipos, disponibles, prestados,
- * dañados, en mantenimiento, de baja, préstamos activos y préstamos vencidos, leídos de la base de datos.</p>
+ * Panel principal del ADMINISTRADOR (diseño Celeste y Blanco - Laboratorios de Computación):
+ * tarjetas blancas redondeadas con íconos celestes para los 12 módulos del sistema y
+ * el Dashboard de Estado en la parte inferior.
  */
 public class MenuPrincipalForm {
 
@@ -53,8 +55,8 @@ public class MenuPrincipalForm {
     private JButton btnServicioFacial;
     private JButton btnCerrarSesion;
 
-    /** Contenedor que se entrega a la ventana: el panel del formulario (.form) + el dashboard debajo. */
-    private final JPanel raiz = new JPanel(new BorderLayout());
+    /** Contenedor que se entrega a la ventana: encabezado + cuadrícula de módulos + dashboard. */
+    private final JPanel raiz = TemaCeleste.crearPanelFondo(new BorderLayout(0, 8));
     /** Etiquetas de los totales del dashboard, en el orden en que se muestran. */
     private final Map<String, JLabel> valoresDashboard = new LinkedHashMap<>();
     private final ConsultaController consultas = new ConsultaController();
@@ -72,13 +74,16 @@ public class MenuPrincipalForm {
     public MenuPrincipalForm(Usuario usuario, Runnable alCerrarSesion) {
         this.usuario = usuario;
         this.alCerrarSesion = alCerrarSesion;
-        lblUsuarioActual.setText("Sesión: " + usuario.getNombreCompleto() + "  (" + usuario.getNombreUsuario()
-                + ", ID " + usuario.getIdUsuario() + ")");
+
+        construirInterfazCeleste();
+
+        String rolTexto = usuario.getRol() != null ? usuario.getRol().getEtiqueta() : "Administrador";
+        lblUsuarioActual.setText("Usuario: " + usuario.getNombreUsuario() + " (" + rolTexto + ")");
+        lblAyuda.setText("Seleccione un módulo para administrarlo.");
+
         configurarEventos();
-        lblAyuda.setText("Elija un módulo. Los totales de abajo se leen de la base de datos.");
-        raiz.add(panelPrincipal, BorderLayout.CENTER);
-        raiz.add(crearDashboard(), BorderLayout.SOUTH);
         actualizarDashboard();
+
         // Se refresca solo cada 30 segundos mientras la pantalla siga abierta.
         Timer reloj = new Timer(30_000, e -> {
             if (!raiz.isDisplayable()) {
@@ -94,31 +99,195 @@ public class MenuPrincipalForm {
         return raiz;
     }
 
+    // ------------------------------------------------------------------
+    // Construcción visual Celeste y Blanco (fiel a mockup_menu_admin_celeste)
+    // ------------------------------------------------------------------
+
+    private void construirInterfazCeleste() {
+        // 1. Barra superior azul (#2B8FD6)
+        JPanel barraSuperior = TemaCeleste.crearEncabezadoAzul(new BorderLayout(16, 0));
+        barraSuperior.setBorder(BorderFactory.createEmptyBorder(12, 24, 12, 24));
+
+        lblTitulo = new JLabel("SIGELAB - Panel principal");
+        lblTitulo.setFont(TemaCeleste.fuente(Font.BOLD, 22f));
+        lblTitulo.setForeground(Color.WHITE);
+
+        JPanel panelSesion = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 0));
+        panelSesion.setOpaque(false);
+
+        JLabel iconoAvatar = new JLabel(TemaCeleste.crearIconoCuadrado(
+                TemaCeleste.TipoIcono.AVATAR_BLANCO, 30, null, Color.WHITE));
+        lblUsuarioActual = new JLabel("Usuario: admin (Administrador)");
+        lblUsuarioActual.setFont(TemaCeleste.fuente(Font.PLAIN, 14.5f));
+        lblUsuarioActual.setForeground(Color.WHITE);
+
+        btnCerrarSesion = new JButton("Cerrar sesión");
+        TemaCeleste.estilizarBotonEncabezado(btnCerrarSesion);
+
+        panelSesion.add(iconoAvatar);
+        panelSesion.add(lblUsuarioActual);
+        panelSesion.add(btnCerrarSesion);
+
+        barraSuperior.add(lblTitulo, BorderLayout.WEST);
+        barraSuperior.add(panelSesion, BorderLayout.EAST);
+
+        // 2. Cuadrícula 3x4 de módulos (tarjetas blancas redondeadas con ícono celeste)
+        btnUsuarios = new JButton();
+        btnLaboratorios = new JButton();
+        btnCategorias = new JButton();
+        btnProductos = new JButton();
+        btnEquipos = new JButton();
+        btnPrestamos = new JButton();
+        btnDevoluciones = new JButton();
+        btnMantenimiento = new JButton();
+        btnBloqueos = new JButton();
+        btnReportes = new JButton();
+        btnAuditoria = new JButton();
+        btnServicioFacial = new JButton();
+
+        TemaCeleste.estilizarBotonModuloAdmin(btnUsuarios, "Usuarios", TemaCeleste.TipoIcono.USUARIOS);
+        TemaCeleste.estilizarBotonModuloAdmin(btnLaboratorios, "Laboratorios", TemaCeleste.TipoIcono.LABORATORIOS);
+        TemaCeleste.estilizarBotonModuloAdmin(btnCategorias, "Categorías", TemaCeleste.TipoIcono.CATEGORIAS);
+        TemaCeleste.estilizarBotonModuloAdmin(btnProductos, "Productos", TemaCeleste.TipoIcono.PRODUCTOS);
+        TemaCeleste.estilizarBotonModuloAdmin(btnEquipos, "Equipos", TemaCeleste.TipoIcono.EQUIPOS);
+        TemaCeleste.estilizarBotonModuloAdmin(btnPrestamos, "Préstamos", TemaCeleste.TipoIcono.PRESTAMOS);
+        TemaCeleste.estilizarBotonModuloAdmin(btnDevoluciones, "Devoluciones", TemaCeleste.TipoIcono.DEVOLUCIONES);
+        TemaCeleste.estilizarBotonModuloAdmin(btnMantenimiento, "Mantenimiento", TemaCeleste.TipoIcono.MANTENIMIENTO);
+        TemaCeleste.estilizarBotonModuloAdmin(btnBloqueos, "Bloqueos", TemaCeleste.TipoIcono.BLOQUEOS);
+        TemaCeleste.estilizarBotonModuloAdmin(btnReportes, "Reportes", TemaCeleste.TipoIcono.REPORTES);
+        TemaCeleste.estilizarBotonModuloAdmin(btnAuditoria, "Auditoría", TemaCeleste.TipoIcono.AUDITORIA);
+        TemaCeleste.estilizarBotonModuloAdmin(btnServicioFacial, "Servicio facial", TemaCeleste.TipoIcono.SERVICIO_FACIAL);
+
+        JPanel grillaModulos = new JPanel(new GridLayout(3, 4, 16, 14));
+        grillaModulos.setOpaque(false);
+        grillaModulos.setBorder(BorderFactory.createEmptyBorder(16, 24, 8, 24));
+        grillaModulos.add(btnUsuarios);
+        grillaModulos.add(btnLaboratorios);
+        grillaModulos.add(btnCategorias);
+        grillaModulos.add(btnProductos);
+        grillaModulos.add(btnEquipos);
+        grillaModulos.add(btnPrestamos);
+        grillaModulos.add(btnDevoluciones);
+        grillaModulos.add(btnMantenimiento);
+        grillaModulos.add(btnBloqueos);
+        grillaModulos.add(btnReportes);
+        grillaModulos.add(btnAuditoria);
+        grillaModulos.add(btnServicioFacial);
+
+        lblAyuda = new JLabel();
+        lblAyuda.setFont(TemaCeleste.fuente(Font.PLAIN, 12.5f));
+        lblAyuda.setForeground(TemaCeleste.TEXTO_SECUNDARIO);
+        lblAyuda.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 24));
+
+        panelPrincipal = new JPanel(new BorderLayout());
+        panelPrincipal.setOpaque(false);
+        panelPrincipal.add(grillaModulos, BorderLayout.CENTER);
+
+        raiz.setPreferredSize(new Dimension(1060, 660));
+        raiz.add(barraSuperior, BorderLayout.NORTH);
+        raiz.add(panelPrincipal, BorderLayout.CENTER);
+        raiz.add(crearDashboard(), BorderLayout.SOUTH);
+    }
+
     /** Franja de tarjetas con los totales (se llenan en {@link #actualizarDashboard()}). */
     private JPanel crearDashboard() {
-        String[] nombres = {"Total de equipos", "Disponibles", "Prestados", "Dañados", "En mantenimiento",
-                "De baja", "Préstamos activos", "Préstamos vencidos"};
-        JPanel tarjetas = new JPanel(new GridLayout(2, 4, 8, 8));
-        for (String nombre : nombres) {
-            JLabel valor = new JLabel("-", JLabel.CENTER);
-            valor.setFont(valor.getFont().deriveFont(Font.BOLD, 24f));
-            JLabel etiqueta = new JLabel(nombre, JLabel.CENTER);
-            JPanel tarjeta = new JPanel(new GridLayout(2, 1));
-            tarjeta.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
-            tarjeta.add(valor);
-            tarjeta.add(etiqueta);
+        Object[][] configuracion = {
+                {"Total de equipos", "Total equipos:", TemaCeleste.TipoIcono.EQUIPOS, TemaCeleste.AZUL_PRINCIPAL, TemaCeleste.AZUL_PRINCIPAL},
+                {"Disponibles", "Disponibles:", TemaCeleste.TipoIcono.PRODUCTOS, TemaCeleste.VERDE_EXITO, TemaCeleste.VERDE_EXITO},
+                {"Prestados", "Prestados:", TemaCeleste.TipoIcono.FLECHAS_PRESTAMO, TemaCeleste.VERDE_EXITO, TemaCeleste.VERDE_EXITO},
+                {"Dañados", "Dañados:", TemaCeleste.TipoIcono.BICHO_DANADO, TemaCeleste.NARANJA_ALERTA, TemaCeleste.NARANJA_ALERTA},
+                {"En mantenimiento", "En mantenimiento:", TemaCeleste.TipoIcono.MANTENIMIENTO, TemaCeleste.AZUL_PRINCIPAL, TemaCeleste.VERDE_EXITO},
+                {"De baja", "De baja:", TemaCeleste.TipoIcono.CRUZ_BAJA, TemaCeleste.AZUL_PRINCIPAL, TemaCeleste.NARANJA_ALERTA},
+                {"Préstamos activos", "Préstamos activos:", TemaCeleste.TipoIcono.FLECHAS_PRESTAMO, TemaCeleste.AZUL_PRINCIPAL, TemaCeleste.AZUL_BRILLANTE},
+                {"Préstamos vencidos", "Préstamos vencidos:", TemaCeleste.TipoIcono.ALERTA_CIRCULO, TemaCeleste.NARANJA_ALERTA, TemaCeleste.NARANJA_ALERTA}
+        };
+
+        JPanel tarjetas = new JPanel(new GridLayout(2, 4, 16, 12));
+        tarjetas.setOpaque(false);
+
+        for (Object[] cfg : configuracion) {
+            String clave = (String) cfg[0];
+            String tituloVisible = (String) cfg[1];
+            TemaCeleste.TipoIcono tipoIcono = (TemaCeleste.TipoIcono) cfg[2];
+            Color colorIcono = (Color) cfg[3];
+            Color colorPastilla = (Color) cfg[4];
+
+            JLabel valor = new JLabel("0");
+            valor.setFont(TemaCeleste.fuente(Font.BOLD, 24f));
+            valor.setForeground(TemaCeleste.TEXTO_PRINCIPAL);
+
+            JLabel etiqueta = new JLabel(tituloVisible);
+            etiqueta.setFont(TemaCeleste.fuente(Font.PLAIN, 13f));
+            etiqueta.setForeground(TemaCeleste.TEXTO_PRINCIPAL);
+
+            // Pastilla superior derecha que refleja el valor actual
+            JComponent pastilla = new JComponent() {
+                @Override
+                protected void paintComponent(Graphics g) {
+                    Graphics2D g2 = (Graphics2D) g.create();
+                    TemaCeleste.activarAntialiasing(g2);
+                    String txt = valor.getText();
+                    g2.setFont(TemaCeleste.fuente(Font.BOLD, 12f));
+                    FontMetrics fm = g2.getFontMetrics();
+                    int pw = Math.max(26, fm.stringWidth(txt) + 14);
+                    int ph = 22;
+                    int px = getWidth() - pw - 2;
+                    int py = 2;
+                    g2.setColor(colorPastilla);
+                    g2.fill(new RoundRectangle2D.Float(px, py, pw, ph, 18, 18));
+                    g2.setColor(Color.WHITE);
+                    int tx = px + (pw - fm.stringWidth(txt)) / 2;
+                    int ty = py + (ph - fm.getHeight()) / 2 + fm.getAscent();
+                    g2.drawString(txt, tx, ty);
+                    g2.dispose();
+                }
+            };
+            pastilla.setPreferredSize(new Dimension(34, 24));
+            valor.addPropertyChangeListener("text", e -> pastilla.repaint());
+
+            JPanel tarjeta = TemaCeleste.crearTarjetaBlanca(new BorderLayout(10, 0), 18, new Insets(10, 12, 10, 10));
+            JLabel lblIcono = new JLabel(TemaCeleste.crearIconoDashboard(tipoIcono, 44, colorIcono));
+
+            JPanel centroTexto = new JPanel(new GridLayout(2, 1, 0, 2));
+            centroTexto.setOpaque(false);
+            centroTexto.add(etiqueta);
+            centroTexto.add(valor);
+
+            JPanel derPastilla = new JPanel(new BorderLayout());
+            derPastilla.setOpaque(false);
+            derPastilla.add(pastilla, BorderLayout.NORTH);
+
+            tarjeta.add(lblIcono, BorderLayout.WEST);
+            tarjeta.add(centroTexto, BorderLayout.CENTER);
+            tarjeta.add(derPastilla, BorderLayout.EAST);
+
             tarjetas.add(tarjeta);
-            valoresDashboard.put(nombre, valor);
+            valoresDashboard.put(clave, valor);
         }
+
+        JLabel titulo = new JLabel("Dashboard de Estado");
+        titulo.setFont(TemaCeleste.fuente(Font.BOLD, 18f));
+        titulo.setForeground(TemaCeleste.TEXTO_PRINCIPAL);
+
         JButton btnActualizar = new JButton("Actualizar totales");
+        TemaCeleste.estilizarBotonCelesteSuave(btnActualizar, 24, 12.5f);
+        btnActualizar.setPreferredSize(new Dimension(150, 30));
         btnActualizar.addActionListener(e -> actualizarDashboard());
-        JLabel titulo = new JLabel("Resumen general");
-        titulo.setFont(titulo.getFont().deriveFont(Font.BOLD, 15f));
-        JPanel encabezado = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
-        encabezado.add(titulo);
-        encabezado.add(btnActualizar);
+
+        JPanel izqEnc = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
+        izqEnc.setOpaque(false);
+        izqEnc.add(titulo);
+        izqEnc.add(lblAyuda);
+
+        JPanel encabezado = new JPanel(new BorderLayout());
+        encabezado.setOpaque(false);
+        encabezado.setBorder(BorderFactory.createEmptyBorder(0, 4, 6, 4));
+        encabezado.add(izqEnc, BorderLayout.WEST);
+        encabezado.add(btnActualizar, BorderLayout.EAST);
+
         JPanel panel = new JPanel(new BorderLayout(0, 6));
-        panel.setBorder(BorderFactory.createEmptyBorder(0, 14, 14, 14));
+        panel.setOpaque(false);
+        panel.setBorder(BorderFactory.createEmptyBorder(4, 24, 20, 24));
         panel.add(encabezado, BorderLayout.NORTH);
         panel.add(tarjetas, BorderLayout.CENTER);
         return panel;
@@ -202,7 +371,7 @@ public class MenuPrincipalForm {
         ventanaUsuarios = new JFrame("SIGELAB - Usuarios");
         ventanaUsuarios.setContentPane(formulario.getPanelPrincipal());
         ventanaUsuarios.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-        ventanaUsuarios.setMinimumSize(new Dimension(1050, 680));
+        ventanaUsuarios.setMinimumSize(new Dimension(1080, 700));
         ventanaUsuarios.pack();
         ventanaUsuarios.setLocationRelativeTo(panelPrincipal);
         ventanaUsuarios.setVisible(true);

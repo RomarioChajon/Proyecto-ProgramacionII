@@ -56,6 +56,7 @@ public final class FacialServiceLauncher {
 
     private volatile Process procesoServicio;   // solo si lo iniciamos directamente desde Java
     private volatile boolean instalando;
+    private volatile boolean iniciando;
 
     private FacialServiceLauncher() {
         // Si cerramos SIGELAB, no dejamos el servicio Python huérfano.
@@ -178,6 +179,10 @@ public final class FacialServiceLauncher {
         return instalando;
     }
 
+    public boolean isIniciando() {
+        return iniciando;
+    }
+
     // ------------------------------------------------------------------
     // Registro de mensajes (la ventana se suscribe para mostrarlos)
     // ------------------------------------------------------------------
@@ -271,41 +276,46 @@ public final class FacialServiceLauncher {
         }
 
         long limite = System.currentTimeMillis() + 180_000L; // el primer arranque carga el modelo: puede tardar
-        if (isUsarTerminal() && !esEmpaquetada(carpeta)) {
-            abrirEnTerminal(carpeta, "bash start-facial.sh");
-            registrar("Se abrió la Terminal con el servicio. Déjela abierta mientras use SIGELAB.");
-        } else {
-            List<String> comando;
-            if (esEmpaquetada(carpeta)) {
-                comando = List.of(carpeta.resolve(EJECUTABLE_EMPAQUETADO).toString());
-            } else if (esWindows()) {
-                comando = List.of("cmd", "/c", "start-facial.bat");
+        iniciando = true;
+        try {
+            if (isUsarTerminal() && !esEmpaquetada(carpeta)) {
+                abrirEnTerminal(carpeta, "bash start-facial.sh");
+                registrar("Se abrió la Terminal con el servicio. Déjela abierta mientras use SIGELAB.");
             } else {
-                comando = List.of("bash", "start-facial.sh");
+                List<String> comando;
+                if (esEmpaquetada(carpeta)) {
+                    comando = List.of(carpeta.resolve(EJECUTABLE_EMPAQUETADO).toString());
+                } else if (esWindows()) {
+                    comando = List.of("cmd", "/c", "start-facial.bat");
+                } else {
+                    comando = List.of("bash", "start-facial.sh");
+                }
+                try {
+                    procesoServicio = lanzar(comando, carpeta, true);
+                } catch (IOException e) {
+                    registrar("No se pudo iniciar el servicio: " + e.getMessage());
+                    return false;
+                }
             }
-            try {
-                procesoServicio = lanzar(comando, carpeta, true);
-            } catch (IOException e) {
-                registrar("No se pudo iniciar el servicio: " + e.getMessage());
-                return false;
-            }
-        }
 
-        registrar("Esperando a que el servicio responda (la primera vez carga el modelo)...");
-        while (System.currentTimeMillis() < limite) {
-            if (servicioActivo()) {
-                registrar("Servicio facial ACTIVO.");
-                return true;
+            registrar("Esperando a que el servicio responda (la primera vez carga el modelo)...");
+            while (System.currentTimeMillis() < limite) {
+                if (servicioActivo()) {
+                    registrar("Servicio facial ACTIVO.");
+                    return true;
+                }
+                Process p = procesoServicio;
+                if (p != null && !p.isAlive()) {
+                    registrar("El servicio se cerró inesperadamente (código " + p.exitValue() + "). Revise el registro.");
+                    return false;
+                }
+                dormir(1000);
             }
-            Process p = procesoServicio;
-            if (p != null && !p.isAlive()) {
-                registrar("El servicio se cerró inesperadamente (código " + p.exitValue() + "). Revise el registro.");
-                return false;
-            }
-            dormir(1000);
+            registrar("El servicio no respondió a tiempo. Revise el registro o la Terminal.");
+            return false;
+        } finally {
+            iniciando = false;
         }
-        registrar("El servicio no respondió a tiempo. Revise el registro o la Terminal.");
-        return false;
     }
 
     /** Detiene el servicio, lo haya iniciado esta aplicación o la Terminal. */
@@ -354,7 +364,7 @@ public final class FacialServiceLauncher {
         try {
             Files.deleteIfExists(carpeta.resolve(MARCADOR_INSTALACION));
         } catch (IOException e) {
-            // No es grave: el instalador lo volverá a crear.
+            // No es grave: el instalador lo volverá crear.
         }
     }
 
