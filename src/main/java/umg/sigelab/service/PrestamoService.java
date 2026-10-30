@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import umg.sigelab.integration.sms.TextBeeSmsService;
 
 /**
  * Reglas de negocio de los PRÉSTAMOS (solicitud, validación del encargado, despacho).
@@ -42,6 +43,7 @@ public class PrestamoService {
     private final PrestamoRepository repository = new PrestamoRepository();
     private final InventarioRepository inventario = new InventarioRepository();
     private final AuditoriaRepository auditoria = new AuditoriaRepository();
+    private final TextBeeSmsService smsService = new TextBeeSmsService();
 
     // ------------------------------------------------------------------
     // Catálogo (vista del docente / estudiante)
@@ -187,6 +189,7 @@ public class PrestamoService {
             int idSolicitante = Integer.parseInt(encabezado[2]);
             Permisos.exigirOperador(operador, idLaboratorio);
 
+
             if (!"PENDIENTE".equals(encabezado[0])) {
                 throw new BusinessException("El préstamo #" + idPrestamo + " ya no está pendiente (estado: "
                         + encabezado[0] + ").");
@@ -244,6 +247,8 @@ public class PrestamoService {
                             + operador.getNombreUsuario() + ". Motivo: " + motivo.trim());
             return null;
         });
+
+        notificarPrestamoPorSms(idPrestamo);
     }
 
     // ------------------------------------------------------------------
@@ -268,7 +273,7 @@ public class PrestamoService {
         }
         Plazo plazo = Plazo.de(inicio, fin);
 
-        return Transaccion.ejecutar("registrar el préstamo", cn -> {
+        int idPrestamoResultado = Transaccion.ejecutar("registrar el préstamo", cn -> {
             String[] usuario = repository.buscarUsuario(cn, usuarioIdONombre.trim())
                     .orElseThrow(() -> new BusinessException("No existe un usuario con ese ID o nombre de usuario."));
             int idSolicitante = Integer.parseInt(usuario[0]);
@@ -333,6 +338,9 @@ public class PrestamoService {
                             + " equipo(s), " + plazo.dias + " día(s), devolución esperada " + plazo.fin.toLocalDate() + ".");
             return idPrestamo;
         });
+
+        notificarPrestamoPorSms(idPrestamoResultado);
+        return idPrestamoResultado;
     }
 
     // ------------------------------------------------------------------
@@ -371,6 +379,55 @@ public class PrestamoService {
             boolean inicioHoy = inicio.equals(hoy);
             return new Plazo(inicioHoy ? LocalDateTime.now() : inicio.atTime(8, 0), fin.atTime(23, 59), (int) dias,
                     inicioHoy);
+        }
+    }
+
+    private void notificarPrestamoPorSms(int idPrestamo) {
+        try {
+            String[] datos = Transaccion.consultar(
+                    "consultar datos para SMS del préstamo",
+                    cn -> repository.datosSmsPrestamo(cn, idPrestamo)
+            );
+
+            if (datos == null) {
+                System.err.println(
+                        "No se pudo enviar el SMS: no se encontraron datos del préstamo "
+                                + idPrestamo
+                );
+                return;
+            }
+
+            String telefono = datos[0];
+            String fechaDevolucion = datos[1];
+
+            if (telefono == null || telefono.isBlank()) {
+                System.err.println(
+                        "El solicitante no tiene teléfono registrado. Préstamo: "
+                                + idPrestamo
+                );
+                return;
+            }
+
+            if (fechaDevolucion == null || fechaDevolucion.isBlank()) {
+                System.err.println(
+                        "No hay fecha de devolución registrada para el préstamo "
+                                + idPrestamo
+                );
+                return;
+            }
+
+            String mensaje = "SIGELAB: Tu préstamo #" + idPrestamo
+                    + " ha sido despachado. Fecha esperada de devolución: "
+                    + fechaDevolucion + ".";
+
+            smsService.enviarSms(telefono, mensaje);
+
+        } catch (Exception e) {
+            // El préstamo ya fue confirmado; un fallo de SMS no debe deshacerlo.
+            System.err.println(
+                    "No se pudo enviar el SMS del préstamo #" + idPrestamo
+                            + ": " + e.getMessage()
+            );
         }
     }
 }
