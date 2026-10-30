@@ -232,11 +232,11 @@ public class LoginForm {
         btnServicioFacial.setAlignmentX(Component.CENTER_ALIGNMENT);
         btnSalir.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        zonaBotonesInferiores.add(crearSeparadorDifuminado());
-        zonaBotonesInferiores.add(Box.createVerticalStrut(8));
-        zonaBotonesInferiores.add(btnServicioFacial);
-        zonaBotonesInferiores.add(Box.createVerticalStrut(8));
-        zonaBotonesInferiores.add(crearSeparadorDifuminado());
+        //zonaBotonesInferiores.add(crearSeparadorDifuminado());
+        //zonaBotonesInferiores.add(Box.createVerticalStrut(8));
+        //zonaBotonesInferiores.add(btnServicioFacial);
+        //zonaBotonesInferiores.add(Box.createVerticalStrut(8));
+        //zonaBotonesInferiores.add(crearSeparadorDifuminado());
         zonaBotonesInferiores.add(Box.createVerticalStrut(8));
         zonaBotonesInferiores.add(btnSalir);
 
@@ -267,6 +267,23 @@ public class LoginForm {
         lblEstadoServicio.setForeground(TemaCeleste.TEXTO_PRINCIPAL);
         lblEstadoServicio.setIcon(TemaCeleste.crearPuntoEstado(TemaCeleste.NARANJA_ALERTA));
         lblEstadoServicio.setIconTextGap(10);
+        //Se oculta el boton de servicio Facial
+
+        // Respaldo: clic en el estado abre el panel del servicio facial (Instalar / Iniciar / Detener).
+        lblEstadoServicio.setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR));
+        lblEstadoServicio.setToolTipText("Clic para abrir el panel del Servicio facial");
+        lblEstadoServicio.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                if (!ocupado && alAbrirServicioFacial != null) {
+                    alAbrirServicioFacial.run();
+                }
+            }
+        });
+
+
+
+
         franjaPie.add(lblEstadoServicio);
 
         // Panel raíz
