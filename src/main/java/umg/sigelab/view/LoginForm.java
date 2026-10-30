@@ -1,22 +1,17 @@
 package umg.sigelab.view;
 
+import com.intellij.uiDesigner.core.GridConstraints;
+import com.intellij.uiDesigner.core.GridLayoutManager;
 import umg.sigelab.controller.AuthController;
-import umg.sigelab.integration.facial.FacialAuthClient;
-import umg.sigelab.integration.facial.FacialClientException;
-import umg.sigelab.integration.facial.FacialEnrollmentResult;
-import umg.sigelab.integration.facial.FacialVerificationResult;
+import umg.sigelab.integration.facial.*;
 import umg.sigelab.model.Usuario;
 import umg.sigelab.util.BusinessException;
 
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JPasswordField;
-import javax.swing.JTabbedPane;
-import javax.swing.JTextField;
-import javax.swing.SwingWorker;
-import javax.swing.Timer;
-import java.awt.Color;
+import javax.swing.*;
+import javax.swing.plaf.FontUIResource;
+import javax.swing.text.StyleContext;
+import java.awt.*;
+import java.util.Locale;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
@@ -39,7 +34,9 @@ public class LoginForm {
     private static final String TITULO = "SIGELAB";
     private static final Logger LOG = Logger.getLogger(LoginForm.class.getName());
 
-    /** Mensaje que pide el enunciado para quienes no son estudiantes. */
+    /**
+     * Mensaje que pide el enunciado para quienes no son estudiantes.
+     */
     static final String AVISO_COLABORADOR =
             "Si usted es colaborador de la institución por favor contactarse con el administrador.";
 
@@ -76,15 +73,21 @@ public class LoginForm {
     private JLabel lblEstadoServicio;
     //private JButton btnServicioFacial;
     private JButton btnSalir;
+    private JLabel lblTelefono;
+    private JTextField txtTelefono;
 
     private final AuthController authController;
     private final FacialAuthClient facialClient;
     private final Consumer<Usuario> alIngresar;
     private final Runnable alAbrirServicioFacial;
 
-    /** true mientras corre una operación larga (cámara, base de datos): bloquea los botones. */
+    /**
+     * true mientras corre una operación larga (cámara, base de datos): bloquea los botones.
+     */
     private boolean ocupado;
-    /** Id del usuario cuyo rostro YA fue verificado en el reinicio de contraseña (0 = ninguno). */
+    /**
+     * Id del usuario cuyo rostro YA fue verificado en el reinicio de contraseña (0 = ninguno).
+     */
     private int reinicioVerificadoId;
     private boolean comprobandoServicio;
     private Timer temporizadorServicio;
@@ -93,13 +96,16 @@ public class LoginForm {
         this(new AuthController(), new FacialAuthClient(), alIngresar, alAbrirServicioFacial);
     }
 
-    /** Constructor completo: permite inyectar controlador y cliente falsos en pruebas. */
+    /**
+     * Constructor completo: permite inyectar controlador y cliente falsos en pruebas.
+     */
     public LoginForm(AuthController authController, FacialAuthClient facialClient,
                      Consumer<Usuario> alIngresar, Runnable alAbrirServicioFacial) {
         this.authController = authController;
         this.facialClient = facialClient;
         this.alIngresar = alIngresar;
         this.alAbrirServicioFacial = alAbrirServicioFacial;
+
 
         lblAvisoColaborador.setToolTipText(AVISO_COLABORADOR);
         configurarEventos();
@@ -111,7 +117,9 @@ public class LoginForm {
         return panelPrincipal;
     }
 
-    /** Detiene el temporizador que consulta el servicio facial. Llamar al salir de esta pantalla. */
+    /**
+     * Detiene el temporizador que consulta el servicio facial. Llamar al salir de esta pantalla.
+     */
     public void cerrar() {
         if (temporizadorServicio != null) {
             temporizadorServicio.stop();
@@ -147,6 +155,7 @@ public class LoginForm {
      * Ingreso en DOS pasos obligatorios para TODOS los roles (administrador, encargado, docente y estudiante):
      * 1) usuario y contraseña correctos, 2) el rostro coincide con ese usuario. Sin los dos no se entra.
      */
+
     private void ingresar() {
         if (ocupado) {
             return;
@@ -200,6 +209,7 @@ public class LoginForm {
         datos.setApellido(txtRegApellido.getText());
         datos.setNombreUsuario(txtRegUsuario.getText());
         datos.setCorreo(txtRegCorreo.getText());
+        datos.setTelefono(txtTelefono.getText());
 
         ejecutar(() -> {
             // Se comprueba ANTES de crear nada: si no hay cámara/servicio no dejamos cuentas a medias.
@@ -283,7 +293,9 @@ public class LoginForm {
         });
     }
 
-    /** Vuelve la pestaña de reinicio al paso 1 y borra todo lo escrito. */
+    /**
+     * Vuelve la pestaña de reinicio al paso 1 y borra todo lo escrito.
+     */
     private void cancelarReinicio() {
         reinicioVerificadoId = 0;
         txtResUsuario.setText("");
@@ -342,12 +354,14 @@ public class LoginForm {
         return r.message() == null || r.message().isBlank() ? "El rostro no coincide con el usuario." : r.message();
     }
 
-    /** Habilita o bloquea botones y campos según el estado actual (ocupado / paso del reinicio). */
+    /**
+     * Habilita o bloquea botones y campos según el estado actual (ocupado / paso del reinicio).
+     */
     private void refrescarControles() {
         boolean libre = !ocupado;
         btnIngresar.setEnabled(libre);
         btnRegistrar.setEnabled(libre);
-       // btnServicioFacial.setEnabled(libre);
+        // btnServicioFacial.setEnabled(libre);
 
         boolean paso1 = libre && reinicioVerificadoId == 0;
         txtResUsuario.setEnabled(paso1);
@@ -413,4 +427,180 @@ public class LoginForm {
             }
         }.execute();
     }
+
+    {
+// GUI initializer generated by IntelliJ IDEA GUI Designer
+// >>> IMPORTANT!! <<<
+// DO NOT EDIT OR ADD ANY CODE HERE!
+        $$$setupUI$$$();
+    }
+
+    /**
+     * Method generated by IntelliJ IDEA GUI Designer
+     * >>> IMPORTANT!! <<<
+     * DO NOT edit this method OR call it in your code!
+     *
+     * @noinspection ALL
+     */
+    private void $$$setupUI$$$() {
+        panelPrincipal = new JPanel();
+        panelPrincipal.setLayout(new GridLayoutManager(4, 1, new Insets(14, 14, 14, 14), -1, -1));
+        lblTitulo = new JLabel();
+        Font lblTituloFont = this.$$$getFont$$$(null, Font.BOLD, 28, lblTitulo.getFont());
+        if (lblTituloFont != null) lblTitulo.setFont(lblTituloFont);
+        lblTitulo.setHorizontalAlignment(0);
+        lblTitulo.setText("SIGELAB");
+        panelPrincipal.add(lblTitulo, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        lblSubtitulo = new JLabel();
+        lblSubtitulo.setHorizontalAlignment(0);
+        lblSubtitulo.setText("Sistema de Gestión y Control de Laboratorios");
+        panelPrincipal.add(lblSubtitulo, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        tabs = new JTabbedPane();
+        panelPrincipal.add(tabs, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        final JPanel panel1 = new JPanel();
+        panel1.setLayout(new GridLayoutManager(4, 2, new Insets(14, 14, 14, 14), -1, -1));
+        tabs.addTab("Ingresar", panel1);
+        final JLabel label1 = new JLabel();
+        label1.setText("Usuario");
+        panel1.add(label1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        txtUsuario = new JTextField();
+        panel1.add(txtUsuario, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        final JLabel label2 = new JLabel();
+        label2.setText("Contraseña");
+        panel1.add(label2, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        txtPassword = new JPasswordField();
+        panel1.add(txtPassword, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        btnIngresar = new JButton();
+        btnIngresar.setText("INGRESAR");
+        panel1.add(btnIngresar, new GridConstraints(2, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        lblAyudaIngreso = new JLabel();
+        lblAyudaIngreso.setHorizontalAlignment(0);
+        lblAyudaIngreso.setText("<html><center>Se verificará su contraseña y después su rostro.<br>Se abrirá la cámara: siga las instrucciones.</center></html>");
+        panel1.add(lblAyudaIngreso, new GridConstraints(3, 0, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JPanel panel2 = new JPanel();
+        panel2.setLayout(new GridLayoutManager(10, 2, new Insets(14, 14, 14, 14), -1, -1));
+        tabs.addTab("Regístrate", panel2);
+        final JLabel label3 = new JLabel();
+        label3.setText("Nombre *");
+        panel2.add(label3, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        txtRegNombre = new JTextField();
+        panel2.add(txtRegNombre, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        final JLabel label4 = new JLabel();
+        label4.setText("Apellido *");
+        panel2.add(label4, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        txtRegApellido = new JTextField();
+        panel2.add(txtRegApellido, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        final JLabel label5 = new JLabel();
+        label5.setText("Usuario *");
+        panel2.add(label5, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        txtRegUsuario = new JTextField();
+        panel2.add(txtRegUsuario, new GridConstraints(2, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        final JLabel label6 = new JLabel();
+        label6.setText("Correo *");
+        panel2.add(label6, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        txtRegCorreo = new JTextField();
+        panel2.add(txtRegCorreo, new GridConstraints(3, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        final JLabel label7 = new JLabel();
+        label7.setText("Contraseña *");
+        panel2.add(label7, new GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        txtRegPassword = new JPasswordField();
+        panel2.add(txtRegPassword, new GridConstraints(5, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        final JLabel label8 = new JLabel();
+        label8.setText("Repetir contraseña *");
+        panel2.add(label8, new GridConstraints(6, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        txtRegPassword2 = new JPasswordField();
+        panel2.add(txtRegPassword2, new GridConstraints(6, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        lblAvisoColaborador = new JLabel();
+        lblAvisoColaborador.setForeground(new Color(-4959479));
+        lblAvisoColaborador.setText("<html>Si usted es colaborador de la institución por favor contactarse con el administrador.<br>(Todas las cuentas nuevas se crean como estudiante.)</html>");
+        panel2.add(lblAvisoColaborador, new GridConstraints(7, 0, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(380, 44), null, 0, false));
+        btnRegistrar = new JButton();
+        btnRegistrar.setText("REGISTRARME Y CAPTURAR ROSTRO");
+        panel2.add(btnRegistrar, new GridConstraints(8, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label9 = new JLabel();
+        label9.setHorizontalAlignment(0);
+        label9.setText("<html><center>Se abrirá la cámara para registrar su rostro.</center></html>");
+        panel2.add(label9, new GridConstraints(9, 0, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        lblTelefono = new JLabel();
+        lblTelefono.setText("Teléfono *");
+        panel2.add(lblTelefono, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        txtTelefono = new JTextField();
+        panel2.add(txtTelefono, new GridConstraints(4, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        final JPanel panel3 = new JPanel();
+        panel3.setLayout(new GridLayoutManager(8, 2, new Insets(14, 14, 14, 14), -1, -1));
+        tabs.addTab("Reiniciar contraseña", panel3);
+        final JLabel label10 = new JLabel();
+        label10.setText("Usuario");
+        panel3.add(label10, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        txtResUsuario = new JTextField();
+        panel3.add(txtResUsuario, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        final JLabel label11 = new JLabel();
+        label11.setText("Correo");
+        panel3.add(label11, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        txtResCorreo = new JTextField();
+        panel3.add(txtResCorreo, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        btnVerificarRostro = new JButton();
+        btnVerificarRostro.setText("VERIFICAR CON RECONOCIMIENTO FACIAL");
+        panel3.add(btnVerificarRostro, new GridConstraints(2, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        lblEstadoReinicio = new JLabel();
+        lblEstadoReinicio.setHorizontalAlignment(0);
+        lblEstadoReinicio.setText("Paso 1: escriba su usuario y correo, y verifique su rostro.");
+        panel3.add(lblEstadoReinicio, new GridConstraints(3, 0, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label12 = new JLabel();
+        label12.setText("Nueva contraseña");
+        panel3.add(label12, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        txtResNueva = new JPasswordField();
+        panel3.add(txtResNueva, new GridConstraints(4, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        final JLabel label13 = new JLabel();
+        label13.setText("Repetir contraseña");
+        panel3.add(label13, new GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        txtResNueva2 = new JPasswordField();
+        panel3.add(txtResNueva2, new GridConstraints(5, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        btnGuardarNueva = new JButton();
+        btnGuardarNueva.setText("GUARDAR NUEVA CONTRASEÑA");
+        panel3.add(btnGuardarNueva, new GridConstraints(6, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label14 = new JLabel();
+        label14.setHorizontalAlignment(0);
+        label14.setText("<html><center>La nueva contraseña se habilita solo si su rostro coincide.</center></html>");
+        panel3.add(label14, new GridConstraints(7, 0, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JPanel panel4 = new JPanel();
+        panel4.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
+        panelPrincipal.add(panel4, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        lblEstadoServicio = new JLabel();
+        lblEstadoServicio.setText("Servicio facial: comprobando...");
+        panel4.add(lblEstadoServicio, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        btnSalir = new JButton();
+        btnSalir.setText("SALIR");
+        panel4.add(btnSalir, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+    }
+
+    /**
+     * @noinspection ALL
+     */
+    private Font $$$getFont$$$(String fontName, int style, int size, Font currentFont) {
+        if (currentFont == null) return null;
+        String resultName;
+        if (fontName == null) {
+            resultName = currentFont.getName();
+        } else {
+            Font testFont = new Font(fontName, Font.PLAIN, 10);
+            if (testFont.canDisplay('a') && testFont.canDisplay('1')) {
+                resultName = fontName;
+            } else {
+                resultName = currentFont.getName();
+            }
+        }
+        Font font = new Font(resultName, style >= 0 ? style : currentFont.getStyle(), size >= 0 ? size : currentFont.getSize());
+        boolean isMac = System.getProperty("os.name", "").toLowerCase(Locale.ENGLISH).startsWith("mac");
+        Font fontWithFallback = isMac ? new Font(font.getFamily(), font.getStyle(), font.getSize()) : new StyleContext().getFont(font.getFamily(), font.getStyle(), font.getSize());
+        return fontWithFallback instanceof FontUIResource ? fontWithFallback : new FontUIResource(fontWithFallback);
+    }
+
+    /**
+     * @noinspection ALL
+     */
+    public JComponent $$$getRootComponent$$$() {
+        return panelPrincipal;
+    }
+
 }

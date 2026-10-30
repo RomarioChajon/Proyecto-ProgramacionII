@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
+import umg.sigelab.integration.sms.TextBeeSmsService;
 
 /**
  * Reglas de las DEVOLUCIONES (parciales o totales).
@@ -37,6 +38,7 @@ public class DevolucionService {
     private final PrestamoRepository repository = new PrestamoRepository();
     private final InventarioRepository inventario = new InventarioRepository();
     private final AuditoriaRepository auditoria = new AuditoriaRepository();
+    private final TextBeeSmsService smsService = new TextBeeSmsService();
 
     /** Préstamos entregados de la sede con equipos pendientes (incluye vencidos). */
     public List<PrestamoResumen> prestamosActivos(Usuario operador, int idLaboratorio) {
@@ -87,7 +89,7 @@ public class DevolucionService {
             throw new BusinessException("Describa el daño en la observación.");
         }
 
-        return Transaccion.ejecutar("registrar la devolución", cn -> {
+        String resultadoDevolucion = Transaccion.ejecutar("registrar la devolución", cn -> {
             Set<Integer> prestamosTocados = new LinkedHashSet<>();
             int idLaboratorioDelUltimo = 0;
             int idSolicitante = 0;
@@ -151,6 +153,53 @@ public class DevolucionService {
             }
             return mensaje.toString();
         });
+        Set<Integer> prestamosNotificados = new LinkedHashSet<>();
+
+        for (int idDetalle : idDetalles) {
+            try {
+                int idPrestamo = Transaccion.consultar(
+                        "consultar préstamo de devolución",
+                        cn -> repository.lineaParaDevolver(cn, idDetalle)
+                                .map(linea -> Integer.parseInt(linea[0]))
+                                .orElse(-1)
+                );
+
+                if (idPrestamo > 0 && prestamosNotificados.add(idPrestamo)) {
+                    notificarDevolucionPorSms(idPrestamo);
+                }
+            } catch (Exception e) {
+                System.err.println("No se pudo notificar la devolución: " + e.getMessage());
+            }
+        }
+
+        return resultadoDevolucion;
+    }
+    private void notificarDevolucionPorSms(int idPrestamo) {
+        try {
+            String[] datos = Transaccion.consultar(
+                    "consultar datos para SMS de devolución",
+                    cn -> repository.datosSmsPrestamo(cn, idPrestamo)
+            );
+
+            if (datos == null || datos[0] == null || datos[0].isBlank()) {
+                System.err.println(
+                        "No se envió SMS: el préstamo #" + idPrestamo
+                                + " no tiene un teléfono registrado."
+                );
+                return;
+            }
+
+            String mensaje = "SIGELAB: Se registró la devolución de equipo(s) "
+                    + "del préstamo #" + idPrestamo + ". Gracias por devolverlo.";
+
+            smsService.enviarSms(datos[0], mensaje);
+
+        } catch (Exception e) {
+            System.err.println(
+                    "No se pudo enviar el SMS de devolución del préstamo #"
+                            + idPrestamo + ": " + e.getMessage()
+            );
+        }
     }
 
     private static String limpiarCodigo(String codigo) {
