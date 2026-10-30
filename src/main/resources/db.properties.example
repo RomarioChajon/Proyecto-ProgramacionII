@@ -1,5 +1,5 @@
 # Copie este archivo como "db.properties" (misma carpeta) y complete sus datos.
 # db.properties NO se sube a GitHub (está en .gitignore): cada integrante usa el suyo.
 db.url=jdbc:sqlserver://localhost:1433;databaseName=SIGELAB;encrypt=true;trustServerCertificate=true;
-db.user=sa
+   db.user=sa
 db.password=Dev2025!

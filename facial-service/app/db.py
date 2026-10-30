@@ -7,6 +7,7 @@ import shutil
 import subprocess
 from contextlib import contextmanager
 from pathlib import Path
+import time
 from typing import Iterator
 
 
@@ -38,18 +39,26 @@ logger = logging.getLogger(__name__)
 class Database:
     def __init__(self, configuration: Settings = settings):
         self.settings = configuration
+        self._last_ping_ok: bool = False
+        self._last_ping_time: float = 0.0
 
     def connect(self) -> pyodbc.Connection:
-        return pyodbc.connect(self.settings.connection_string, timeout=5)
+        return pyodbc.connect(self.settings.connection_string, timeout=30)
 
-    def ping(self) -> bool:
+    def ping(self, cache_ttl: float = 60.0) -> bool:
+        now = time.monotonic()
+        ttl = cache_ttl if self._last_ping_ok else 10.0
+        if self._last_ping_time > 0.0 and (now - self._last_ping_time) < ttl:
+            return self._last_ping_ok
         try:
             with self.connect() as connection:
                 connection.execute("SELECT 1").fetchone()
-            return True
+            self._last_ping_ok = True
         except pyodbc.Error:
             logger.exception("SQL Server no está disponible")
-            return False
+            self._last_ping_ok = False
+        self._last_ping_time = time.monotonic()
+        return self._last_ping_ok
 
     def facial_tables_ready(self) -> bool:
         query = """
