@@ -87,6 +87,14 @@ def _check_virtualenv() -> CheckResult:
 def _java_environment() -> dict[str, str]:
     environment = os.environ.copy()
     if platform.system() != "Darwin":
+        jdks_dir = Path.home() / ".jdks"
+        if jdks_dir.is_dir():
+            for candidate in sorted(jdks_dir.iterdir(), reverse=True):
+                if "21" in candidate.name and (candidate / "bin").is_dir():
+                    environment["JAVA_HOME"] = str(candidate)
+                    environment["PATH"] = f"{candidate / 'bin'}{os.pathsep}{environment.get('PATH', '')}"
+                    break
+        return environment
         return environment
     try:
         java_home = subprocess.check_output(
@@ -103,11 +111,13 @@ def _java_environment() -> dict[str, str]:
 
 
 def _check_java() -> CheckResult:
-    if shutil.which("java") is None:
+    env = _java_environment()
+    java_bin = shutil.which("java", path=env.get("PATH"))
+    if java_bin is None:
         return _result("Java 21", False, "instale/configure JDK 21 y JAVA_HOME")
     try:
         completed = subprocess.run(
-            ["java", "-version"], capture_output=True, text=True, timeout=5, env=_java_environment()
+            [java_bin, "-version"], capture_output=True, text=True, timeout=5, env=env
         )
         version_text = completed.stderr or completed.stdout
         major = re.search(r'version "(\d+)', version_text)
@@ -119,7 +129,8 @@ def _check_java() -> CheckResult:
 
 def _check_maven() -> CheckResult:
     if shutil.which("mvn") is None:
-        return _result("Maven", False, "instale Maven y asegure que mvn esté en PATH")
+        return _result("Maven", False, "instale Maven o ejecute desde IntelliJ", required=False)
+
     try:
         completed = subprocess.run(
             ["mvn", "-version"], capture_output=True, text=True, timeout=10, env=_java_environment()
@@ -284,7 +295,7 @@ def _check_camera_suite(configuration: object) -> list[CheckResult]:
 def _check_port(configuration: object) -> CheckResult:
     address = (configuration.facial_host, configuration.facial_port)
     try:
-        with urlopen(configuration.facial_base_url + "/health", timeout=1) as response:
+        with urlopen(configuration.facial_base_url + "/health", timeout=5) as response:
             return _result(f"Port {configuration.facial_port}", 200 <= response.status < 300, "servicio facial responde")
     except (URLError, TimeoutError):
         pass
