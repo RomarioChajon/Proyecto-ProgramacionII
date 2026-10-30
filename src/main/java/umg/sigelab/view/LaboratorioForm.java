@@ -94,16 +94,16 @@ public class LaboratorioForm {
         panelCampos.add(new JLabel("ID:"));
         panelCampos.add(txtId);
 
-        panelCampos.add(new JLabel("Código:"));
+        panelCampos.add(new JLabel("Código (L+NombreLaboratorio ejemplo LMRomero):"));
         panelCampos.add(txtCodigo);
 
-        panelCampos.add(new JLabel("Nombre:"));
+        panelCampos.add(new JLabel("Nombre Completo:"));
         panelCampos.add(txtNombre);
 
         panelCampos.add(new JLabel("Ubicación:"));
         panelCampos.add(txtUbicacion);
 
-        panelCampos.add(new JLabel("Capacidad:"));
+        panelCampos.add(new JLabel("Capacidad de Estudiantes:"));
         panelCampos.add(txtCapacidad);
 
         panelCampos.add(new JLabel("Estado:"));
