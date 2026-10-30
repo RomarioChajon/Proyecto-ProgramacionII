@@ -1,3 +1,9 @@
+// ============================================================================
+// ARCHIVO: src/main/java/umg/sigelab/view/TipoEquipoForm.java
+// INSTRUCCIONES: Copia todo desde "package umg.sigelab.view;" hasta la última
+// llave "}" y pégalo reemplazando todo el contenido de TipoEquipoForm.java.
+// (Nota: Requiere tener TemaCeleste.java en la misma carpeta umg/sigelab/view)
+// ============================================================================
 
 package umg.sigelab.view;
 
@@ -12,7 +18,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Ventana de Categorías / Tipos de Equipo con diseño Celeste y Blanco
+ * ("Laboratorios de Computación").
+ */
 public class TipoEquipoForm {
+
+    private static final int COL_ID = 0;
+    private static final int COL_CODIGO = 1;
+    private static final int COL_ESTADO = 4;
 
     private JPanel panelPrincipal;
 
@@ -22,6 +36,7 @@ public class TipoEquipoForm {
     private JTextField txtDescripcion;
     private JTextField textField1;
     private JTextField txtCotegoria;
+    private JTextField txtBuscar;
 
     private JComboBox<String> cmbEstado;
 
@@ -31,8 +46,10 @@ public class TipoEquipoForm {
     private JButton btnDesactivar;
     private JButton btnSalir;
     private JButton btnBuscar;
+    private JButton btnVerTodos;
 
     private JTable tblTipoEquipo;
+    private JScrollPane scrollTabla;
 
     private final TipoEquipoController controller;
     private boolean cargandoTabla = false;
@@ -40,10 +57,7 @@ public class TipoEquipoForm {
     public TipoEquipoForm() {
         controller = new TipoEquipoController();
 
-        if (!componentesDisponibles()) {
-            crearInterfaz();
-        }
-
+        crearInterfaz();
         configurarFormulario();
         configurarTabla();
         configurarEventos();
@@ -51,104 +65,174 @@ public class TipoEquipoForm {
         nuevo();
     }
 
-    private boolean componentesDisponibles() {
-        return panelPrincipal != null
-                && txtId != null
-                && txtCodigo != null
-                && txtNombre != null
-                && txtDescripcion != null
-                && cmbEstado != null
-                && btnNuevo != null
-                && btnGuardar != null
-                && btnBuscar != null
-                && btnActualizar != null
-                && btnDesactivar != null
-                && btnSalir != null
-                && tblTipoEquipo != null;
-    }
-
     private void crearInterfaz() {
-        panelPrincipal = new JPanel(new BorderLayout(10, 10));
-        panelPrincipal.setBorder(
-                BorderFactory.createEmptyBorder(15, 15, 15, 15)
-        );
+        // 1. Encabezado superior azul (#2B8FD6)
+        JPanel barraSuperior = TemaCeleste.crearEncabezadoAzul(new BorderLayout(16, 0));
+        barraSuperior.setBorder(BorderFactory.createEmptyBorder(11, 24, 11, 24));
 
-        JLabel titulo = new JLabel(
-                "Gestión de Tipos de Equipo",
-                SwingConstants.CENTER
-        );
-        titulo.setFont(titulo.getFont().deriveFont(Font.BOLD, 18f));
+        JPanel izqHeader = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
+        izqHeader.setOpaque(false);
+        JLabel iconoHeader = new JLabel(TemaCeleste.crearIconoDashboard(
+                TemaCeleste.TipoIcono.CATEGORIAS, 36, new Color(255, 255, 255, 38)));
+        JLabel titulo = new JLabel("SIGELAB - Categorías / Tipos de Equipo");
+        titulo.setFont(TemaCeleste.fuente(Font.BOLD, 20f));
+        titulo.setForeground(Color.WHITE);
+        titulo.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 20));
+        izqHeader.add(iconoHeader);
+        izqHeader.add(titulo);
 
-        txtId = new JTextField();
-        txtCodigo = new JTextField();
-        txtNombre = new JTextField();
-        txtDescripcion = new JTextField();
+        btnSalir = new JButton("Cerrar ventana");
+        TemaCeleste.estilizarBotonEncabezado(btnSalir);
+
+        barraSuperior.add(izqHeader, BorderLayout.WEST);
+        barraSuperior.add(btnSalir, BorderLayout.EAST);
+
+        // 2. Tarjeta superior: Formulario de Categoría / Tipo de Equipo
+        JPanel tarjetaFormulario = TemaCeleste.crearTarjetaBlanca(
+                new BorderLayout(0, 14), 18, new Insets(16, 22, 16, 22));
+
+        txtId = TemaCeleste.crearCampoTextoRedondeado();
+        txtCodigo = TemaCeleste.crearCampoTextoRedondeado();
+        txtNombre = TemaCeleste.crearCampoTextoRedondeado();
+        txtDescripcion = TemaCeleste.crearCampoTextoRedondeado();
+
         cmbEstado = new JComboBox<>();
+        TemaCeleste.estilizarCombo(cmbEstado);
 
-        JPanel campos = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 8, 5, 8);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        // Fila 1: ID, Código, Nombre de la categoría
+        JPanel fila1 = new JPanel(new GridLayout(1, 3, 16, 0));
+        fila1.setOpaque(false);
+        fila1.add(campoConEtiqueta("ID Categoría", txtId));
+        fila1.add(campoConEtiqueta("Código (vacío = CAT-XXXX-NNNN)", txtCodigo));
+        fila1.add(campoConEtiqueta("Nombre de la categoría", txtNombre));
 
-        agregarCampo(campos, gbc, 0, "ID", txtId);
-        agregarCampo(campos, gbc, 1, "Código", txtCodigo);
-        agregarCampo(campos, gbc, 2, "Categoría", txtNombre);
-        agregarCampo(campos, gbc, 3, "Descripción", txtDescripcion);
-        agregarCampo(campos, gbc, 4, "Estado", cmbEstado);
+        // Fila 2: Descripción amplia (2/3) + Estado (1/3)
+        JPanel fila2 = new JPanel(new BorderLayout(16, 0));
+        fila2.setOpaque(false);
+        fila2.add(campoConEtiqueta("Descripción detallada", txtDescripcion), BorderLayout.CENTER);
 
-        btnNuevo = new JButton("Nuevo");
-        btnGuardar = new JButton("Guardar");
-        btnBuscar = new JButton("Buscar");
-        btnActualizar = new JButton("Actualizar");
+        JPanel panelEstadoDerecha = new JPanel(new GridLayout(1, 2, 16, 0));
+        panelEstadoDerecha.setOpaque(false);
+        panelEstadoDerecha.setPreferredSize(new Dimension(380, 60));
+        panelEstadoDerecha.add(campoConEtiqueta("Estado del registro", cmbEstado));
+
+        JPanel notaCodigo = TemaCeleste.crearSubTarjetaCeleste(new BorderLayout(), 16, new Insets(6, 10, 6, 10));
+        JLabel lblNota = new JLabel(
+                "<html><div style='text-align:center;'>Formato <b>CAT-XXXX-NNNN</b><br><span style='color:#4A5568;font-size:10px;'>automático si queda vacío</span></div></html>",
+                SwingConstants.CENTER);
+        lblNota.setFont(TemaCeleste.fuente(Font.PLAIN, 12f));
+        lblNota.setForeground(TemaCeleste.AZUL_PRINCIPAL);
+        notaCodigo.add(lblNota, BorderLayout.CENTER);
+        panelEstadoDerecha.add(campoConEtiqueta("Formato de código", notaCodigo));
+
+        fila2.add(panelEstadoDerecha, BorderLayout.EAST);
+
+        JPanel contenedorCampos = new JPanel(new GridLayout(2, 1, 0, 12));
+        contenedorCampos.setOpaque(false);
+        contenedorCampos.add(fila1);
+        contenedorCampos.add(fila2);
+
+        // Barra de botones de acción CRUD
+        JPanel botones = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        botones.setOpaque(false);
+
+        btnNuevo = new JButton("Nuevo / Limpiar");
+        TemaCeleste.estilizarBotonClaro(btnNuevo, 28, 13.5f);
+        btnNuevo.setPreferredSize(new Dimension(150, 36));
+
+        btnGuardar = new JButton("Guardar categoría");
+        TemaCeleste.estilizarBotonPrimario(btnGuardar, 28, 14f);
+        btnGuardar.setPreferredSize(new Dimension(175, 36));
+
+        btnActualizar = new JButton("Actualizar datos");
+        TemaCeleste.estilizarBotonPrimario(btnActualizar, 28, 14f);
+        btnActualizar.setPreferredSize(new Dimension(160, 36));
+
         btnDesactivar = new JButton("Desactivar");
-        btnSalir = new JButton("Salir");
-
-        JPanel botones = new JPanel(
-                new FlowLayout(FlowLayout.CENTER, 8, 8)
-        );
+        TemaCeleste.estilizarBotonPeligro(btnDesactivar, 28, 13.5f);
+        btnDesactivar.setPreferredSize(new Dimension(135, 36));
 
         botones.add(btnNuevo);
         botones.add(btnGuardar);
-        botones.add(btnBuscar);
         botones.add(btnActualizar);
         botones.add(btnDesactivar);
-        botones.add(btnSalir);
 
-        JPanel superior = new JPanel(new BorderLayout(8, 8));
-        superior.add(titulo, BorderLayout.NORTH);
-        superior.add(campos, BorderLayout.CENTER);
-        superior.add(botones, BorderLayout.SOUTH);
+        tarjetaFormulario.add(contenedorCampos, BorderLayout.CENTER);
+        tarjetaFormulario.add(botones, BorderLayout.SOUTH);
+
+        // 3. Tarjeta inferior: Buscador + Tabla de categorías
+        JPanel tarjetaTabla = TemaCeleste.crearTarjetaBlanca(
+                new BorderLayout(0, 12), 18, new Insets(16, 22, 18, 22));
+
+        JPanel barraBusqueda = new JPanel(new BorderLayout(12, 0));
+        barraBusqueda.setOpaque(false);
+
+        JLabel lblListado = new JLabel("Categorías de Equipo Registradas");
+        lblListado.setFont(TemaCeleste.fuente(Font.BOLD, 18f));
+        lblListado.setForeground(TemaCeleste.TEXTO_PRINCIPAL);
+
+        JPanel controlesFiltro = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        controlesFiltro.setOpaque(false);
+
+        JLabel lblBuscarTxt = new JLabel("Buscar:");
+        lblBuscarTxt.setFont(TemaCeleste.fuente(Font.PLAIN, 13.5f));
+        lblBuscarTxt.setForeground(TemaCeleste.TEXTO_SECUNDARIO);
+
+        txtBuscar = TemaCeleste.crearCampoTextoRedondeado();
+        txtBuscar.setPreferredSize(new Dimension(240, 36));
+        txtBuscar.setToolTipText("Buscar por ID, código, categoría, descripción o estado");
+
+        btnBuscar = new JButton("Buscar");
+        TemaCeleste.estilizarBotonPrimario(btnBuscar, 24, 13.5f);
+        btnBuscar.setPreferredSize(new Dimension(105, 36));
+
+        btnVerTodos = new JButton("Ver todos");
+        TemaCeleste.estilizarBotonCelesteSuave(btnVerTodos, 24, 13f);
+        btnVerTodos.setPreferredSize(new Dimension(105, 36));
+
+        controlesFiltro.add(lblBuscarTxt);
+        controlesFiltro.add(txtBuscar);
+        controlesFiltro.add(btnBuscar);
+        controlesFiltro.add(btnVerTodos);
+
+        barraBusqueda.add(lblListado, BorderLayout.WEST);
+        barraBusqueda.add(controlesFiltro, BorderLayout.EAST);
 
         tblTipoEquipo = new JTable();
+        scrollTabla = new JScrollPane(tblTipoEquipo);
+        scrollTabla.setPreferredSize(new Dimension(950, 270));
 
-        panelPrincipal.add(superior, BorderLayout.NORTH);
-        panelPrincipal.add(
-                new JScrollPane(tblTipoEquipo),
-                BorderLayout.CENTER
-        );
+        tarjetaTabla.add(barraBusqueda, BorderLayout.NORTH);
+        tarjetaTabla.add(scrollTabla, BorderLayout.CENTER);
 
-        panelPrincipal.setPreferredSize(new Dimension(950, 620));
+        // Cuerpo principal
+        JPanel cuerpo = new JPanel(new BorderLayout(0, 14));
+        cuerpo.setOpaque(false);
+        cuerpo.setBorder(BorderFactory.createEmptyBorder(14, 20, 16, 20));
+        cuerpo.add(tarjetaFormulario, BorderLayout.NORTH);
+        cuerpo.add(tarjetaTabla, BorderLayout.CENTER);
+
+        panelPrincipal = TemaCeleste.crearPanelFondo(new BorderLayout());
+        panelPrincipal.setPreferredSize(new Dimension(1060, 660));
+        panelPrincipal.add(barraSuperior, BorderLayout.NORTH);
+        panelPrincipal.add(cuerpo, BorderLayout.CENTER);
     }
 
-    private void agregarCampo(
-            JPanel panel,
-            GridBagConstraints gbc,
-            int fila,
-            String etiqueta,
-            JComponent componente
-    ) {
-        gbc.gridx = 0;
-        gbc.gridy = fila;
-        gbc.weightx = 0;
-        panel.add(new JLabel(etiqueta), gbc);
-
-        gbc.gridx = 1;
-        gbc.weightx = 1;
-        panel.add(componente, gbc);
+    private JPanel campoConEtiqueta(String etiqueta, JComponent componente) {
+        JPanel p = new JPanel(new BorderLayout(0, 4));
+        p.setOpaque(false);
+        JLabel l = new JLabel(etiqueta);
+        l.setFont(TemaCeleste.fuente(Font.PLAIN, 12.5f));
+        l.setForeground(TemaCeleste.TEXTO_PRINCIPAL);
+        componente.setPreferredSize(new Dimension(160, 38));
+        p.add(l, BorderLayout.NORTH);
+        p.add(componente, BorderLayout.CENTER);
+        return p;
     }
 
     private void configurarFormulario() {
         txtId.setEditable(false);
+        txtId.setFocusable(false);
         // Código editable: vacío al crear = se genera automáticamente.
         txtCodigo.setEditable(true);
         txtCodigo.setToolTipText("Formato CAT-XXXX-NNNN. Déjelo vacío para generarlo automáticamente.");
@@ -177,6 +261,11 @@ public class TipoEquipoForm {
             public boolean isCellEditable(int fila, int columna) {
                 return false;
             }
+
+            @Override
+            public Class<?> getColumnClass(int columna) {
+                return columna == COL_ID ? Integer.class : Object.class;
+            }
         };
 
         tblTipoEquipo.setModel(modelo);
@@ -184,9 +273,11 @@ public class TipoEquipoForm {
                 ListSelectionModel.SINGLE_SELECTION
         );
         tblTipoEquipo.setAutoCreateRowSorter(true);
-        tblTipoEquipo.setFillsViewportHeight(true);
-        tblTipoEquipo.setRowHeight(25);
-        tblTipoEquipo.getTableHeader().setReorderingAllowed(false);
+        tblTipoEquipo.getColumnModel().getColumn(COL_ID).setMaxWidth(65);
+        tblTipoEquipo.getColumnModel().getColumn(COL_CODIGO).setPreferredWidth(145);
+        tblTipoEquipo.getColumnModel().getColumn(COL_ESTADO).setPreferredWidth(115);
+
+        TemaCeleste.estilizarTabla(tblTipoEquipo, scrollTabla, COL_ESTADO);
     }
 
     private void configurarEventos() {
@@ -196,6 +287,20 @@ public class TipoEquipoForm {
         btnActualizar.addActionListener(e -> actualizar());
         btnDesactivar.addActionListener(e -> desactivar());
         btnSalir.addActionListener(e -> salir());
+
+        if (txtBuscar != null) {
+            txtBuscar.addActionListener(e -> ejecutarBusqueda(txtBuscar.getText().trim()));
+        }
+
+        if (btnVerTodos != null) {
+            btnVerTodos.addActionListener(e -> {
+                if (txtBuscar != null) {
+                    txtBuscar.setText("");
+                }
+                cargarTiposEquipo();
+                nuevo();
+            });
+        }
 
         tblTipoEquipo.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && !cargandoTabla) {
@@ -401,6 +506,12 @@ public class TipoEquipoForm {
     }
 
     private void buscar() {
+        String textoBarra = txtBuscar == null ? "" : txtBuscar.getText().trim();
+        if (!textoBarra.isEmpty()) {
+            ejecutarBusqueda(textoBarra);
+            return;
+        }
+
         String entrada = JOptionPane.showInputDialog(
                 panelPrincipal,
                 "Buscar por ID, código, categoría, descripción o estado.\n"
@@ -413,8 +524,10 @@ public class TipoEquipoForm {
             return;
         }
 
-        String criterio = entrada.trim();
+        ejecutarBusqueda(entrada.trim());
+    }
 
+    private void ejecutarBusqueda(String criterio) {
         if (criterio.isEmpty()) {
             cargarTiposEquipo();
             nuevo();
@@ -631,4 +744,3 @@ public class TipoEquipoForm {
         return panelPrincipal;
     }
 }
-
