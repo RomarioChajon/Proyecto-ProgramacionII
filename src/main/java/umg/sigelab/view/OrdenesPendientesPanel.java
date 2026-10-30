@@ -8,6 +8,7 @@ import umg.sigelab.model.PrestamoResumen;
 import umg.sigelab.model.Usuario;
 import umg.sigelab.service.PrestamoService;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -43,31 +44,38 @@ class OrdenesPendientesPanel extends PanelSede {
     OrdenesPendientesPanel(Usuario operador, Supplier<Laboratorio> sede) {
         super(operador, sede);
 
-        JLabel titulo = new JLabel("Órdenes pendientes de despacho");
-        titulo.setFont(titulo.getFont().deriveFont(Font.BOLD, 20f));
+        JLabel titulo = Tablas.titulo("Órdenes pendientes de despacho");
         JButton btnActualizar = new JButton("Actualizar");
+        Tablas.estilizarBotonPrimario(btnActualizar);
         btnActualizar.addActionListener(e -> refrescar());
         JPanel norte = new JPanel(new BorderLayout());
+        Tablas.estilizarTarjeta(norte);
         norte.add(titulo, BorderLayout.WEST);
         norte.add(btnActualizar, BorderLayout.EAST);
         add(norte, BorderLayout.NORTH);
 
         JPanel abajo = new JPanel(new BorderLayout(4, 4));
-        abajo.add(new JLabel("Equipos de la orden seleccionada"), BorderLayout.NORTH);
+        abajo.setBackground(Tablas.BLANCO_HIELO);
+        abajo.add(Tablas.etiqueta("Equipos de la orden seleccionada"), BorderLayout.NORTH);
         abajo.add(Tablas.conScroll(tblLineas), BorderLayout.CENTER);
         JSplitPane division = new JSplitPane(JSplitPane.VERTICAL_SPLIT, Tablas.conScroll(tblOrdenes), abajo);
         division.setResizeWeight(0.55);
+        division.setBorder(BorderFactory.createEmptyBorder());
+        division.setBackground(Tablas.BLANCO_HIELO);
         add(division, BorderLayout.CENTER);
 
         JPanel acciones = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
-        acciones.add(new JLabel("Tiempo de préstamo  -  Inicio:"));
+        Tablas.estilizarTarjeta(acciones);
+        acciones.add(Tablas.etiqueta("Tiempo de préstamo  -  Inicio:"));
         acciones.add(dcInicio);
-        acciones.add(new JLabel("Fin:"));
+        acciones.add(Tablas.etiqueta("Fin:"));
         acciones.add(dcFin);
-        lblDias.setFont(lblDias.getFont().deriveFont(Font.BOLD));
+        lblDias.setFont(new Font("Segoe UI", Font.BOLD, 12));
         acciones.add(lblDias);
         JButton btnConfirmar = new JButton("Confirmar y despachar");
         JButton btnRechazar = new JButton("Rechazar...");
+        Tablas.estilizarBotonPrimario(btnConfirmar);
+        Tablas.estilizarBotonSuave(btnRechazar);
         acciones.add(btnConfirmar);
         acciones.add(btnRechazar);
         add(acciones, BorderLayout.SOUTH);
@@ -146,7 +154,7 @@ class OrdenesPendientesPanel extends PanelSede {
         }
         long dias = ChronoUnit.DAYS.between(inicio, fin) + 1;
         boolean valido = dias >= 1 && dias <= PrestamoService.DIAS_MAXIMOS;
-        lblDias.setForeground(valido ? new Color(0x1B5E20) : new Color(0xB00020));
+        lblDias.setForeground(valido ? Tablas.CELESTE_PRINCIPAL : new Color(0xB00020));
         lblDias.setText(valido ? dias + " día(s)" : "Máx. " + PrestamoService.DIAS_MAXIMOS + " días");
     }
 
@@ -167,7 +175,7 @@ class OrdenesPendientesPanel extends PanelSede {
         try {
             controller.despachar(operador, orden.idPrestamo(), inicio, fin);
             Mensajes.informar(this, "Préstamo confirmado", "La orden #" + orden.idPrestamo()
-                    + " fue despachada. Los equipos ahora están PRESTADOS.");
+                    + " fue despachachada. Los equipos ahora están PRESTADOS.");
             refrescar();
         } catch (RuntimeException ex) {
             Mensajes.mostrarExcepcion(this, "Confirmar préstamo", ex);
