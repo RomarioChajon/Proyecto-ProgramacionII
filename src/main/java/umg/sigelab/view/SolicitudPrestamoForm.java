@@ -31,6 +31,9 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.util.ArrayList;
 import java.util.List;
+import java.awt.Window;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 /**
  * Pantalla del DOCENTE y del ESTUDIANTE: pedir un préstamo y ver su historial.
@@ -86,12 +89,32 @@ public class SolicitudPrestamoForm {
         JButton btnNuevo = new JButton("Nuevo préstamo");
         JButton btnHistorial = new JButton("Mi historial de préstamos");
         JButton btnCerrar = new JButton("Cerrar sesión");
+        JButton btnEmociones = new JButton("Detección de emociones");
+        btnEmociones.addActionListener(e -> DeteccionEmocionesForm.abrir(panelPrincipal));
+        btnEmociones.addActionListener(e ->
+                new DeteccionEmocionesForm().getPanelPrincipal()
+        );
+
         btnNuevo.addActionListener(e -> mostrarNuevo());
         btnHistorial.addActionListener(e -> mostrarHistorial());
         btnCerrar.addActionListener(e -> alCerrarSesion.run());
 
-        panelPrincipal.add(BarraLateral.crear(usuario, null, btnNuevo, btnHistorial, null, btnCerrar),
-                BorderLayout.WEST);
+        btnEmociones.addActionListener(e ->
+                DeteccionEmocionesForm.abrir(panelPrincipal)
+        );
+
+        panelPrincipal.add(
+                BarraLateral.crear(
+                        usuario,
+                        null,
+                        btnNuevo,
+                        btnHistorial,
+                        btnEmociones,
+                        null,
+                        btnCerrar
+                ),
+                BorderLayout.WEST
+        );
         contenido.add(crearPanelNuevo(), TARJETA_NUEVO);
         contenido.add(crearPanelHistorial(), TARJETA_HISTORIAL);
         panelPrincipal.add(contenido, BorderLayout.CENTER);

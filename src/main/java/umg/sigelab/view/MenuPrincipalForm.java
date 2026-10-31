@@ -54,6 +54,7 @@ public class MenuPrincipalForm {
     private JButton btnAuditoria;
     private JButton btnServicioFacial;
     private JButton btnCerrarSesion;
+    private JButton btnDeteccionEmociones;
 
     /** Contenedor que se entrega a la ventana: encabezado + cuadrícula de módulos + dashboard. */
     private final JPanel raiz = TemaCeleste.crearPanelFondo(new BorderLayout(0, 8));
@@ -144,7 +145,7 @@ public class MenuPrincipalForm {
         btnReportes = new JButton();
         btnAuditoria = new JButton();
         btnServicioFacial = new JButton();
-
+        btnDeteccionEmociones = new JButton();
         TemaCeleste.estilizarBotonModuloAdmin(btnUsuarios, "Usuarios", TemaCeleste.TipoIcono.USUARIOS);
         TemaCeleste.estilizarBotonModuloAdmin(btnLaboratorios, "Laboratorios", TemaCeleste.TipoIcono.LABORATORIOS);
         TemaCeleste.estilizarBotonModuloAdmin(btnCategorias, "Categorías", TemaCeleste.TipoIcono.CATEGORIAS);
@@ -157,8 +158,14 @@ public class MenuPrincipalForm {
         TemaCeleste.estilizarBotonModuloAdmin(btnReportes, "Reportes", TemaCeleste.TipoIcono.REPORTES);
         TemaCeleste.estilizarBotonModuloAdmin(btnAuditoria, "Auditoría", TemaCeleste.TipoIcono.AUDITORIA);
         TemaCeleste.estilizarBotonModuloAdmin(btnServicioFacial, "Servicio facial", TemaCeleste.TipoIcono.SERVICIO_FACIAL);
+        TemaCeleste.estilizarBotonModuloAdmin(
+                btnDeteccionEmociones,
+                "Detección de emociones",
+                TemaCeleste.TipoIcono.MONITOR_FACIAL
+        );
 
-        JPanel grillaModulos = new JPanel(new GridLayout(3, 4, 16, 14));
+
+        JPanel grillaModulos = new JPanel(new GridLayout(3, 5, 16, 14));
         grillaModulos.setOpaque(false);
         grillaModulos.setBorder(BorderFactory.createEmptyBorder(16, 24, 8, 24));
         grillaModulos.add(btnUsuarios);
@@ -173,6 +180,7 @@ public class MenuPrincipalForm {
         grillaModulos.add(btnReportes);
         grillaModulos.add(btnAuditoria);
         grillaModulos.add(btnServicioFacial);
+        grillaModulos.add(btnDeteccionEmociones);
 
         lblAyuda = new JLabel();
         lblAyuda.setFont(TemaCeleste.fuente(Font.PLAIN, 12.5f));
@@ -319,6 +327,11 @@ public class MenuPrincipalForm {
         // Módulo terminado
         btnUsuarios.addActionListener(e -> abrirUsuarios());
         btnServicioFacial.addActionListener(e -> ServicioFacialForm.abrir(panelPrincipal));
+        btnDeteccionEmociones.addActionListener(e ->
+                abrirModulo("Detección de emociones", () ->
+                        new DeteccionEmocionesForm().getPanelPrincipal()
+                )
+        );
         btnCerrarSesion.addActionListener(e -> {
             cerrarVentanasHijas();
             alCerrarSesion.run();
