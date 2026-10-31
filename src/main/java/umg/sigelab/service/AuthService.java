@@ -20,7 +20,7 @@ import java.util.Optional;
  * ingresar (existe, está activo, coincide el correo, etc.).</p>
  */
 public class AuthService {
-
+// complemento de auditoria Registra los logins exitosos y fallidos
     /** Mensaje único para usuario o contraseña incorrectos: no revela cuál de los dos falló. */
     private static final String CREDENCIALES_INVALIDAS = "Usuario o contraseña incorrectos.";
 
