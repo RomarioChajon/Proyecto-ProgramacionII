@@ -103,8 +103,8 @@ public class TipoEquipoForm {
         JPanel fila1 = new JPanel(new GridLayout(1, 3, 16, 0));
         fila1.setOpaque(false);
         fila1.add(campoConEtiqueta("ID Categoría", txtId));
-        fila1.add(campoConEtiqueta("Código (vacío = CAT-XXXX-NNNN)", txtCodigo));
-        fila1.add(campoConEtiqueta("Nombre de la categoría", txtNombre));
+        fila1.add(campoConEtiqueta("Código (Ejemplo = CAT-XXXX-NNNN)", txtCodigo));
+        fila1.add(campoConEtiqueta("Nombre de la categoría(Puede ir marca)", txtNombre));
 
         // Fila 2: Descripción amplia (2/3) + Estado (1/3)
         JPanel fila2 = new JPanel(new BorderLayout(16, 0));

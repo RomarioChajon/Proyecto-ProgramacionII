@@ -228,7 +228,7 @@ public class EquipoForm {
         estilizarContenedor(panelPrincipal);
 
         estilizarCampoTexto(txtId, false);
-        estilizarCampoTexto(txtCodigoInventario, true);
+        estilizarCampoTexto(txtCodigoInventario, false);
         estilizarCampoTexto(txtNumeroSerie, true);
         estilizarCampoTexto(txtEstado, false);
         estilizarCampoTexto(txtFechadeRegistro, false);
