@@ -209,11 +209,11 @@ public class PrestamoRepository {
      */
     public int crearDespachado(Connection cn, int idSolicitante, int idLaboratorio, int idEncargado, int dias,
                                LocalDateTime inicio, LocalDateTime fin, boolean inicioHoy) throws SQLException {
-        String despacho = inicioHoy ? "SYSDATETIME()" : "?";
+        String despacho = inicioHoy ? JdbcSupport.AHORA_SQL : "?";
         String sql = "INSERT INTO dbo.Prestamo (id_solicitante, id_laboratorio, id_usuario_registra, "
                 + "id_usuario_revisa, fecha_revision, dias_solicitados, dias_prestamo, fecha_despacho, "
                 + "fecha_esperada_devolucion, id_usuario_despacha, estado) OUTPUT INSERTED.id_prestamo "
-                + "VALUES (?, ?, ?, ?, SYSDATETIME(), ?, ?, " + despacho + ", ?, ?, 'DESPACHADO')";
+                + "VALUES (?, ?, ?, ?, " + JdbcSupport.AHORA_SQL + ", ?, ?, " + despacho + ", ?, ?, 'DESPACHADO')";
         try (PreparedStatement ps = cn.prepareStatement(sql)) {
             int i = 1;
             ps.setInt(i++, idSolicitante);
@@ -269,9 +269,9 @@ public class PrestamoRepository {
 
     public boolean despachar(Connection cn, int idPrestamo, int idEncargado, int dias, LocalDateTime inicio,
                              LocalDateTime fin, boolean inicioHoy) throws SQLException {
-        String despacho = inicioHoy ? "SYSDATETIME()" : "?";
+        String despacho = inicioHoy ? JdbcSupport.AHORA_SQL : "?";
         String sql = "UPDATE dbo.Prestamo SET estado = 'DESPACHADO', id_usuario_revisa = ?, "
-                + "fecha_revision = SYSDATETIME(), dias_prestamo = ?, fecha_despacho = " + despacho + ", "
+                + "fecha_revision = " + JdbcSupport.AHORA_SQL + ", dias_prestamo = ?, fecha_despacho = " + despacho + ", "
                 + "fecha_esperada_devolucion = ?, id_usuario_despacha = ? "
                 + "WHERE id_prestamo = ? AND estado = 'PENDIENTE'";
         try (PreparedStatement ps = cn.prepareStatement(sql)) {
@@ -290,7 +290,7 @@ public class PrestamoRepository {
 
     public boolean rechazar(Connection cn, int idPrestamo, int idEncargado, String motivo) throws SQLException {
         String sql = "UPDATE dbo.Prestamo SET estado = 'RECHAZADO', id_usuario_revisa = ?, "
-                + "fecha_revision = SYSDATETIME(), motivo_rechazo = ? WHERE id_prestamo = ? AND estado = 'PENDIENTE'";
+                + "fecha_revision = " + JdbcSupport.AHORA_SQL + ", motivo_rechazo = ? WHERE id_prestamo = ? AND estado = 'PENDIENTE'";
         try (PreparedStatement ps = cn.prepareStatement(sql)) {
             ps.setInt(1, idEncargado);
             ps.setString(2, motivo);
@@ -366,7 +366,7 @@ public class PrestamoRepository {
     /** Marca el préstamo FINALIZADO (RN-16: solo cuando ya no queda ningún equipo pendiente). */
     public boolean finalizar(Connection cn, int idPrestamo) throws SQLException {
         String sql = "UPDATE dbo.Prestamo SET estado = 'FINALIZADO', "
-                + "fecha_cierre = CASE WHEN SYSDATETIME() < fecha_despacho THEN fecha_despacho ELSE SYSDATETIME() END "
+                + "fecha_cierre = CASE WHEN " + JdbcSupport.AHORA_SQL + " < fecha_despacho THEN fecha_despacho ELSE " + JdbcSupport.AHORA_SQL + " END "
                 + "WHERE id_prestamo = ? AND estado = 'DESPACHADO'";
         try (PreparedStatement ps = cn.prepareStatement(sql)) {
             ps.setInt(1, idPrestamo);
@@ -393,7 +393,7 @@ public class PrestamoRepository {
 
     /** Libera los bloqueos activos de un préstamo al completarse la devolución. */
     public int liberarBloqueosDePrestamo(Connection cn, int idPrestamo, int idUsuarioLibera) throws SQLException {
-        String sql = "UPDATE dbo.BloqueoUsuario SET estado = 'LIBERADO', fecha_liberacion = SYSDATETIME(), "
+        String sql = "UPDATE dbo.BloqueoUsuario SET estado = 'LIBERADO', fecha_liberacion = " + JdbcSupport.AHORA_SQL + ", "
                 + "tipo_liberacion = 'DEVOLUCION_COMPLETA', id_usuario_libera = ? "
                 + "WHERE id_prestamo = ? AND estado = 'ACTIVO'";
         try (PreparedStatement ps = cn.prepareStatement(sql)) {
@@ -408,7 +408,7 @@ public class PrestamoRepository {
     // ------------------------------------------------------------------
 
     private static final String SELECT_RESUMEN = "SELECT x.*, "
-            + "CASE WHEN x.estado = 'DESPACHADO' AND x.fecha_esperada_devolucion < SYSDATETIME() "
+            + "CASE WHEN x.estado = 'DESPACHADO' AND x.fecha_esperada_devolucion < " + JdbcSupport.AHORA_SQL + " "
             + "AND x.pendientes > 0 THEN 1 ELSE 0 END AS vencido FROM ("
             + "SELECT pr.id_prestamo, pr.id_solicitante, u.nombre + ' ' + u.apellido AS solicitante, "
             + "u.nombre_usuario, pr.id_laboratorio, l.codigo + ' - ' + l.nombre AS laboratorio, "

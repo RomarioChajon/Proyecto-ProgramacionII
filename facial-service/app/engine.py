@@ -20,7 +20,7 @@ from .errors import (
     PreviewUnavailableError,
 )
 from .liveness import LivenessSession
-from .preview import FaceOverlay, PreviewWindow
+from .preview import CELESTE_MEDIO, CELESTE_PRINCIPAL, FaceOverlay, PreviewWindow
 from .quality import QualityResult, evaluate_face
 
 
@@ -63,8 +63,20 @@ class FaceEngine:
                     "El modelo %s no está en la caché local; InsightFace lo descargará durante esta primera ejecución.",
                     configuration.face_model,
                 )
-            self.model = FaceAnalysis(name=configuration.face_model, providers=providers)
-            self.model.prepare(ctx_id=-1, det_size=(640, 640))
+            from insightface.app.common import Face
+
+            self._face_class = Face
+            # Solo detección + reconocimiento: el resto de modelos de buffalo_l (landmarks 3D/106,
+            # edad/género) no se usan y costaban tiempo en cada cuadro.
+            self.model = FaceAnalysis(
+                name=configuration.face_model,
+                root=str(configuration.model_root),
+                allowed_modules=["detection", "recognition"],
+                providers=providers,
+            )
+            size = configuration.face_det_size
+            self.model.prepare(ctx_id=-1, det_size=(size, size))
+            self._recognizer = self.model.models["recognition"]
             self.model_loaded = True
             if not model_was_available and self._model_is_available():
                 logger.info("Modelo %s descargado y listo para reutilizarse.", configuration.face_model)
@@ -92,12 +104,20 @@ class FaceEngine:
         return selected
 
     def detect(self, frame: np.ndarray) -> list[object]:
+        """Solo detecta rostros (recuadro, 5 puntos y confianza). El embedding se calcula
+        aparte, únicamente cuando se toma una muestra: así el video va mucho más fluido."""
         if not self.model_loaded or self.model is None:
             raise ModelUnavailableError()
-        return list(self.model.get(frame))
+        bboxes, kpss = self.model.det_model.detect(frame, max_num=0, metric="default")
+        faces = []
+        for i in range(bboxes.shape[0]):
+            kps = None if kpss is None else kpss[i]
+            faces.append(self._face_class(bbox=bboxes[i, 0:4], kps=kps, det_score=bboxes[i, 4]))
+        return faces
 
-    @staticmethod
-    def embedding(face: object) -> np.ndarray:
+    def embedding(self, face: object, frame: np.ndarray | None = None) -> np.ndarray:
+        if frame is not None and getattr(face, "embedding", None) is None:
+            self._recognizer.get(frame, face)
         value = getattr(face, "normed_embedding", None)
         if value is None:
             value = getattr(face, "embedding", None)
@@ -116,7 +136,7 @@ class FaceEngine:
         return self._capture(
             sample_count=self.settings.enroll_sample_count,
             timeout_seconds=self.settings.enroll_timeout_seconds,
-            title="Universidad Asistencia - Registro Facial",
+            title="SIGELAB - Registro Facial",
             user_label=user_label,
             phases=phases,
         )
@@ -127,7 +147,7 @@ class FaceEngine:
         return self._capture(
             sample_count=self.settings.verify_sample_count,
             timeout_seconds=self.settings.verify_timeout_seconds,
-            title="Universidad Asistencia - Verificación Facial",
+            title="SIGELAB - Verificación Facial",
             user_label=user_label,
             phases=phases,
         )
@@ -201,7 +221,7 @@ class FaceEngine:
                                 action = self._liveness_action(liveness)
                             elif phase_ok and time.monotonic() - last_sample >= self.settings.sample_interval_seconds:
                                 if phase_counts[phase_index] < current_phase.samples:
-                                    embeddings.append(self.embedding(face))
+                                    embeddings.append(self.embedding(face, frame))
                                     qualities.append(quality.score)
                                     phase_counts[phase_index] += 1
                                     last_sample = time.monotonic()
@@ -326,15 +346,15 @@ class FaceEngine:
             return False, quality.message.upper()
         yaw = quality.pose.yaw
         if target == "front":
-            if abs(yaw) <= 10:
+            if abs(yaw) <= 12:
                 return True, "MIRE AL FRENTE"
             return False, "VUELVA A MIRAR AL FRENTE"
         if target == "left":
-            if yaw <= -12:
+            if yaw <= -10:
                 return True, "MANTENGA EL GIRO A LA IZQUIERDA"
             return False, "GIRE LIGERAMENTE A LA IZQUIERDA"
         if target == "right":
-            if yaw >= 12:
+            if yaw >= 10:
                 return True, "MANTENGA EL GIRO A LA DERECHA"
             return False, "GIRE LIGERAMENTE A LA DERECHA"
         return False, "SIGA LA INSTRUCCIÓN EN PANTALLA"
@@ -356,7 +376,7 @@ class FaceEngine:
             return [FaceOverlay(item, (0, 0, 255)) for item in faces]
         if face is None:
             return []
-        color = (0, 220, 0) if quality is not None and quality.accepted and phase_ok else (0, 220, 255)
+        color = CELESTE_PRINCIPAL if quality is not None and quality.accepted and phase_ok else CELESTE_MEDIO
         return [FaceOverlay(face, color)]
 
     def _lines(

@@ -17,32 +17,34 @@ import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
+import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.GridLayout;
+import java.awt.Insets;
 import java.awt.Window;
 import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 
 /**
- * Pantalla de administración de usuarios (CRUD).
- *
- * <p>Diseño: el aspecto lo define {@code UsuarioForm.form} (diseñador de IntelliJ).
- * IntelliJ llena automáticamente los campos privados de abajo, uno por cada componente
- * "enlazado" (binding) en el .form. Esta clase solo contiene el COMPORTAMIENTO:
- * leer los campos, llamar al controlador y mostrar el resultado.</p>
+ * Pantalla de administración de usuarios (CRUD) con diseño Celeste y Blanco
+ * ("Laboratorios de Computación").
  *
  * <p>La vista NO decide reglas de negocio: valida que el usuario haya escrito/elegido lo básico
  * y delega todo lo demás al controlador. Las excepciones se muestran con {@link Mensajes}.</p>
@@ -53,13 +55,13 @@ public class UsuarioForm {
 
     private static final String TITULO = "Usuarios";
     /** Lado del cuadro donde se dibuja la foto (el JLabel mide 180x180 con borde). */
-    private static final int LADO_FOTO = 176;
+    private static final int LADO_FOTO = 166;
 
     // Posición de cada columna en la tabla.
     private static final int COL_ID = 0;
     private static final int COL_ESTADO = 6;
 
-    // ---- Componentes enlazados con UsuarioForm.form (los asigna IntelliJ) ----
+    // ---- Componentes enlazados con UsuarioForm.form ----
     private JPanel panelPrincipal;
     private JLabel lblTitulo;
     private JTextField txtId;
@@ -86,6 +88,7 @@ public class UsuarioForm {
     private JButton btnBuscar;
     private JTable tblUsuarios;
     private JButton btnSalir;
+    private JScrollPane scrollTabla;
 
     // ---- Dependencias ----
     private final UsuarioController usuarioController;
@@ -146,6 +149,7 @@ public class UsuarioForm {
         this.facialClient = facialClient;
         this.usuarioAutenticado = usuarioAutenticado;
 
+        construirInterfazCeleste();
         configurarFormulario();
         cargarLaboratorios();
         configurarEventos();
@@ -158,12 +162,241 @@ public class UsuarioForm {
     }
 
     // ------------------------------------------------------------------
+    // Construcción visual Celeste y Blanco
+    // ------------------------------------------------------------------
+
+    private void construirInterfazCeleste() {
+        // 1. Barra de encabezado azul (#2B8FD6)
+        JPanel barraSuperior = TemaCeleste.crearEncabezadoAzul(new BorderLayout(16, 0));
+        barraSuperior.setBorder(BorderFactory.createEmptyBorder(11, 24, 11, 24));
+
+        JPanel izqHeader = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
+        izqHeader.setOpaque(false);
+        JLabel iconoHeader = new JLabel(TemaCeleste.crearIconoDashboard(
+                TemaCeleste.TipoIcono.USUARIOS, 36, new Color(255, 255, 255, 38)));
+        lblTitulo = new JLabel("SIGELAB - Administración de Usuarios");
+        lblTitulo.setFont(TemaCeleste.fuente(Font.BOLD, 20f));
+        lblTitulo.setForeground(Color.WHITE);
+        lblTitulo.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 20));
+        izqHeader.add(iconoHeader);
+        izqHeader.add(lblTitulo);
+
+        btnSalir = new JButton("Cerrar ventana");
+        TemaCeleste.estilizarBotonEncabezado(btnSalir);
+
+        barraSuperior.add(izqHeader, BorderLayout.WEST);
+        barraSuperior.add(btnSalir, BorderLayout.EAST);
+
+        // 2. Tarjeta superior: Formulario + Reconocimiento Facial + Fotografía
+        JPanel tarjetaFormulario = TemaCeleste.crearTarjetaBlanca(new BorderLayout(18, 0), 18, new Insets(14, 20, 14, 20));
+
+        // Campos del formulario (3 filas x 3 columnas)
+        txtId = TemaCeleste.crearCampoTextoRedondeado();
+        txtNombre = TemaCeleste.crearCampoTextoRedondeado();
+        txtApellido = TemaCeleste.crearCampoTextoRedondeado();
+        txtUsuario = TemaCeleste.crearCampoTextoRedondeado();
+        txtPassword = TemaCeleste.crearCampoPasswordRedondeado();
+        txtCorreo = TemaCeleste.crearCampoTextoRedondeado();
+
+        cmbRol = new JComboBox<>();
+        TemaCeleste.estilizarCombo(cmbRol);
+
+        cmbLaboratorio = new JComboBox<>();
+        TemaCeleste.estilizarCombo(cmbLaboratorio);
+
+        lblEstado = new JLabel("Nuevo (Activo)", SwingConstants.CENTER);
+        lblEstado.setFont(TemaCeleste.fuente(Font.BOLD, 13f));
+        lblEstado.setForeground(TemaCeleste.AZUL_PRINCIPAL);
+        JPanel cajaEstado = TemaCeleste.crearSubTarjetaCeleste(new BorderLayout(), 16, new Insets(4, 10, 4, 10));
+        cajaEstado.add(lblEstado, BorderLayout.CENTER);
+
+        JPanel grillaCampos = new JPanel(new GridLayout(3, 3, 14, 8));
+        grillaCampos.setOpaque(false);
+        grillaCampos.add(campoConEtiqueta("ID Usuario", txtId));
+        grillaCampos.add(campoConEtiqueta("Nombre", txtNombre));
+        grillaCampos.add(campoConEtiqueta("Apellido", txtApellido));
+        grillaCampos.add(campoConEtiqueta("Nombre de usuario", txtUsuario));
+        grillaCampos.add(campoConEtiqueta("Contraseña (vacía = conservar)", txtPassword));
+        grillaCampos.add(campoConEtiqueta("Correo institucional", txtCorreo));
+        grillaCampos.add(campoConEtiqueta("Rol en el sistema", cmbRol));
+        grillaCampos.add(campoConEtiqueta("Laboratorio (solo encargado)", cmbLaboratorio));
+        grillaCampos.add(campoConEtiqueta("Estado del registro", cajaEstado));
+
+        // Franja de reconocimiento facial
+        JPanel franjaRostro = TemaCeleste.crearSubTarjetaCeleste(new BorderLayout(12, 0), 14, new Insets(8, 14, 8, 14));
+        JPanel izqRostro = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        izqRostro.setOpaque(false);
+        JLabel lblTitRostro = new JLabel("Reconocimiento facial:");
+        lblTitRostro.setFont(TemaCeleste.fuente(Font.BOLD, 13f));
+        lblTitRostro.setForeground(TemaCeleste.TEXTO_PRINCIPAL);
+
+        lblEstadoRostro = new JLabel("Guarde el usuario para registrar su rostro.");
+        lblEstadoRostro.setFont(TemaCeleste.fuente(Font.PLAIN, 13f));
+        lblEstadoRostro.setForeground(TemaCeleste.AZUL_PRINCIPAL);
+        lblEstadoRostro.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 24));
+
+        izqRostro.add(lblTitRostro);
+        izqRostro.add(lblEstadoRostro);
+
+        JPanel derRostro = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        derRostro.setOpaque(false);
+        btnRegistrarRostro = new JButton("Registrar rostro");
+        TemaCeleste.estilizarBotonCelesteSuave(btnRegistrarRostro, 24, 13f);
+        btnRegistrarRostro.setPreferredSize(new Dimension(150, 32));
+
+        btnEliminarRostro = new JButton("Eliminar rostro");
+        TemaCeleste.estilizarBotonPeligro(btnEliminarRostro, 24, 13f);
+        btnEliminarRostro.setPreferredSize(new Dimension(140, 32));
+
+        derRostro.add(btnRegistrarRostro);
+        derRostro.add(btnEliminarRostro);
+
+        franjaRostro.add(izqRostro, BorderLayout.WEST);
+        franjaRostro.add(derRostro, BorderLayout.EAST);
+
+        // Barra de botones de acción CRUD
+        JPanel barraCrud = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        barraCrud.setOpaque(false);
+
+        btnNuevo = new JButton("Nuevo / Limpiar");
+        TemaCeleste.estilizarBotonClaro(btnNuevo, 28, 13.5f);
+        btnNuevo.setPreferredSize(new Dimension(150, 36));
+
+        btnGuardar = new JButton("Guardar nuevo");
+        TemaCeleste.estilizarBotonPrimario(btnGuardar, 28, 14f);
+        btnGuardar.setPreferredSize(new Dimension(160, 36));
+
+        btnActualizar = new JButton("Actualizar datos");
+        TemaCeleste.estilizarBotonPrimario(btnActualizar, 28, 14f);
+        btnActualizar.setPreferredSize(new Dimension(160, 36));
+
+        btnCambiarEstado = new JButton("Desactivar");
+        TemaCeleste.estilizarBotonPeligro(btnCambiarEstado, 28, 13.5f);
+        btnCambiarEstado.setPreferredSize(new Dimension(135, 36));
+
+        barraCrud.add(btnNuevo);
+        barraCrud.add(btnGuardar);
+        barraCrud.add(btnActualizar);
+        barraCrud.add(btnCambiarEstado);
+
+        JPanel bloqueSurForm = new JPanel(new BorderLayout(0, 8));
+        bloqueSurForm.setOpaque(false);
+        bloqueSurForm.setBorder(BorderFactory.createEmptyBorder(8, 0, 0, 0));
+        bloqueSurForm.add(franjaRostro, BorderLayout.NORTH);
+        bloqueSurForm.add(barraCrud, BorderLayout.SOUTH);
+
+        JPanel columnaIzquierda = new JPanel(new BorderLayout(0, 4));
+        columnaIzquierda.setOpaque(false);
+        columnaIzquierda.add(grillaCampos, BorderLayout.CENTER);
+        columnaIzquierda.add(bloqueSurForm, BorderLayout.SOUTH);
+
+        // Columna derecha: Fotografía del usuario
+        JPanel tarjetaFoto = TemaCeleste.crearSubTarjetaCeleste(new BorderLayout(0, 8), 16, new Insets(10, 12, 10, 12));
+        JLabel lblTitFoto = new JLabel("Fotografía de perfil", SwingConstants.CENTER);
+        lblTitFoto.setFont(TemaCeleste.fuente(Font.BOLD, 13f));
+        lblTitFoto.setForeground(TemaCeleste.TEXTO_PRINCIPAL);
+
+        lblFoto = new JLabel("Sin foto", SwingConstants.CENTER);
+        lblFoto.setFont(TemaCeleste.fuente(Font.PLAIN, 13f));
+        lblFoto.setForeground(TemaCeleste.TEXTO_SECUNDARIO);
+        lblFoto.setOpaque(true);
+        lblFoto.setBackground(Color.WHITE);
+        lblFoto.setPreferredSize(new Dimension(172, 172));
+
+        JPanel botonesFoto = new JPanel(new GridLayout(1, 2, 6, 0));
+        botonesFoto.setOpaque(false);
+        btnSeleccionarFoto = new JButton("Elegir...");
+        TemaCeleste.estilizarBotonCelesteSuave(btnSeleccionarFoto, 20, 12.5f);
+        btnSeleccionarFoto.setPreferredSize(new Dimension(85, 30));
+
+        btnQuitarFoto = new JButton("Quitar");
+        TemaCeleste.estilizarBotonClaro(btnQuitarFoto, 20, 12.5f);
+        btnQuitarFoto.setPreferredSize(new Dimension(75, 30));
+
+        botonesFoto.add(btnSeleccionarFoto);
+        botonesFoto.add(btnQuitarFoto);
+
+        tarjetaFoto.add(lblTitFoto, BorderLayout.NORTH);
+        tarjetaFoto.add(lblFoto, BorderLayout.CENTER);
+        tarjetaFoto.add(botonesFoto, BorderLayout.SOUTH);
+
+        tarjetaFormulario.add(columnaIzquierda, BorderLayout.CENTER);
+        tarjetaFormulario.add(tarjetaFoto, BorderLayout.EAST);
+
+        // 3. Tarjeta inferior: Buscador + Tabla de usuarios (estilo mockup_prestamos_celeste)
+        JPanel tarjetaTabla = TemaCeleste.crearTarjetaBlanca(new BorderLayout(0, 10), 18, new Insets(14, 20, 16, 20));
+
+        JPanel barraBusqueda = new JPanel(new BorderLayout(12, 0));
+        barraBusqueda.setOpaque(false);
+
+        JLabel lblListado = new JLabel("Usuarios Registrados");
+        lblListado.setFont(TemaCeleste.fuente(Font.BOLD, 18f));
+        lblListado.setForeground(TemaCeleste.TEXTO_PRINCIPAL);
+
+        JPanel controlesFiltro = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        controlesFiltro.setOpaque(false);
+
+        JLabel lblBuscarTxt = new JLabel("Buscar:");
+        lblBuscarTxt.setFont(TemaCeleste.fuente(Font.PLAIN, 13.5f));
+        lblBuscarTxt.setForeground(TemaCeleste.TEXTO_SECUNDARIO);
+
+        txtBuscar = TemaCeleste.crearCampoTextoRedondeado();
+        txtBuscar.setPreferredSize(new Dimension(230, 36));
+        txtBuscar.setToolTipText("Buscar por nombre, apellido, usuario o correo");
+
+        cmbFiltroEstado = new JComboBox<>();
+        TemaCeleste.estilizarCombo(cmbFiltroEstado);
+        cmbFiltroEstado.setPreferredSize(new Dimension(185, 36));
+
+        btnBuscar = new JButton("Buscar");
+        TemaCeleste.estilizarBotonPrimario(btnBuscar, 24, 13.5f);
+        btnBuscar.setPreferredSize(new Dimension(105, 36));
+
+        controlesFiltro.add(lblBuscarTxt);
+        controlesFiltro.add(txtBuscar);
+        controlesFiltro.add(cmbFiltroEstado);
+        controlesFiltro.add(btnBuscar);
+
+        barraBusqueda.add(lblListado, BorderLayout.WEST);
+        barraBusqueda.add(controlesFiltro, BorderLayout.EAST);
+
+        tblUsuarios = new JTable();
+        scrollTabla = new JScrollPane(tblUsuarios);
+        scrollTabla.setPreferredSize(new Dimension(980, 230));
+
+        tarjetaTabla.add(barraBusqueda, BorderLayout.NORTH);
+        tarjetaTabla.add(scrollTabla, BorderLayout.CENTER);
+
+        // Cuerpo principal con ambas tarjetas
+        JPanel cuerpo = new JPanel(new BorderLayout(0, 14));
+        cuerpo.setOpaque(false);
+        cuerpo.setBorder(BorderFactory.createEmptyBorder(14, 20, 16, 20));
+        cuerpo.add(tarjetaFormulario, BorderLayout.NORTH);
+        cuerpo.add(tarjetaTabla, BorderLayout.CENTER);
+
+        panelPrincipal = TemaCeleste.crearPanelFondo(new BorderLayout());
+        panelPrincipal.setPreferredSize(new Dimension(1120, 710));
+        panelPrincipal.add(barraSuperior, BorderLayout.NORTH);
+        panelPrincipal.add(cuerpo, BorderLayout.CENTER);
+    }
+
+    private JPanel campoConEtiqueta(String titulo, JComponent componente) {
+        JPanel p = new JPanel(new BorderLayout(0, 3));
+        p.setOpaque(false);
+        JLabel l = new JLabel(titulo);
+        l.setFont(TemaCeleste.fuente(Font.PLAIN, 12.5f));
+        l.setForeground(TemaCeleste.TEXTO_PRINCIPAL);
+        componente.setPreferredSize(new Dimension(160, 36));
+        p.add(l, BorderLayout.NORTH);
+        p.add(componente, BorderLayout.CENTER);
+        return p;
+    }
+
+    // ------------------------------------------------------------------
     // Configuración inicial
     // ------------------------------------------------------------------
 
     private void configurarFormulario() {
-        lblTitulo.setFont(lblTitulo.getFont().deriveFont(Font.BOLD, 16f));
-
         // El id lo genera la base de datos: solo lectura.
         txtId.setEditable(false);
 
@@ -199,26 +432,10 @@ public class UsuarioForm {
         });
         tblUsuarios.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblUsuarios.setAutoCreateRowSorter(true); // clic en el encabezado ordena
-        tblUsuarios.getColumnModel().getColumn(COL_ID).setMaxWidth(60);
+        tblUsuarios.getColumnModel().getColumn(COL_ID).setMaxWidth(65);
+        tblUsuarios.getColumnModel().getColumn(COL_ESTADO).setPreferredWidth(115);
 
-        // Los usuarios INACTIVO se ven en gris para distinguirlos.
-        DefaultTableCellRenderer renderizador = new DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(JTable tabla, Object valor, boolean seleccionada,
-                                                           boolean conFoco, int fila, int columna) {
-                Component celda = super.getTableCellRendererComponent(tabla, valor, seleccionada, conFoco, fila, columna);
-                int filaModelo = tabla.convertRowIndexToModel(fila);
-                boolean inactivo = EstadoRegistro.INACTIVO.getEtiqueta()
-                        .equals(tabla.getModel().getValueAt(filaModelo, COL_ESTADO));
-                if (!seleccionada) {
-                    celda.setForeground(inactivo ? Color.GRAY : tabla.getForeground());
-                }
-                return celda;
-            }
-        };
-        renderizador.setHorizontalAlignment(JLabel.LEFT);
-        tblUsuarios.setDefaultRenderer(Object.class, renderizador);
-        tblUsuarios.setDefaultRenderer(Integer.class, renderizador);
+        TemaCeleste.estilizarTabla(tblUsuarios, scrollTabla, COL_ESTADO);
     }
 
     private void cargarLaboratorios() {
@@ -380,9 +597,10 @@ public class UsuarioForm {
         lblFoto.setText(icono == null ? "Sin foto" : "");
     }
 
-    /** Borde naranja = hay un cambio de foto pendiente de guardar; gris = foto tal como está guardada. */
+    /** Borde naranja = hay un cambio de foto pendiente de guardar; celeste = foto tal como está guardada. */
     private void marcarFoto(boolean pendiente) {
-        lblFoto.setBorder(BorderFactory.createLineBorder(pendiente ? new Color(0xE67E22) : Color.LIGHT_GRAY, 2));
+        lblFoto.setBorder(new TemaCeleste.BordeRedondeadoSimple(
+                pendiente ? TemaCeleste.NARANJA_ALERTA : TemaCeleste.CELESTE_SUAVE, 14, pendiente ? 2.2f : 1.4f));
         lblFoto.setToolTipText(pendiente ? "Cambio de foto pendiente: se guarda al presionar Guardar o Actualizar." : null);
     }
 
@@ -535,8 +753,6 @@ public class UsuarioForm {
 
     // ------------------------------------------------------------------
     // Reconocimiento facial (servicio Python local)
-    // La cámara se abre en el servicio Python; aquí solo se pide la operación.
-    // Todo corre en un SwingWorker para no congelar la pantalla mientras se espera la cámara.
     // ------------------------------------------------------------------
 
     private void deshabilitarRostro(String mensaje) {

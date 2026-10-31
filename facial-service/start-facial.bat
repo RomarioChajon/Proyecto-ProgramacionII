@@ -2,7 +2,7 @@
 setlocal
 cd /d "%~dp0"
 if not exist ".venv\Scripts\python.exe" (
-  echo Cree primero el entorno con: .\setup-facial.ps1
+  echo Cree primero el entorno ejecutando setup-facial.bat o setup-facial.ps1
   exit /b 1
 )
 if not exist ".env" (

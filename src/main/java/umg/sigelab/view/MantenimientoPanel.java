@@ -17,7 +17,6 @@ import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
-import java.awt.Font;
 import java.awt.GridLayout;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,15 +40,18 @@ class MantenimientoPanel extends PanelSede {
     MantenimientoPanel(Usuario operador, Supplier<Laboratorio> sede) {
         super(operador, sede);
         qr = new QrCampo("Equipo por QR / código:", this::seleccionarPorCodigo);
+        Tablas.estilizarCombo(cmbCategoria);
 
-        JLabel titulo = new JLabel("Equipos en mantenimiento");
-        titulo.setFont(titulo.getFont().deriveFont(Font.BOLD, 20f));
+        JLabel titulo = Tablas.titulo("Equipos en mantenimiento");
         JPanel filtros = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 2));
-        filtros.add(new JLabel("Categoría:"));
+        filtros.setBackground(Tablas.BLANCO_PURO);
+        filtros.add(Tablas.etiqueta("Categoría:"));
         filtros.add(cmbCategoria);
         JButton btnActualizar = new JButton("Actualizar");
+        Tablas.estilizarBotonPrimario(btnActualizar);
         filtros.add(btnActualizar);
-        JPanel norte = new JPanel(new GridLayout(3, 1));
+        JPanel norte = new JPanel(new GridLayout(3, 1, 0, 2));
+        Tablas.estilizarTarjeta(norte);
         norte.add(titulo);
         norte.add(filtros);
         norte.add(qr);
@@ -57,8 +59,11 @@ class MantenimientoPanel extends PanelSede {
         add(Tablas.conScroll(tabla), BorderLayout.CENTER);
 
         JPanel acciones = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        Tablas.estilizarTarjeta(acciones);
         JButton btnReparado = new JButton("Finalizar: reparado (vuelve a Disponible)");
         JButton btnBaja = new JButton("Finalizar: no reparable (pasa a Baja)");
+        Tablas.estilizarBotonPrimario(btnReparado);
+        Tablas.estilizarBotonSuave(btnBaja);
         acciones.add(btnReparado);
         acciones.add(btnBaja);
         add(acciones, BorderLayout.SOUTH);

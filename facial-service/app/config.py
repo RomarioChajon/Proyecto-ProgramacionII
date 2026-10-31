@@ -2,13 +2,18 @@ from __future__ import annotations
 
 import base64
 import os
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
 from dotenv import load_dotenv
 
 
-SERVICE_ROOT = Path(__file__).resolve().parents[1]
+if getattr(sys, "frozen", False):
+    # Empaquetado con PyInstaller (facial-service.exe): .env y modelos están junto al .exe.
+    SERVICE_ROOT = Path(sys.executable).resolve().parent
+else:
+    SERVICE_ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(SERVICE_ROOT / ".env")
 
 
@@ -66,6 +71,7 @@ class Settings:
     camera_height: int
     show_preview: bool
     face_model: str
+    face_det_size: int
     face_match_threshold: float
     face_min_size: int
     blur_threshold: float
@@ -102,6 +108,7 @@ class Settings:
             camera_height=_int("CAMERA_HEIGHT", 720),
             show_preview=_bool("SHOW_PREVIEW", True),
             face_model=os.getenv("FACE_MODEL", "buffalo_l"),
+            face_det_size=_int("FACE_DET_SIZE", 320),
             face_match_threshold=_float("FACE_MATCH_THRESHOLD", 0.55),
             face_min_size=_int("FACE_MIN_SIZE", 120),
             blur_threshold=_float("BLUR_THRESHOLD", 80),
@@ -146,9 +153,19 @@ class Settings:
     @property
     def model_directory(self) -> Path:
         """Directorio de caché de InsightFace, fuera del repositorio."""
+        return self.model_root / "models" / self.face_model
+
+    @property
+    def model_root(self) -> Path:
+        """Raíz que se pasa a InsightFace. Prioridad: INSIGHTFACE_HOME, modelo incluido junto al
+        servicio (versión empaquetada) y, por último, ~/.insightface."""
         configured_home = os.getenv("INSIGHTFACE_HOME")
-        root = Path(configured_home).expanduser() if configured_home else Path.home() / ".insightface"
-        return root / "models" / self.face_model
+        if configured_home:
+            return Path(configured_home).expanduser()
+        bundled = SERVICE_ROOT / "insightface"
+        if (bundled / "models" / self.face_model).is_dir():
+            return bundled
+        return Path.home() / ".insightface"
 
     @property
     def facial_base_url(self) -> str:

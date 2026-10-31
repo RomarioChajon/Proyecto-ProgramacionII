@@ -1,3 +1,10 @@
+// ============================================================================
+// ARCHIVO: src/main/java/umg/sigelab/view/LaboratorioForm.java
+// INSTRUCCIONES: Copia todo desde "package umg.sigelab.view;" hasta la última
+// llave "}" y pégalo reemplazando todo el contenido de LaboratorioForm.java.
+// (Nota: Requiere tener TemaCeleste.java en la misma carpeta umg/sigelab/view)
+// ============================================================================
+
 package umg.sigelab.view;
 
 import umg.sigelab.controller.LaboratorioAdminController;
@@ -14,7 +21,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Ventana de Gestión de Laboratorios / Sedes con diseño Celeste y Blanco
+ * ("Laboratorios de Computación").
+ */
 public class LaboratorioForm {
+
+    private static final int COL_ID = 0;
+    private static final int COL_ESTADO = 5;
 
     private JPanel panelPrincipal;
 
@@ -24,6 +38,7 @@ public class LaboratorioForm {
     private JTextField txtUbicacion;
     private JTextField txtCapacidad;
     private JTextField txtFechaCreacion;
+    private JTextField txtBuscar;
 
     private JComboBox<String> cmbEstado;
 
@@ -32,9 +47,11 @@ public class LaboratorioForm {
     private JButton btnActualizar;
     private JButton btnDesactivar;
     private JButton btnBuscar;
+    private JButton btnVerTodos;
     private JButton salirButton;
 
     private JTable tblLaborario;
+    private JScrollPane scrollTabla;
 
     private final LaboratorioAdminController controller;
 
@@ -60,121 +77,156 @@ public class LaboratorioForm {
     }
 
     private void crearInterfaz() {
+        // 1. Encabezado superior azul (#2B8FD6)
+        JPanel barraSuperior = TemaCeleste.crearEncabezadoAzul(new BorderLayout(16, 0));
+        barraSuperior.setBorder(BorderFactory.createEmptyBorder(11, 24, 11, 24));
 
-        panelPrincipal = new JPanel(new BorderLayout(10, 10));
+        JPanel izqHeader = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
+        izqHeader.setOpaque(false);
+        JLabel iconoHeader = new JLabel(TemaCeleste.crearIconoDashboard(
+                TemaCeleste.TipoIcono.LABORATORIOS, 36, new Color(255, 255, 255, 38)));
+        JLabel titulo = new JLabel("SIGELAB - Gestión de Laboratorios / Sedes");
+        titulo.setFont(TemaCeleste.fuente(Font.BOLD, 20f));
+        titulo.setForeground(Color.WHITE);
+        titulo.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 20));
+        izqHeader.add(iconoHeader);
+        izqHeader.add(titulo);
 
-        panelPrincipal.setBorder(
-                BorderFactory.createEmptyBorder(15, 15, 15, 15)
-        );
+        salirButton = new JButton("Cerrar ventana");
+        TemaCeleste.estilizarBotonEncabezado(salirButton);
 
-        JLabel titulo = new JLabel(
-                "SIGELAB - Gestión de Laboratorios",
-                SwingConstants.CENTER
-        );
+        barraSuperior.add(izqHeader, BorderLayout.WEST);
+        barraSuperior.add(salirButton, BorderLayout.EAST);
 
-        titulo.setFont(
-                new Font("Arial", Font.BOLD, 20)
-        );
+        // 2. Tarjeta superior: Formulario de laboratorio / sede
+        JPanel tarjetaFormulario = TemaCeleste.crearTarjetaBlanca(
+                new BorderLayout(0, 14), 18, new Insets(16, 22, 16, 22));
 
-        panelPrincipal.add(titulo, BorderLayout.NORTH);
-
-        JPanel panelCampos = new JPanel(
-                new GridLayout(7, 2, 10, 10)
-        );
-
-        txtId = new JTextField();
-        txtCodigo = new JTextField();
-        txtNombre = new JTextField();
-        txtUbicacion = new JTextField();
-        txtCapacidad = new JTextField();
-        txtFechaCreacion = new JTextField();
+        txtId = TemaCeleste.crearCampoTextoRedondeado();
+        txtCodigo = TemaCeleste.crearCampoTextoRedondeado();
+        txtNombre = TemaCeleste.crearCampoTextoRedondeado();
+        txtUbicacion = TemaCeleste.crearCampoTextoRedondeado();
+        txtCapacidad = TemaCeleste.crearCampoTextoRedondeado();
+        txtFechaCreacion = TemaCeleste.crearCampoTextoRedondeado();
 
         cmbEstado = new JComboBox<>();
+        TemaCeleste.estilizarCombo(cmbEstado);
 
-        panelCampos.add(new JLabel("ID:"));
-        panelCampos.add(txtId);
+        JPanel grillaCampos = new JPanel(new GridLayout(2, 4, 16, 12));
+        grillaCampos.setOpaque(false);
 
-        panelCampos.add(new JLabel("Código:"));
-        panelCampos.add(txtCodigo);
+        grillaCampos.add(campoConEtiqueta("ID Laboratorio", txtId));
+        grillaCampos.add(campoConEtiqueta("Código (ej. LMRomero, vacío = automático)", txtCodigo));
+        grillaCampos.add(campoConEtiqueta("Nombre completo del laboratorio / sede", txtNombre));
+        grillaCampos.add(campoConEtiqueta("Ubicación / salón", txtUbicacion));
 
-        panelCampos.add(new JLabel("Nombre:"));
-        panelCampos.add(txtNombre);
+        grillaCampos.add(campoConEtiqueta("Capacidad de estudiantes", txtCapacidad));
+        grillaCampos.add(campoConEtiqueta("Estado del laboratorio", cmbEstado));
+        grillaCampos.add(campoConEtiqueta("Fecha de creación", txtFechaCreacion));
 
-        panelCampos.add(new JLabel("Ubicación:"));
-        panelCampos.add(txtUbicacion);
+        JPanel notaAuto = TemaCeleste.crearSubTarjetaCeleste(new BorderLayout(), 16, new Insets(6, 12, 6, 12));
+        JLabel lblNota = new JLabel("<html><div style='text-align:center;'>Código autogenerado<br><span style='color:#4A5568;font-size:10px;'>si se deja en blanco al guardar</span></div></html>", SwingConstants.CENTER);
+        lblNota.setFont(TemaCeleste.fuente(Font.BOLD, 12f));
+        lblNota.setForeground(TemaCeleste.AZUL_PRINCIPAL);
+        notaAuto.add(lblNota, BorderLayout.CENTER);
+        grillaCampos.add(campoConEtiqueta("Generación de código", notaAuto));
 
-        panelCampos.add(new JLabel("Capacidad:"));
-        panelCampos.add(txtCapacidad);
+        // Botones de acción CRUD
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        panelBotones.setOpaque(false);
 
-        panelCampos.add(new JLabel("Estado:"));
-        panelCampos.add(cmbEstado);
+        btnNuevo = new JButton("Nuevo / Limpiar");
+        TemaCeleste.estilizarBotonClaro(btnNuevo, 28, 13.5f);
+        btnNuevo.setPreferredSize(new Dimension(150, 36));
 
-        panelCampos.add(new JLabel("Fecha de creación:"));
-        panelCampos.add(txtFechaCreacion);
+        btnGuardar = new JButton("Guardar laboratorio");
+        TemaCeleste.estilizarBotonPrimario(btnGuardar, 28, 14f);
+        btnGuardar.setPreferredSize(new Dimension(175, 36));
 
-        btnNuevo = new JButton("Nuevo");
-        btnGuardar = new JButton("Guardar");
-        btnActualizar = new JButton("Actualizar");
+        btnActualizar = new JButton("Actualizar datos");
+        TemaCeleste.estilizarBotonPrimario(btnActualizar, 28, 14f);
+        btnActualizar.setPreferredSize(new Dimension(160, 36));
+
         btnDesactivar = new JButton("Desactivar");
-        btnBuscar = new JButton("Buscar");
-        salirButton = new JButton("Salir");
-
-        JPanel panelBotones = new JPanel(
-                new FlowLayout(FlowLayout.CENTER, 8, 8)
-        );
+        TemaCeleste.estilizarBotonPeligro(btnDesactivar, 28, 13.5f);
+        btnDesactivar.setPreferredSize(new Dimension(135, 36));
 
         panelBotones.add(btnNuevo);
         panelBotones.add(btnGuardar);
         panelBotones.add(btnActualizar);
         panelBotones.add(btnDesactivar);
-        panelBotones.add(btnBuscar);
-        panelBotones.add(salirButton);
 
-        JPanel panelSuperior = new JPanel(
-                new BorderLayout(10, 10)
-        );
+        tarjetaFormulario.add(grillaCampos, BorderLayout.CENTER);
+        tarjetaFormulario.add(panelBotones, BorderLayout.SOUTH);
 
-        panelSuperior.add(
-                panelCampos,
-                BorderLayout.CENTER
-        );
+        // 3. Tarjeta inferior: Buscador + Tabla de laboratorios
+        JPanel tarjetaTabla = TemaCeleste.crearTarjetaBlanca(
+                new BorderLayout(0, 12), 18, new Insets(16, 22, 18, 22));
 
-        panelSuperior.add(
-                panelBotones,
-                BorderLayout.SOUTH
-        );
+        JPanel barraBusqueda = new JPanel(new BorderLayout(12, 0));
+        barraBusqueda.setOpaque(false);
+
+        JLabel lblListado = new JLabel("Laboratorios y Sedes Registrados");
+        lblListado.setFont(TemaCeleste.fuente(Font.BOLD, 18f));
+        lblListado.setForeground(TemaCeleste.TEXTO_PRINCIPAL);
+
+        JPanel controlesFiltro = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        controlesFiltro.setOpaque(false);
+
+        JLabel lblBuscarTxt = new JLabel("Buscar:");
+        lblBuscarTxt.setFont(TemaCeleste.fuente(Font.PLAIN, 13.5f));
+        lblBuscarTxt.setForeground(TemaCeleste.TEXTO_SECUNDARIO);
+
+        txtBuscar = TemaCeleste.crearCampoTextoRedondeado();
+        txtBuscar.setPreferredSize(new Dimension(240, 36));
+        txtBuscar.setToolTipText("Ingrese ID, código, nombre o ubicación y presione Enter o Buscar");
+
+        btnBuscar = new JButton("Buscar");
+        TemaCeleste.estilizarBotonPrimario(btnBuscar, 24, 13.5f);
+        btnBuscar.setPreferredSize(new Dimension(105, 36));
+
+        btnVerTodos = new JButton("Ver todos");
+        TemaCeleste.estilizarBotonCelesteSuave(btnVerTodos, 24, 13f);
+        btnVerTodos.setPreferredSize(new Dimension(105, 36));
+
+        controlesFiltro.add(lblBuscarTxt);
+        controlesFiltro.add(txtBuscar);
+        controlesFiltro.add(btnBuscar);
+        controlesFiltro.add(btnVerTodos);
+
+        barraBusqueda.add(lblListado, BorderLayout.WEST);
+        barraBusqueda.add(controlesFiltro, BorderLayout.EAST);
 
         tblLaborario = new JTable();
+        scrollTabla = new JScrollPane(tblLaborario);
+        scrollTabla.setPreferredSize(new Dimension(980, 270));
 
-        JScrollPane scrollTabla =
-                new JScrollPane(tblLaborario);
+        tarjetaTabla.add(barraBusqueda, BorderLayout.NORTH);
+        tarjetaTabla.add(scrollTabla, BorderLayout.CENTER);
 
-        scrollTabla.setPreferredSize(
-                new Dimension(850, 280)
-        );
+        // Cuerpo principal
+        JPanel contenido = new JPanel(new BorderLayout(0, 14));
+        contenido.setOpaque(false);
+        contenido.setBorder(BorderFactory.createEmptyBorder(14, 20, 16, 20));
+        contenido.add(tarjetaFormulario, BorderLayout.NORTH);
+        contenido.add(tarjetaTabla, BorderLayout.CENTER);
 
-        JPanel contenido = new JPanel(
-                new BorderLayout(10, 10)
-        );
+        panelPrincipal = TemaCeleste.crearPanelFondo(new BorderLayout());
+        panelPrincipal.setPreferredSize(new Dimension(1080, 680));
+        panelPrincipal.add(barraSuperior, BorderLayout.NORTH);
+        panelPrincipal.add(contenido, BorderLayout.CENTER);
+    }
 
-        contenido.add(
-                panelSuperior,
-                BorderLayout.NORTH
-        );
-
-        contenido.add(
-                scrollTabla,
-                BorderLayout.CENTER
-        );
-
-        panelPrincipal.add(
-                contenido,
-                BorderLayout.CENTER
-        );
-
-        panelPrincipal.setPreferredSize(
-                new Dimension(1000, 650)
-        );
+    private JPanel campoConEtiqueta(String titulo, JComponent componente) {
+        JPanel p = new JPanel(new BorderLayout(0, 4));
+        p.setOpaque(false);
+        JLabel l = new JLabel(titulo);
+        l.setFont(TemaCeleste.fuente(Font.PLAIN, 12.5f));
+        l.setForeground(TemaCeleste.TEXTO_PRINCIPAL);
+        componente.setPreferredSize(new Dimension(160, 38));
+        p.add(l, BorderLayout.NORTH);
+        p.add(componente, BorderLayout.CENTER);
+        return p;
     }
 
     private void mostrarFechaActual() {
@@ -246,6 +298,11 @@ public class LaboratorioForm {
             ) {
                 return false;
             }
+
+            @Override
+            public Class<?> getColumnClass(int columna) {
+                return columna == COL_ID ? Integer.class : Object.class;
+            }
         };
 
         tblLaborario.setModel(modelo);
@@ -254,12 +311,11 @@ public class LaboratorioForm {
                 ListSelectionModel.SINGLE_SELECTION
         );
 
-        tblLaborario.setRowHeight(25);
         tblLaborario.setAutoCreateRowSorter(true);
-        tblLaborario.setFillsViewportHeight(true);
+        tblLaborario.getColumnModel().getColumn(COL_ID).setMaxWidth(65);
+        tblLaborario.getColumnModel().getColumn(COL_ESTADO).setPreferredWidth(115);
 
-        tblLaborario.getTableHeader()
-                .setReorderingAllowed(false);
+        TemaCeleste.estilizarTabla(tblLaborario, scrollTabla, COL_ESTADO);
     }
 
     private void configurarEventos() {
@@ -273,6 +329,20 @@ public class LaboratorioForm {
         btnDesactivar.addActionListener(e -> desactivar());
 
         btnBuscar.addActionListener(e -> buscar());
+
+        if (txtBuscar != null) {
+            txtBuscar.addActionListener(e -> ejecutarBusqueda(txtBuscar.getText().trim()));
+        }
+
+        if (btnVerTodos != null) {
+            btnVerTodos.addActionListener(e -> {
+                if (txtBuscar != null) {
+                    txtBuscar.setText("");
+                }
+                cargarLaboratorios();
+                nuevo();
+            });
+        }
 
         salirButton.addActionListener(e -> salir());
 
@@ -557,6 +627,11 @@ public class LaboratorioForm {
     }
 
     private void buscar() {
+        String textoBarra = txtBuscar == null ? "" : txtBuscar.getText().trim();
+        if (!textoBarra.isEmpty()) {
+            ejecutarBusqueda(textoBarra);
+            return;
+        }
 
         String entrada = JOptionPane.showInputDialog(
                 panelPrincipal,
@@ -570,8 +645,10 @@ public class LaboratorioForm {
             return;
         }
 
-        String criterio = entrada.trim();
+        ejecutarBusqueda(entrada.trim());
+    }
 
+    private void ejecutarBusqueda(String criterio) {
         try {
 
             if (criterio.isEmpty()) {

@@ -1,4 +1,3 @@
-
 package umg.sigelab.view;
 
 import umg.sigelab.controller.ProductoController;
@@ -7,8 +6,13 @@ import umg.sigelab.model.Producto;
 import umg.sigelab.model.TipoEquipo;
 
 import javax.swing.*;
+import javax.swing.plaf.basic.BasicButtonUI;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,6 +21,13 @@ import java.util.Locale;
 import java.util.Map;
 
 public class ProductoForm {
+
+    private static final Color CELESTE_PRINCIPAL = new Color(0x2B8FD6);
+    private static final Color CELESTE_MEDIO = new Color(0x63B3ED);
+    private static final Color CELESTE_SUAVE = new Color(0xBEE3F8);
+    private static final Color BLANCO_HIELO = new Color(0xF0F8FF);
+    private static final Color BLANCO_PURO = new Color(0xFFFFFF);
+    private static final Color TEXTO_OSCURO = new Color(0x1A202C);
 
     private JPanel panelPrincipal;
 
@@ -59,6 +70,7 @@ public class ProductoForm {
 
         configurarFormulario();
         configurarTabla();
+        aplicarTemaCeleste();
         configurarEventos();
 
         cargarTiposEquipo();
@@ -86,16 +98,18 @@ public class ProductoForm {
     }
 
     private void crearInterfaz() {
-        panelPrincipal = new JPanel(new BorderLayout(10, 10));
+        panelPrincipal = new JPanel(new BorderLayout(12, 12));
+        panelPrincipal.setBackground(BLANCO_HIELO);
         panelPrincipal.setBorder(
-                BorderFactory.createEmptyBorder(15, 15, 15, 15)
+                BorderFactory.createEmptyBorder(16, 16, 16, 16)
         );
 
         JLabel titulo = new JLabel(
-                "Gestión de Producto",
+                "Catálogo de Productos",
                 SwingConstants.CENTER
         );
-        titulo.setFont(titulo.getFont().deriveFont(Font.BOLD, 18f));
+        titulo.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        titulo.setForeground(CELESTE_PRINCIPAL);
 
         txtId = new JTextField();
         txtCodigo = new JTextField();
@@ -108,12 +122,17 @@ public class ProductoForm {
         cmbEstado = new JComboBox<>();
 
         JPanel campos = new JPanel(new GridBagLayout());
+        campos.setBackground(BLANCO_PURO);
+        campos.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(CELESTE_SUAVE, 1, true),
+                BorderFactory.createEmptyBorder(12, 14, 12, 14)
+        ));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 8, 5, 8);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         agregarCampo(campos, gbc, 0, "ID", txtId);
-        agregarCampo(campos, gbc, 1, "Código", txtCodigo);
+        agregarCampo(campos, gbc, 1, "Código ", txtCodigo);
         agregarCampo(campos, gbc, 2, "Nombre", txtNombre);
         agregarCampo(campos, gbc, 3, "Tipo Equipo", cmbTipoEquipo);
         agregarCampo(campos, gbc, 4, "Marca", txtMarca);
@@ -126,11 +145,13 @@ public class ProductoForm {
         btnActualizar = new JButton("Actualizar");
         btnDesactivar = new JButton("Desactivar");
         buscarButton = new JButton("Buscar");
+        btnBuscar = buscarButton;
         btnSalir = new JButton("Salir");
 
         JPanel botones = new JPanel(
-                new FlowLayout(FlowLayout.CENTER, 8, 8)
+                new FlowLayout(FlowLayout.CENTER, 10, 8)
         );
+        botones.setBackground(BLANCO_HIELO);
 
         botones.add(btnNuevo);
         botones.add(btnGuardar);
@@ -139,18 +160,19 @@ public class ProductoForm {
         botones.add(buscarButton);
         botones.add(btnSalir);
 
-        JPanel superior = new JPanel(new BorderLayout(8, 8));
+        JPanel superior = new JPanel(new BorderLayout(8, 10));
+        superior.setBackground(BLANCO_HIELO);
         superior.add(titulo, BorderLayout.NORTH);
         superior.add(campos, BorderLayout.CENTER);
         superior.add(botones, BorderLayout.SOUTH);
 
         tblProducto = new JTable();
+        JScrollPane scroll = new JScrollPane(tblProducto);
+        scroll.getViewport().setBackground(BLANCO_PURO);
+        scroll.setBorder(BorderFactory.createLineBorder(CELESTE_MEDIO, 1));
 
         panelPrincipal.add(superior, BorderLayout.NORTH);
-        panelPrincipal.add(
-                new JScrollPane(tblProducto),
-                BorderLayout.CENTER
-        );
+        panelPrincipal.add(scroll, BorderLayout.CENTER);
 
         panelPrincipal.setPreferredSize(
                 new Dimension(1050, 680)
@@ -167,11 +189,159 @@ public class ProductoForm {
         gbc.gridx = 0;
         gbc.gridy = fila;
         gbc.weightx = 0;
-        panel.add(new JLabel(etiqueta), gbc);
+        JLabel lbl = new JLabel(etiqueta);
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lbl.setForeground(TEXTO_OSCURO);
+        panel.add(lbl, gbc);
 
         gbc.gridx = 1;
         gbc.weightx = 1;
         panel.add(componente, gbc);
+    }
+
+    private void aplicarTemaCeleste() {
+        panelPrincipal.setBackground(BLANCO_HIELO);
+        panelPrincipal.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(4, 0, 0, 0, CELESTE_PRINCIPAL),
+                BorderFactory.createEmptyBorder(14, 16, 14, 16)
+        ));
+        estilizarContenedor(panelPrincipal);
+
+        estilizarCampoTexto(txtId, false);
+        estilizarCampoTexto(txtCodigo, true);
+        estilizarCampoTexto(txtNombre, true);
+        estilizarCampoTexto(txtMarca, true);
+        estilizarCampoTexto(txtModelo, true);
+        estilizarCampoTexto(txtDescripcion, true);
+
+        estilizarCombo(cmbTipoEquipo);
+        estilizarCombo(cmbEstado);
+
+        estilizarBoton(btnGuardar, CELESTE_PRINCIPAL, BLANCO_PURO);
+        estilizarBoton(btnActualizar, CELESTE_PRINCIPAL, BLANCO_PURO);
+        if (buscarButton != null) {
+            estilizarBoton(buscarButton, CELESTE_PRINCIPAL, BLANCO_PURO);
+        }
+        if (btnBuscar != null) {
+            estilizarBoton(btnBuscar, CELESTE_PRINCIPAL, BLANCO_PURO);
+        }
+        estilizarBoton(btnNuevo, CELESTE_MEDIO, TEXTO_OSCURO);
+        estilizarBoton(btnDesactivar, CELESTE_SUAVE, TEXTO_OSCURO);
+        estilizarBoton(btnSalir, BLANCO_PURO, TEXTO_OSCURO);
+
+        estilizarTabla(tblProducto);
+    }
+
+    private void estilizarContenedor(Component comp) {
+        if (comp instanceof JLabel label) {
+            String texto = label.getText() != null ? label.getText().trim() : "";
+            if (texto.toLowerCase(Locale.ROOT).contains("gesti") || texto.toLowerCase(Locale.ROOT).contains("catálogo")) {
+                label.setFont(new Font("Segoe UI", Font.BOLD, 20));
+                label.setForeground(CELESTE_PRINCIPAL);
+            } else {
+                label.setFont(new Font("Segoe UI", Font.BOLD, 12));
+                label.setForeground(TEXTO_OSCURO);
+            }
+        } else if (comp instanceof JScrollPane scroll) {
+            scroll.getViewport().setBackground(BLANCO_PURO);
+            scroll.setBorder(BorderFactory.createLineBorder(CELESTE_MEDIO, 1));
+        }
+        if (comp instanceof Container container) {
+            for (Component hijo : container.getComponents()) {
+                estilizarContenedor(hijo);
+            }
+        }
+    }
+
+    private void estilizarCampoTexto(JTextField campo, boolean editable) {
+        if (campo == null) {
+            return;
+        }
+        campo.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        campo.setForeground(TEXTO_OSCURO);
+        campo.setBackground(editable ? BLANCO_PURO : BLANCO_HIELO);
+        campo.setCaretColor(CELESTE_PRINCIPAL);
+        campo.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(CELESTE_MEDIO, 1),
+                BorderFactory.createEmptyBorder(4, 8, 4, 8)
+        ));
+    }
+
+    private void estilizarCombo(JComboBox<?> combo) {
+        if (combo == null) {
+            return;
+        }
+        combo.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        combo.setForeground(TEXTO_OSCURO);
+        combo.setBackground(BLANCO_PURO);
+        combo.setBorder(BorderFactory.createLineBorder(CELESTE_MEDIO, 1));
+    }
+
+    private void estilizarBoton(JButton boton, Color fondo, Color texto) {
+        if (boton == null) {
+            return;
+        }
+        boton.setUI(new BasicButtonUI());
+        boton.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        boton.setBackground(fondo);
+        boton.setForeground(texto);
+        boton.setOpaque(true);
+        boton.setFocusPainted(false);
+        boton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        boton.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(CELESTE_PRINCIPAL, 1),
+                BorderFactory.createEmptyBorder(6, 14, 6, 14)
+        ));
+        Color hoverFondo = fondo.equals(CELESTE_PRINCIPAL) ? CELESTE_MEDIO : CELESTE_SUAVE;
+        Color hoverTexto = fondo.equals(CELESTE_PRINCIPAL) ? BLANCO_PURO : TEXTO_OSCURO;
+        boton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                if (boton.isEnabled()) {
+                    boton.setBackground(hoverFondo);
+                    boton.setForeground(hoverTexto);
+                }
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                boton.setBackground(fondo);
+                boton.setForeground(texto);
+            }
+        });
+    }
+
+    private void estilizarTabla(JTable tabla) {
+        if (tabla == null) {
+            return;
+        }
+        tabla.setBackground(BLANCO_PURO);
+        tabla.setForeground(TEXTO_OSCURO);
+        tabla.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        tabla.setGridColor(CELESTE_SUAVE);
+        tabla.setSelectionBackground(CELESTE_SUAVE);
+        tabla.setSelectionForeground(TEXTO_OSCURO);
+        tabla.setRowHeight(26);
+        tabla.setFillsViewportHeight(true);
+
+        JTableHeader header = tabla.getTableHeader();
+        header.setDefaultRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                                                           boolean isSelected, boolean hasFocus, int row, int column) {
+                JLabel lbl = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                lbl.setBackground(CELESTE_PRINCIPAL);
+                lbl.setForeground(BLANCO_PURO);
+                lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
+                lbl.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createMatteBorder(0, 0, 2, 1, CELESTE_MEDIO),
+                        BorderFactory.createEmptyBorder(6, 8, 6, 8)
+                ));
+                lbl.setOpaque(true);
+                return lbl;
+            }
+        });
+        header.setPreferredSize(new Dimension(header.getPreferredSize().width, 32));
     }
 
     private void configurarFormulario() {
@@ -222,7 +392,7 @@ public class ProductoForm {
         );
         tblProducto.setAutoCreateRowSorter(true);
         tblProducto.setFillsViewportHeight(true);
-        tblProducto.setRowHeight(25);
+        tblProducto.setRowHeight(26);
         tblProducto.getTableHeader().setReorderingAllowed(false);
     }
 
@@ -331,7 +501,7 @@ public class ProductoForm {
     private void guardar() {
         if (!txtId.getText().trim().isEmpty()) {
             mostrarAdvertencia(
-                    "Presione Nuevo antes de registrar otro producto."
+                "Presione Nuevo antes de registrar otro producto."
             );
             return;
         }
@@ -558,11 +728,7 @@ public class ProductoForm {
             }
 
             List<Producto> resultados =
-                    exactos.isEmpty() ? exactos : exactos;
-
-            if (exactos.isEmpty()) {
-                resultados = parciales;
-            }
+                    exactos.isEmpty() ? parciales : exactos;
 
             cargarTabla(resultados);
             limpiarCampos();
@@ -785,4 +951,3 @@ public class ProductoForm {
         return panelPrincipal;
     }
 }
-

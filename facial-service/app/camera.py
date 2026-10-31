@@ -102,17 +102,23 @@ def _candidate_indices(configuration: Settings, names: list[str]) -> list[tuple[
 
 
 def _open(index: int, backend: int, configuration: Settings) -> tuple[cv2.VideoCapture, bool] | None:
-    capture = cv2.VideoCapture(index, backend)
-    capture.set(cv2.CAP_PROP_FRAME_WIDTH, configuration.camera_width)
-    capture.set(cv2.CAP_PROP_FRAME_HEIGHT, configuration.camera_height)
-    if not capture.isOpened():
+    # Primero en MJPG: muchas webcams en Windows solo dan ~5-10 fps a 1280x720 sin compresión
+    # (de ahí el video "robotizado") y 30 fps en MJPG. Si la cámara no lo acepta, se abre como antes.
+    for mjpg in (True, False):
+        capture = cv2.VideoCapture(index, backend)
+        if mjpg:
+            capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
+        capture.set(cv2.CAP_PROP_FRAME_WIDTH, configuration.camera_width)
+        capture.set(cv2.CAP_PROP_FRAME_HEIGHT, configuration.camera_height)
+        capture.set(cv2.CAP_PROP_BUFFERSIZE, 1)  # cuadro más reciente, sin retraso acumulado
+        if not capture.isOpened():
+            capture.release()
+            continue
+        ok, frame = capture.read()
+        if ok and frame is not None:
+            return capture, ok
         capture.release()
-        return None
-    ok, frame = capture.read()
-    if not ok or frame is None:
-        capture.release()
-        return None
-    return capture, ok
+    return None
 
 
 def list_cameras(configuration: Settings = settings, max_indices: int = 8) -> list[CameraInfo]:
@@ -141,6 +147,30 @@ def list_cameras(configuration: Settings = settings, max_indices: int = 8) -> li
 
 
 def select_camera(configuration: Settings = settings) -> CameraInfo:
+    names = mac_camera_names()
+    if not names and configuration.camera_index is None:
+        for index, name in _candidate_indices(configuration, names):
+            for backend in camera_backends():
+                opened = _open(index, backend, configuration)
+                if opened is None:
+                    continue
+                capture, can_read = opened
+                try:
+                    actual_backend = capture.getBackendName() if hasattr(capture, "getBackendName") else backend_name(backend)
+                except cv2.error:
+                    actual_backend = backend_name(backend)
+                capture.release()
+                if can_read:
+                    _, reason = _name_score(name, configuration)
+                    selected = CameraInfo(index, name, backend, actual_backend, can_read, reason)
+                    logger.info(
+                        "Selected camera index=%s name=%s backend=%s reason=%s",
+                        selected.index,
+                        selected.name,
+                        selected.backend_name,
+                        selected.reason,
+                    )
+                    return selected
     cameras = list_cameras(configuration)
     usable = [camera for camera in cameras if camera.can_read_frame]
     if usable:

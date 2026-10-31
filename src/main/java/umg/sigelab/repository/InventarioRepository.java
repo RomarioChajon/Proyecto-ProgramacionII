@@ -166,7 +166,7 @@ public class InventarioRepository {
     public boolean cerrarMantenimiento(Connection cn, int idMantenimiento, ResultadoMantenimiento resultado,
                                        String observaciones, int idUsuarioCierra) throws SQLException {
         String sql = "UPDATE dbo.Mantenimiento SET estado = 'FINALIZADO', fecha_salida = "
-                + "CASE WHEN SYSDATETIME() < fecha_ingreso THEN fecha_ingreso ELSE SYSDATETIME() END, "
+                + "CASE WHEN " + JdbcSupport.AHORA_SQL + " < fecha_ingreso THEN fecha_ingreso ELSE " + JdbcSupport.AHORA_SQL + " END, "
                 + "resultado = ?, observaciones = ?, id_usuario_cierra = ? "
                 + "WHERE id_mantenimiento = ? AND estado = 'EN_PROCESO'";
         try (PreparedStatement ps = cn.prepareStatement(sql)) {
