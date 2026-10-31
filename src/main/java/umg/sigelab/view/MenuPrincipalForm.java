@@ -1,4 +1,4 @@
-package umg.sigelab.view;
+﻿package umg.sigelab.view;
 
 import umg.sigelab.controller.ConsultaController;
 import umg.sigelab.model.Usuario;
@@ -24,13 +24,13 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 /**
- * Panel principal del ADMINISTRADOR: un botón por cada módulo del sistema.
+ * Panel principal del ADMINISTRADOR: un botÃ³n por cada mÃ³dulo del sistema.
  *
- * <p>Todos los módulos están conectados: usuarios, servicio facial, laboratorios, categorías, productos,
- * equipos, préstamos y despacho, devoluciones, mantenimiento, bloqueos, reportes y auditoría.</p>
+ * <p>Todos los mÃ³dulos estÃ¡n conectados: usuarios, servicio facial, laboratorios, categorÃ­as, productos,
+ * equipos, prÃ©stamos y despacho, devoluciones, mantenimiento, bloqueos, reportes y auditorÃ­a.</p>
  *
  * <p>Debajo de los botones se muestra el DASHBOARD (PDF 6.11): total de equipos, disponibles, prestados,
- * dañados, en mantenimiento, de baja, préstamos activos y préstamos vencidos, leídos de la base de datos.</p>
+ * daÃ±ados, en mantenimiento, de baja, prÃ©stamos activos y prÃ©stamos vencidos, leÃ­dos de la base de datos.</p>
  */
 public class MenuPrincipalForm {
 
@@ -51,6 +51,7 @@ public class MenuPrincipalForm {
     private JButton btnReportes;
     private JButton btnAuditoria;
     private JButton btnServicioFacial;
+    private JButton btnDeteccionEmociones;
     private JButton btnCerrarSesion;
 
     /** Contenedor que se entrega a la ventana: el panel del formulario (.form) + el dashboard debajo. */
@@ -62,20 +63,20 @@ public class MenuPrincipalForm {
     private final Runnable alCerrarSesion;
     /** Ventana de usuarios: se reutiliza para no abrir varias copias. */
     private JFrame ventanaUsuarios;
-    /** Ventanas de los módulos de inventario, por título (una sola copia de cada una). */
+    /** Ventanas de los mÃ³dulos de inventario, por tÃ­tulo (una sola copia de cada una). */
     private final Map<String, JFrame> ventanasModulos = new HashMap<>();
 
     /**
-     * @param usuario        administrador con la sesión abierta
-     * @param alCerrarSesion qué hacer al pulsar "Cerrar sesión" (volver al login)
+     * @param usuario        administrador con la sesiÃ³n abierta
+     * @param alCerrarSesion quÃ© hacer al pulsar "Cerrar sesiÃ³n" (volver al login)
      */
     public MenuPrincipalForm(Usuario usuario, Runnable alCerrarSesion) {
         this.usuario = usuario;
         this.alCerrarSesion = alCerrarSesion;
-        lblUsuarioActual.setText("Sesión: " + usuario.getNombreCompleto() + "  (" + usuario.getNombreUsuario()
+        lblUsuarioActual.setText("SesiÃ³n: " + usuario.getNombreCompleto() + "  (" + usuario.getNombreUsuario()
                 + ", ID " + usuario.getIdUsuario() + ")");
         configurarEventos();
-        lblAyuda.setText("Elija un módulo. Los totales de abajo se leen de la base de datos.");
+        lblAyuda.setText("Elija un mÃ³dulo. Los totales de abajo se leen de la base de datos.");
         raiz.add(panelPrincipal, BorderLayout.CENTER);
         raiz.add(crearDashboard(), BorderLayout.SOUTH);
         actualizarDashboard();
@@ -94,10 +95,108 @@ public class MenuPrincipalForm {
         return raiz;
     }
 
+    // ------------------------------------------------------------------
+    // ConstrucciÃ³n visual Celeste y Blanco (fiel a mockup_menu_admin_celeste)
+    // ------------------------------------------------------------------
+
+    private void construirInterfazCeleste() {
+        // 1. Barra superior azul (#2B8FD6)
+        JPanel barraSuperior = TemaCeleste.crearEncabezadoAzul(new BorderLayout(16, 0));
+        barraSuperior.setBorder(BorderFactory.createEmptyBorder(12, 24, 12, 24));
+
+        lblTitulo = new JLabel("SIGELAB - Panel principal");
+        lblTitulo.setFont(TemaCeleste.fuente(Font.BOLD, 22f));
+        lblTitulo.setForeground(Color.WHITE);
+
+        JPanel panelSesion = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 0));
+        panelSesion.setOpaque(false);
+
+        JLabel iconoAvatar = new JLabel(TemaCeleste.crearIconoCuadrado(
+                TemaCeleste.TipoIcono.AVATAR_BLANCO, 30, null, Color.WHITE));
+        lblUsuarioActual = new JLabel("Usuario: admin (Administrador)");
+        lblUsuarioActual.setFont(TemaCeleste.fuente(Font.PLAIN, 14.5f));
+        lblUsuarioActual.setForeground(Color.WHITE);
+
+        btnCerrarSesion = new JButton("Cerrar sesiÃ³n");
+        TemaCeleste.estilizarBotonEncabezado(btnCerrarSesion);
+
+        panelSesion.add(iconoAvatar);
+        panelSesion.add(lblUsuarioActual);
+        panelSesion.add(btnCerrarSesion);
+
+        barraSuperior.add(lblTitulo, BorderLayout.WEST);
+        barraSuperior.add(panelSesion, BorderLayout.EAST);
+
+        // 2. CuadrÃ­cula 3x4 de mÃ³dulos (tarjetas blancas redondeadas con Ã­cono celeste)
+        btnUsuarios = new JButton();
+        btnLaboratorios = new JButton();
+        btnCategorias = new JButton();
+        btnProductos = new JButton();
+        btnEquipos = new JButton();
+        btnPrestamos = new JButton();
+        btnDevoluciones = new JButton();
+        btnMantenimiento = new JButton();
+        btnBloqueos = new JButton();
+        btnReportes = new JButton();
+        btnAuditoria = new JButton();
+        btnServicioFacial = new JButton();
+        btnDeteccionEmociones = new JButton();
+
+        TemaCeleste.estilizarBotonModuloAdmin(
+                btnDeteccionEmociones,
+                "DetecciÃ³n de emociones",
+                TemaCeleste.TipoIcono.MONITOR_FACIAL
+        );
+
+        TemaCeleste.estilizarBotonModuloAdmin(btnUsuarios, "Usuarios", TemaCeleste.TipoIcono.USUARIOS);
+        TemaCeleste.estilizarBotonModuloAdmin(btnLaboratorios, "Laboratorios", TemaCeleste.TipoIcono.LABORATORIOS);
+        TemaCeleste.estilizarBotonModuloAdmin(btnCategorias, "CategorÃ­as", TemaCeleste.TipoIcono.CATEGORIAS);
+        TemaCeleste.estilizarBotonModuloAdmin(btnProductos, "Productos", TemaCeleste.TipoIcono.PRODUCTOS);
+        TemaCeleste.estilizarBotonModuloAdmin(btnEquipos, "Equipos", TemaCeleste.TipoIcono.EQUIPOS);
+        TemaCeleste.estilizarBotonModuloAdmin(btnPrestamos, "PrÃ©stamos", TemaCeleste.TipoIcono.PRESTAMOS);
+        TemaCeleste.estilizarBotonModuloAdmin(btnDevoluciones, "Devoluciones", TemaCeleste.TipoIcono.DEVOLUCIONES);
+        TemaCeleste.estilizarBotonModuloAdmin(btnMantenimiento, "Mantenimiento", TemaCeleste.TipoIcono.MANTENIMIENTO);
+        TemaCeleste.estilizarBotonModuloAdmin(btnBloqueos, "Bloqueos", TemaCeleste.TipoIcono.BLOQUEOS);
+        TemaCeleste.estilizarBotonModuloAdmin(btnReportes, "Reportes", TemaCeleste.TipoIcono.REPORTES);
+        TemaCeleste.estilizarBotonModuloAdmin(btnAuditoria, "AuditorÃ­a", TemaCeleste.TipoIcono.AUDITORIA);
+        TemaCeleste.estilizarBotonModuloAdmin(btnServicioFacial, "Servicio facial", TemaCeleste.TipoIcono.SERVICIO_FACIAL);
+
+        JPanel grillaModulos = new JPanel(new GridLayout(3, 5, 16, 14));
+        grillaModulos.setOpaque(false);
+        grillaModulos.setBorder(BorderFactory.createEmptyBorder(16, 24, 8, 24));
+        grillaModulos.add(btnUsuarios);
+        grillaModulos.add(btnLaboratorios);
+        grillaModulos.add(btnCategorias);
+        grillaModulos.add(btnProductos);
+        grillaModulos.add(btnEquipos);
+        grillaModulos.add(btnPrestamos);
+        grillaModulos.add(btnDevoluciones);
+        grillaModulos.add(btnMantenimiento);
+        grillaModulos.add(btnBloqueos);
+        grillaModulos.add(btnReportes);
+        grillaModulos.add(btnAuditoria);
+        grillaModulos.add(btnServicioFacial);
+        grillaModulos.add(btnDeteccionEmociones);
+
+        lblAyuda = new JLabel();
+        lblAyuda.setFont(TemaCeleste.fuente(Font.PLAIN, 12.5f));
+        lblAyuda.setForeground(TemaCeleste.TEXTO_SECUNDARIO);
+        lblAyuda.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 24));
+
+        panelPrincipal = new JPanel(new BorderLayout());
+        panelPrincipal.setOpaque(false);
+        panelPrincipal.add(grillaModulos, BorderLayout.CENTER);
+
+        raiz.setPreferredSize(new Dimension(1060, 660));
+        raiz.add(barraSuperior, BorderLayout.NORTH);
+        raiz.add(panelPrincipal, BorderLayout.CENTER);
+        raiz.add(crearDashboard(), BorderLayout.SOUTH);
+    }
+
     /** Franja de tarjetas con los totales (se llenan en {@link #actualizarDashboard()}). */
     private JPanel crearDashboard() {
-        String[] nombres = {"Total de equipos", "Disponibles", "Prestados", "Dañados", "En mantenimiento",
-                "De baja", "Préstamos activos", "Préstamos vencidos"};
+        String[] nombres = {"Total de equipos", "Disponibles", "Prestados", "DaÃ±ados", "En mantenimiento",
+                "De baja", "PrÃ©stamos activos", "PrÃ©stamos vencidos"};
         JPanel tarjetas = new JPanel(new GridLayout(2, 4, 8, 8));
         for (String nombre : nombres) {
             JLabel valor = new JLabel("-", JLabel.CENTER);
@@ -139,7 +238,7 @@ public class MenuPrincipalForm {
                     valoresDashboard.forEach((nombre, etiqueta) ->
                             etiqueta.setText(String.valueOf(datos.getOrDefault(nombre, 0))));
                 } catch (Exception ex) {
-                    // Sin conexión o error de consulta: se deja el guion y no se interrumpe al administrador.
+                    // Sin conexiÃ³n o error de consulta: se deja el guion y no se interrumpe al administrador.
                     valoresDashboard.values().forEach(etiqueta -> etiqueta.setText("-"));
                 }
             }
@@ -147,22 +246,28 @@ public class MenuPrincipalForm {
     }
 
     private void configurarEventos() {
-        // Módulo terminado
+        // MÃ³dulo terminado
         btnUsuarios.addActionListener(e -> abrirUsuarios());
         btnServicioFacial.addActionListener(e -> ServicioFacialForm.abrir(panelPrincipal));
+
+        btnDeteccionEmociones.addActionListener(e ->
+                abrirModulo("DetecciÃ³n de emociones", () ->
+                        new DeteccionEmocionesForm().getPanelPrincipal()
+                )
+        );
         btnCerrarSesion.addActionListener(e -> {
             cerrarVentanasHijas();
             alCerrarSesion.run();
         });
 
-        // Módulos de inventario (rama de Geovanni): laboratorios/sedes, categorías, productos y equipos con QR.
+        // MÃ³dulos de inventario (rama de Geovanni): laboratorios/sedes, categorÃ­as, productos y equipos con QR.
         btnLaboratorios.addActionListener(e -> abrirModulo("Laboratorios / sedes", () -> new LaboratorioForm().getPanelPrincipal()));
-        btnCategorias.addActionListener(e -> abrirModulo("Categorías de equipo", () -> new TipoEquipoForm().getPanelPrincipal()));
+        btnCategorias.addActionListener(e -> abrirModulo("CategorÃ­as de equipo", () -> new TipoEquipoForm().getPanelPrincipal()));
         btnProductos.addActionListener(e -> abrirModulo("Productos", () -> new ProductoForm().getPanelPrincipal()));
         btnEquipos.addActionListener(e -> abrirModulo("Equipos (unidades)", () -> new EquipoForm().getPanelPrincipal()));
 
-        // Préstamos, devoluciones, mantenimiento, bloqueos, reportes y auditoría.
-        btnPrestamos.addActionListener(e -> abrirOperaciones("Préstamos y despacho", PanelOperacionesForm.ORDENES));
+        // PrÃ©stamos, devoluciones, mantenimiento, bloqueos, reportes y auditorÃ­a.
+        btnPrestamos.addActionListener(e -> abrirOperaciones("PrÃ©stamos y despacho", PanelOperacionesForm.ORDENES));
         btnDevoluciones.addActionListener(e -> abrirOperaciones("Devoluciones", PanelOperacionesForm.DEVOLUCIONES));
         btnMantenimiento.addActionListener(e -> abrirOperaciones("Mantenimiento", PanelOperacionesForm.MANTENIMIENTO));
         btnBloqueos.addActionListener(e -> ReportesForm.abrir(panelPrincipal, usuario, null, ReportesForm.BLOQUEOS));
@@ -171,8 +276,8 @@ public class MenuPrincipalForm {
     }
 
     /**
-     * Abre el panel de operaciones (órdenes, inventario, mantenimiento, préstamo por QR, devoluciones)
-     * en la sección indicada. El administrador elige la sede en la barra lateral.
+     * Abre el panel de operaciones (Ã³rdenes, inventario, mantenimiento, prÃ©stamo por QR, devoluciones)
+     * en la secciÃ³n indicada. El administrador elige la sede en la barra lateral.
      */
     private void abrirOperaciones(String titulo, String seccion) {
         abrirModulo(titulo, () -> {
@@ -191,13 +296,13 @@ public class MenuPrincipalForm {
         });
     }
 
-    /** Abre el CRUD de usuarios en su propia ventana (o la trae al frente si ya está abierta). */
+    /** Abre el CRUD de usuarios en su propia ventana (o la trae al frente si ya estÃ¡ abierta). */
     private void abrirUsuarios() {
         if (ventanaUsuarios != null && ventanaUsuarios.isDisplayable()) {
             ventanaUsuarios.toFront();
             return;
         }
-        // Usuario conectado: sirve para no dejar que el administrador se desactive a sí mismo.
+        // Usuario conectado: sirve para no dejar que el administrador se desactive a sÃ­ mismo.
         UsuarioForm formulario = new UsuarioForm(Sesion.getUsuario() != null ? Sesion.getUsuario() : usuario);
         ventanaUsuarios = new JFrame("SIGELAB - Usuarios");
         ventanaUsuarios.setContentPane(formulario.getPanelPrincipal());
@@ -209,10 +314,10 @@ public class MenuPrincipalForm {
     }
 
     /**
-     * Abre un módulo en su propia ventana (o la trae al frente si ya está abierta).
+     * Abre un mÃ³dulo en su propia ventana (o la trae al frente si ya estÃ¡ abierta).
      *
-     * @param titulo  nombre del módulo; también identifica la ventana para no abrir copias
-     * @param fabrica crea el panel del módulo (se invoca solo si hay que abrir la ventana)
+     * @param titulo  nombre del mÃ³dulo; tambiÃ©n identifica la ventana para no abrir copias
+     * @param fabrica crea el panel del mÃ³dulo (se invoca solo si hay que abrir la ventana)
      */
     private void abrirModulo(String titulo, Supplier<JPanel> fabrica) {
         JFrame abierta = ventanasModulos.get(titulo);
@@ -223,7 +328,7 @@ public class MenuPrincipalForm {
         try {
             JPanel panel = fabrica.get();
             if (panel == null) {
-                throw new IllegalStateException("El panel del módulo no se creó. Compile el proyecto desde IntelliJ "
+                throw new IllegalStateException("El panel del mÃ³dulo no se creÃ³. Compile el proyecto desde IntelliJ "
                         + "(Build > Rebuild Project) para que se generen las pantallas de los archivos .form.");
             }
             JFrame ventana = new JFrame("SIGELAB - " + titulo);
@@ -234,8 +339,8 @@ public class MenuPrincipalForm {
             ventana.setVisible(true);
             ventanasModulos.put(titulo, ventana);
         } catch (Exception | LinkageError ex) {
-            // LinkageError: falta alguna librería o clase en tiempo de ejecución.
-            Mensajes.error(panelPrincipal, titulo, "No se pudo abrir el módulo \"" + titulo + "\".\n\nDetalle: "
+            // LinkageError: falta alguna librerÃ­a o clase en tiempo de ejecuciÃ³n.
+            Mensajes.error(panelPrincipal, titulo, "No se pudo abrir el mÃ³dulo \"" + titulo + "\".\n\nDetalle: "
                     + (ex.getMessage() == null ? ex.getClass().getSimpleName() : ex.getMessage()));
         }
     }

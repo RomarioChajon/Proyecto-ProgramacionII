@@ -10,6 +10,7 @@ import numpy as np
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
+from .camera import open_camera_session
 from .config import settings
 from .db import Database
 from .engine import FaceEngine
@@ -264,5 +265,98 @@ async def detect_face_emotions(request: Request):
         "note": (
             "La expresión es una estimación visual, no una "
             "determinación del estado emocional real."
+        ),
+    }
+
+@app.post("/face/detect-emotions/camera")
+def detect_emotions_from_camera():
+    """Captura un fotograma de la cámara y estima las expresiones visibles."""
+
+    face_service = service()
+    classifier = getattr(app.state, "emotion_classifier", None)
+
+    if not face_service.model_loaded or face_service.engine is None:
+        raise HTTPException(
+            status_code=503,
+            detail="El modelo de detección facial no está disponible.",
+        )
+
+    if classifier is None:
+        raise HTTPException(
+            status_code=503,
+            detail="El modelo de expresiones faciales no está disponible.",
+        )
+
+    # La sesión libera la cámara automáticamente al terminar.
+    with open_camera_session(settings) as (capture, selected):
+        frame = None
+
+        # Se descartan algunos fotogramas iniciales para estabilizar la captura.
+        for _ in range(5):
+            ok, current_frame = capture.read()
+            if ok and current_frame is not None:
+                frame = current_frame
+
+        if frame is None:
+            raise HTTPException(
+                status_code=503,
+                detail="No se pudo capturar una imagen de la cámara.",
+            )
+
+        faces = face_service.engine.detect(frame)
+        detected_faces = []
+
+        height, width = frame.shape[:2]
+
+        for index, face in enumerate(faces, start=1):
+            bbox = getattr(face, "bbox", None)
+
+            if bbox is None:
+                continue
+
+            x1, y1, x2, y2 = [int(value) for value in bbox]
+
+            x1 = max(0, min(x1, width))
+            x2 = max(0, min(x2, width))
+            y1 = max(0, min(y1, height))
+            y2 = max(0, min(y2, height))
+
+            if x2 <= x1 or y2 <= y1:
+                continue
+
+            face_crop = frame[y1:y2, x1:x2]
+
+            try:
+                prediction = classifier.predict(face_crop)
+            except Exception:
+                logger.exception(
+                    "Error al estimar la expresión del rostro %s", index
+                )
+                continue
+
+            detected_faces.append({
+                "faceNumber": index,
+                "boundingBox": {
+                    "x1": x1,
+                    "y1": y1,
+                    "x2": x2,
+                    "y2": y2,
+                },
+                "expression": prediction["emotion"],
+                "confidence": prediction["confidence"],
+            })
+
+    return {
+        "success": True,
+        "count": len(detected_faces),
+        "faces": detected_faces,
+        "message": (
+            "Rostros y expresiones estimados correctamente."
+            if detected_faces
+            else "No se detectaron rostros con expresiones."
+        ),
+        "note": (
+            "La expresión es una estimación visual, "
+            "no una determinación del estado emocional real."
         ),
     }
