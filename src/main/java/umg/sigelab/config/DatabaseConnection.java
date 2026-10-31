@@ -17,8 +17,8 @@ public final class DatabaseConnection {
 
     private static final String ARCHIVO = "/db.properties";
     private static final String URL_POR_DEFECTO =
-            "jdbc:sqlserver://localhost:1433;databaseName=SIGELAB;encrypt=true;trustServerCertificate=true;";
-    private static final String USUARIO_POR_DEFECTO = "sa";
+            "jdbc:sqlserver://umgproyecto.database.windows.net:1433;databaseName=SIGELAB;encrypt=true;trustServerCertificate=true;";
+    private static final String USUARIO_POR_DEFECTO = "sigelab_equipo";
 
     /** Contenido de db.properties, leído una sola vez. */
     private static Properties archivo;
@@ -36,7 +36,7 @@ public final class DatabaseConnection {
     public static Connection getConnection() throws SQLException {
         String url = valor("sigelab.db.url", "SIGELAB_DB_URL", "db.url", URL_POR_DEFECTO);
         String usuario = valor("sigelab.db.user", "SIGELAB_DB_USER", "db.user", USUARIO_POR_DEFECTO);
-        String password = valor("sigelab.db.password", "SIGELAB_DB_PASSWORD", "db.password", "Dev2025!");
+        String password = valor("sigelab.db.password", "SIGELAB_DB_PASSWORD", "db.password", " proyectoumg$7");
 
         if (password == null) {
             throw new DataAccessException(

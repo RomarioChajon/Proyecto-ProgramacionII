@@ -10,6 +10,7 @@ import umg.sigelab.model.Laboratorio;
 import umg.sigelab.model.Usuario;
 import umg.sigelab.service.PrestamoService;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -56,45 +57,56 @@ class PrestamoMostradorPanel extends PanelSede {
     PrestamoMostradorPanel(Usuario operador, Supplier<Laboratorio> sede) {
         super(operador, sede);
         qr = new QrCampo("Escanear equipo (QR / código):", this::agregarEquipo);
+        Tablas.estilizarCampo(txtUsuario);
+        Tablas.estilizarCombo(cmbCategoria);
 
-        JLabel titulo = new JLabel("Crear préstamo para un usuario");
-        titulo.setFont(titulo.getFont().deriveFont(Font.BOLD, 20f));
+        JLabel titulo = Tablas.titulo("Crear préstamo para un usuario");
         JPanel filaUsuario = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 2));
-        filaUsuario.add(new JLabel("ID o usuario del docente/estudiante:"));
+        filaUsuario.setBackground(Tablas.BLANCO_PURO);
+        filaUsuario.add(Tablas.etiqueta("ID o usuario del docente/estudiante:"));
         filaUsuario.add(txtUsuario);
         JPanel filaFiltro = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 2));
-        filaFiltro.add(new JLabel("Filtrar por categoría:"));
+        filaFiltro.setBackground(Tablas.BLANCO_PURO);
+        filaFiltro.add(Tablas.etiqueta("Filtrar por categoría:"));
         filaFiltro.add(cmbCategoria);
         JButton btnAgregar = new JButton("Agregar el equipo seleccionado");
+        Tablas.estilizarBotonPrimario(btnAgregar);
         filaFiltro.add(btnAgregar);
-        JPanel norte = new JPanel(new GridLayout(4, 1));
+        JPanel norte = new JPanel(new GridLayout(4, 1, 0, 2));
+        Tablas.estilizarTarjeta(norte);
         norte.add(titulo);
         norte.add(filaUsuario);
         norte.add(qr);
         norte.add(filaFiltro);
         add(norte, BorderLayout.NORTH);
 
-        JPanel panelDisponibles = new JPanel(new BorderLayout());
-        panelDisponibles.add(new JLabel("Equipos disponibles en la sede (de la categoría elegida):"), BorderLayout.NORTH);
+        JPanel panelDisponibles = new JPanel(new BorderLayout(0, 4));
+        panelDisponibles.setBackground(Tablas.BLANCO_HIELO);
+        panelDisponibles.add(Tablas.etiqueta("Equipos disponibles en la sede (de la categoría elegida):"), BorderLayout.NORTH);
         panelDisponibles.add(Tablas.conScroll(tablaDisponibles), BorderLayout.CENTER);
-        JPanel panelPrestamo = new JPanel(new BorderLayout());
-        panelPrestamo.add(new JLabel("Equipos del préstamo:"), BorderLayout.NORTH);
+        JPanel panelPrestamo = new JPanel(new BorderLayout(0, 4));
+        panelPrestamo.setBackground(Tablas.BLANCO_HIELO);
+        panelPrestamo.add(Tablas.etiqueta("Equipos del préstamo:"), BorderLayout.NORTH);
         panelPrestamo.add(Tablas.conScroll(tabla), BorderLayout.CENTER);
         JSplitPane division = new JSplitPane(JSplitPane.VERTICAL_SPLIT, panelDisponibles, panelPrestamo);
         division.setResizeWeight(0.5);
+        division.setBorder(BorderFactory.createEmptyBorder());
+        division.setBackground(Tablas.BLANCO_HIELO);
         add(division, BorderLayout.CENTER);
 
         JPanel acciones = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        Tablas.estilizarTarjeta(acciones);
         JButton btnQuitar = new JButton("Quitar seleccionado");
+        Tablas.estilizarBotonSuave(btnQuitar);
         acciones.add(btnQuitar);
-        acciones.add(new JLabel("   Inicio:"));
+        acciones.add(Tablas.etiqueta("   Inicio:"));
         acciones.add(dcInicio);
-        acciones.add(new JLabel("Fin:"));
+        acciones.add(Tablas.etiqueta("Fin:"));
         acciones.add(dcFin);
-        lblDias.setFont(lblDias.getFont().deriveFont(Font.BOLD));
+        lblDias.setFont(new Font("Segoe UI", Font.BOLD, 12));
         acciones.add(lblDias);
         JButton btnRegistrar = new JButton("Registrar préstamo");
-        btnRegistrar.setFont(btnRegistrar.getFont().deriveFont(Font.BOLD));
+        Tablas.estilizarBotonPrimario(btnRegistrar);
         acciones.add(btnRegistrar);
         add(acciones, BorderLayout.SOUTH);
 
@@ -245,7 +257,7 @@ class PrestamoMostradorPanel extends PanelSede {
         }
         long dias = ChronoUnit.DAYS.between(inicio, fin) + 1;
         boolean valido = dias >= 1 && dias <= PrestamoService.DIAS_MAXIMOS;
-        lblDias.setForeground(valido ? new Color(0x1B5E20) : new Color(0xB00020));
+        lblDias.setForeground(valido ? Tablas.CELESTE_PRINCIPAL : new Color(0xB00020));
         lblDias.setText(valido ? dias + " día(s)" : "Máx. " + PrestamoService.DIAS_MAXIMOS + " días");
     }
 

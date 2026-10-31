@@ -15,6 +15,7 @@ import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.GridLayout;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -53,6 +54,8 @@ public class PanelOperacionesForm {
      */
     public PanelOperacionesForm(Usuario usuario, Runnable alCerrar, String textoCerrar, String seccionInicial) {
         this.usuario = usuario;
+        panelPrincipal.setBackground(Tablas.BLANCO_HIELO);
+        contenido.setBackground(Tablas.BLANCO_HIELO);
 
         secciones.put(ORDENES, new OrdenesPendientesPanel(usuario, this::sedeActual));
         secciones.put(INVENTARIO, new InventarioPanel(usuario, this::sedeActual));
@@ -116,11 +119,13 @@ public class PanelOperacionesForm {
     }
 
     private JComponent crearSelectorSede() {
-        JPanel panel = new JPanel(new GridLayout(2, 1, 0, 2));
+        JPanel panel = new JPanel(new GridLayout(2, 1, 0, 4));
         panel.setOpaque(false);
-        panel.setBorder(BorderFactory.createEmptyBorder(0, 0, 4, 0));
+        panel.setBorder(BorderFactory.createEmptyBorder(0, 0, 6, 0));
         JLabel etiqueta = new JLabel("Laboratorio / sede:");
         etiqueta.setForeground(Color.WHITE);
+        etiqueta.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        Tablas.estilizarCombo(cmbSede);
         panel.add(etiqueta);
         panel.add(cmbSede);
         try {
